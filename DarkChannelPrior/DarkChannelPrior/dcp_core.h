@@ -34,6 +34,7 @@ void MedianFilterSnow(IplImage *brightchannel, IplImage* input, int radius);
 void CorseFilter(IplImage *value, IplImage *sturation, IplImage *dst_img, int radius);
 void RemovalBaseMask(Mat input, Mat mask, Mat& output,int radius);
 void FrameDiff(vector<Mat> input, Mat& ouput,Mat& frameNumOutput);
+void FlowOutlierRemoval(Mat& flow);
 
 
 

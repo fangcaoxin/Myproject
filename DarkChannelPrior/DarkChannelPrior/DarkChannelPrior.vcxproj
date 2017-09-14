@@ -159,8 +159,10 @@
     <ClCompile Include="CorseFilter.cpp" />
     <ClCompile Include="darkchannel.cpp" />
     <ClCompile Include="dcp.cpp" />
+    <ClCompile Include="flowOutlierRemoval.cpp" />
     <ClCompile Include="framediff.cpp" />
     <ClCompile Include="guildedfilter.cpp" />
+    <ClCompile Include="KNN.cpp" />
     <ClCompile Include="medianFilter.cpp" />
     <ClCompile Include="recover.cpp" />
     <ClCompile Include="removalBaseMask.cpp" />

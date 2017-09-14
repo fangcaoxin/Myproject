@@ -15,7 +15,7 @@ int keyboard;
 int count_num = 1;
 void processVideo(char* videoFilename);
 void processImages(char* firstFrameFilename);
-
+//#define HARRIS
 int main(int argc, char* argv[]){
     
 
@@ -44,8 +44,8 @@ int main(int argc, char* argv[]){
  
  
 	vector<Mat> img_list;
-	string filePre = "..//..//video//img_170721_01j//170721_01j_00";
-	string savefilePre = "..//..//result//";
+	string filePre = "..//..//..//video//img_170721_01j//170721_01j_00";
+	string savefilePre = "..//..//..//result//";
 	int beg_num = 11;
 	Rect valid_rect(226, 0, 1468, 1080); //the black range
 	int img_width = valid_rect.width;
@@ -58,18 +58,49 @@ int main(int argc, char* argv[]){
 		else {
 			img_list.push_back(cur(valid_rect));
 		}
+	}
+#ifdef HARRIS
+	   string file_name = filePre + to_string(27) + ".jpg";
+	    Mat src_ori = imread(file_name);
+		int thresh = 200;
+		int max_thresh = 255;
+		Mat src,src_gray,dst,dst_norm,dst_norm_scaled;
+		resize(src_ori, src, Size(img_width / 4, img_height / 4));
+		cvtColor(src, src_gray, CV_BGR2GRAY);
+		int blockSize = 2;
+		int apertureSize = 3;
+		double k = 0.04;
+		cornerHarris(src_gray, dst, blockSize, apertureSize, k, BORDER_DEFAULT);
+		normalize(dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat());
+		convertScaleAbs(dst_norm, dst_norm_scaled);
+
+		/// Drawing a circle around corners
+		for (int j = 0; j < dst_norm.rows; j++)
+		{
+			for (int i = 0; i < dst_norm.cols; i++)
+			{
+				if ((int)dst_norm.at<float>(j, i) > thresh)
+				{
+					circle(src, Point(i, j), 5, Scalar(0,0,255), 2, 8, 0);
+				}
+			}
+		}
+		/// Showing the result
 		
+		imshow("corner window", src);
+		waitKey(0);
+#endif //HARRIS
 
 		//imwrite(filePre + to_string(i) + "rect.jpg",cur(valid_rect));
-	}
 	
-	Mat output(img_height, img_width,CV_8UC3);
-	Mat frameNumOutput(img_height, img_width, CV_8UC3);
-	FrameDiff(img_list, output,frameNumOutput);
-	string savefile = filePre +  to_string(beg_num) + "out.jpg";
-	//imwrite(savefile, output);
-	string savefile_frame = filePre + to_string(beg_num) + "num.jpg";
-    imwrite(savefile_frame, frameNumOutput);
+	
+	//Mat output(img_height, img_width,CV_8UC3);
+	//Mat frameNumOutput(img_height, img_width, CV_8UC3);
+	//FrameDiff(img_list, output,frameNumOutput);
+	//string savefile = filePre +  to_string(beg_num) + "out.jpg";
+	////imwrite(savefile, output);
+	//string savefile_frame = filePre + to_string(beg_num) + "num.jpg";
+ //   imwrite(savefile_frame, frameNumOutput);
 
 	return 0;
 }
