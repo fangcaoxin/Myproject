@@ -1,0 +1,12 @@
+﻿  darkFrames.cpp
+c:\research\opencvproject\denoise\denoise\darkframes.cpp(13): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+c:\research\opencvproject\denoise\denoise\darkframes.cpp(14): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+c:\research\opencvproject\denoise\denoise\darkframes.cpp(21): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+c:\research\opencvproject\denoise\denoise\darkframes.cpp(102): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+c:\research\opencvproject\denoise\denoise\darkframes.cpp(133): warning C4244: “初始化”: 从“int”转换到“float”，可能丢失数据
+c:\research\opencvproject\denoise\denoise\darkframes.cpp(134): warning C4244: “初始化”: 从“int”转换到“float”，可能丢失数据
+c:\research\opencvproject\denoise\denoise\darkframes.cpp(161): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+c:\research\opencvproject\denoise\denoise\darkframes.cpp(177): warning C4244: “初始化”: 从“__int64”转换到“int”，可能丢失数据
+c:\research\opencvproject\denoise\denoise\darkframes.cpp(204): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+  Denoise.vcxproj -> C:\Research\OpenCVProject\Denoise\x64\Debug\Denoise.exe
+  Denoise.vcxproj -> C:\Research\OpenCVProject\Denoise\x64\Debug\Denoise.pdb (Partial PDB)
