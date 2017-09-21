@@ -36,9 +36,6 @@
     <ClCompile Include="transmission.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="brightchannel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="medianFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -35,7 +35,7 @@ void CalcTransmission(IplImage *transmission, IplImage *input, double A[], int r
             }
         }
     }
-    CalcDarkChannel(transmission, normalized_input, radius);
+//    CalcDarkChannel(transmission, normalized_input, radius);
     
     for (int i = 0; i < height; i++)
     {

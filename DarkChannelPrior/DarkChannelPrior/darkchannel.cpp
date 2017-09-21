@@ -10,20 +10,13 @@
 #include "dcp_core.h"
 
 
-static inline int minbgr(int b, int g, int r)
-{
-    b = b > g ? g : b;
-    b = b > r ? r : b;
-    return b;
-}
 
-void CalcDarkChannel(IplImage *darkchannel, IplImage *input, int radius)
+
+void CalcDarkChannel(Mat& darkchannel, Mat& brightchannel, Mat&input, int radius)
 {
-    int height = input->height;
-    int width = input->width;
-    int widthstep = input->widthStep;
-    int gwidthstep = darkchannel->widthStep;
-    int nch = input->nChannels;
+	int height = input.rows;
+	int width = input.cols;
+    
     
     int st_row, ed_row;
     int st_col, ed_col;
@@ -42,20 +35,22 @@ void CalcDarkChannel(IplImage *darkchannel, IplImage *input, int radius)
             
             int cur = 0;
             int min = 300;
-            
+			int max = 0;
             for (int m = st_row; m <= ed_row; m++)
             {
                 for (int n = st_col; n <= ed_col; n++)
                 {
                     for (int k = 0; k < 3; k++)
                     {
-                        cur = *(uchar *)(input->imageData + m * widthstep + n * nch + k);
-                        if (cur < min)
-                            min = cur;
+						cur = input.at<Vec3b>(m, n)[k];
+                        if (cur < min) min = cur;
+						if (cur > max) max = cur;
                     }
                 }
             }
-            *(uchar *)(darkchannel->imageData + i * gwidthstep + j) = min;
+			darkchannel.at<uchar>(i, j) = min;
+			brightchannel.at<uchar>(i, j) = max;
+            
         }
     }
 }

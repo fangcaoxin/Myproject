@@ -23,7 +23,7 @@ void dehaze(IplImage *recover, IplImage *input)
     double Airlight[3] = { 0.0, 0.0, 0.0 };
     
      printf("CalcDarkChannel...");
-    CalcDarkChannel(darkchannel, input, darkchannelradius);
+//    CalcDarkChannel(darkchannel, input, darkchannelradius);
     
     printf("CalcAirlight...");
     CalcAirlight(darkchannel, input, Airlight);

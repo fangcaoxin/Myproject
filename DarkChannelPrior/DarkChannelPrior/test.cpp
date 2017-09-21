@@ -16,49 +16,115 @@ int count_num = 1;
 void processVideo(char* videoFilename);
 void processImages(char* firstFrameFilename);
 //#define HARRIS
+#define FLOW
+//#define VIDEOPROCESS
+//#define FRAMEDIFF
+//#define FILELIST
 int main(int argc, char* argv[]){
-    
-
-
- //  const char *file_name="..//..//img//result_2.jpg";
- //   IplImage *input=cvLoadImage(file_name);
- //   IplImage *output=cvCreateImage(cvGetSize(input), IPL_DEPTH_8U, 3);
-	//IplImage *img_hsv = cvCreateImage(cvGetSize(input), IPL_DEPTH_8U, 3);
-	//
-	//
-	//
- //   dehaze(output, input);
- //  int width=input->width;
- //  int height=input->height;
- //  Mat output_dehaze = cvarrToMat(output);
- //  imwrite("result_dehaze.jpg", output_dehaze);
-   
-   
 	
-	
-
-
-    //cvReleaseImage(&output);
-    //cvReleaseImage(&input);
- 
- 
- 
-	vector<Mat> img_list;
-	string filePre = "..//..//..//video//img_170721_01j//170721_01j_00";
+	vector<Mat> img_list,img_list_gray;
+	//string filePre = "..//..//..//video//img_170721_01j//170721_01j_000";
+	string filePre = "..//..//..//video//img_170721_01j//";
 	string savefilePre = "..//..//..//result//";
-	int beg_num = 11;
-	Rect valid_rect(226, 0, 1468, 1080); //the black range
+	string file_name = "..//..//..//result//object1.jpg";
+	int beg_num = 895;
+	Rect valid_rect(236, 0, 1358, 1080); //the black range
 	int img_width = valid_rect.width;
 	int img_height = valid_rect.height;
+	Size shrink_size(img_width , img_height );
+	vector<Point2f> points[2];
+	int count = 0;
+	
+
+#ifdef FILELIST
+	const char* file_list = "..//..//..//diff//list.txt";
+	char file_name[256];
+	FILE *data;
+	data = fopen(file_list, "r");
+	
+	while (!feof(data)) {
+		if (fscanf(data, "%s", file_name) == NULL) break;
+		Mat src=imread(file_name);
+		count++;
+		Mat dst;
+		threshold(src, dst, 10, 255, THRESH_BINARY);
+		imshow("dst", dst);
+		waitKey();
+
+	}
+
+#endif //FILELIST
+
+#ifdef VIDEOPROCESS
+	VideoCapture cap;
+	cap.open("..//..//..//video//170721_01j.mp4");
+	for (int i = 0; i < 900; i++) {
+		Mat frame;
+		cap >> frame;
+		string save_file= filePre + "img_170721_01j_" + to_string(i) + ".jpg";
+		cv::imwrite(save_file, frame(valid_rect));
+		cout << "saved" << save_file << endl;
+	}
+#endif //VIDEOPROCESS
+#ifdef FRAMEDIFF
 	for (int i = beg_num; i < beg_num + 3; i++) {
-		Mat cur = imread(filePre + to_string(i) + "rect.jpg");
-		if (cur.cols == img_width) {
-			img_list.push_back(cur);
+		Mat cur = imread(filePre + "img_170721_01j_"+to_string(i) + ".jpg");
+		Mat img_gray,image,img_mix;
+		Mat darkChannel(shrink_size, CV_8UC1);
+		Mat brightChannel(shrink_size, CV_8UC1);
+		resize(cur, image, shrink_size);
+		string savefile = filePre + to_string(i) + "_re.jpg";
+		//imwrite(savefile, image);
+		img_list.push_back(image);
+		cvtColor(image, img_gray, CV_BGR2GRAY);
+		img_list_gray.push_back(img_gray);
+		count++;
+		if (count < 3) {
+			continue;
 		}
 		else {
-			img_list.push_back(cur(valid_rect));
+			Mat diff(shrink_size, CV_8UC1);
+			Mat range(shrink_size, CV_8UC1);
+			Mat output(shrink_size, CV_8UC3);
+			diffFrames(img_list_gray[0], img_list_gray[1], diff);
+			Mat labels, stats, centroids;
+			int size= connectedComponentsWithStats(diff, labels, stats, centroids, 8, 4);
+			for (int i = 0; i < size; i++) {
+				cout << stats.at<int>(i, 4) << endl;
+			}
+			//shapeFilter(diff, labels, stats, size);
+			//frameDarkChannel(img_list, output, diff);
+			//colorRanges(diff, img_list[1], range);
+			
+			string savefile_mask = savefilePre +"img_170724_02j_" +to_string(i-2) + "_mask.jpg";
+			string savefile_out = savefilePre + "img_170724_02j_"+to_string(i - 2) + "_out.jpg";
+			string savefile_diff1 = savefilePre + "img_170721_01j_" + to_string(i - 2) + "_dif1.jpg";
+			string savefile_diff2 = savefilePre + "img_170721_01j_" + to_string(i - 2) + "_dif2.jpg";
+			Mat diff1 = img_list_gray[1] - img_list_gray[0];
+			Mat diff2 = img_list_gray[1] - img_list_gray[2];
+			//imshow("mask", diff);
+			//imshow("output", output);
+			//imwrite(savefile_mask, diff);
+			//imwrite(savefile_out, output);
+			imwrite(savefile_diff1, diff1);
+			imwrite(savefile_diff2, diff2);
+			img_list.erase(img_list.begin());
+			img_list_gray.erase(img_list_gray.begin());
+			waitKey(0);
 		}
+		//CalcDarkChannel(darkChannel, brightChannel, image, 0);
+		//goodFeaturesToTrack(darkChannel, points[1], 200,0.01,20, Mat(), 3, false, 0.04);
+		//img_mix = 2*brightChannel - darkChannel-img_gray;
+		/*for (size_t i = 0; i < points[1].size(); i++) {
+			circle(img_mix, points[1][i], 5, Scalar(0, 0, 255), 1, 8, 0);
+		}*/
+		//imshow("darkchannel", darkChannel);
+		//imshow("brightchannel", brightChannel);
+		//imshow("mix", img_mix);
+
+		//waitKey(0);
 	}
+#endif //FRAMEDIFF
 #ifdef HARRIS
 	   string file_name = filePre + to_string(27) + ".jpg";
 	    Mat src_ori = imread(file_name);
@@ -91,16 +157,6 @@ int main(int argc, char* argv[]){
 		waitKey(0);
 #endif //HARRIS
 
-		//imwrite(filePre + to_string(i) + "rect.jpg",cur(valid_rect));
-	
-	
-	//Mat output(img_height, img_width,CV_8UC3);
-	//Mat frameNumOutput(img_height, img_width, CV_8UC3);
-	//FrameDiff(img_list, output,frameNumOutput);
-	//string savefile = filePre +  to_string(beg_num) + "out.jpg";
-	////imwrite(savefile, output);
-	//string savefile_frame = filePre + to_string(beg_num) + "num.jpg";
- //   imwrite(savefile_frame, frameNumOutput);
 
 	return 0;
 }
