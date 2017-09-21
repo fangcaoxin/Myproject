@@ -20,7 +20,7 @@ void calcTransmission(Mat& transmission, Mat& input, double A[], int radius)
 			}
 		}
 	}
-	imshow("normalized_input", normalized_input);
+	//imshow("normalized_input", normalized_input);
 	Mat brightChannel(height, width, CV_8UC1);
 	calcDarkChannel(transmission, brightChannel, normalized_input, radius);
 

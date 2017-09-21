@@ -134,7 +134,7 @@ void shapeFilter(Mat& diff_wb, Mat& labels, Mat& stats,int size,vector<int>& val
 		float area_height = stats.at<int>(k, 3);
 		if (area > 1000 || area < 4) {
 			outlier.push_back(k);
-		}else if (area_width / area_height > 4 || area_width / area_height < 0.25) {
+		}else if (area_width / area_height > 5 || area_width / area_height < 0.2) {
 			outlier.push_back(k);
 		}
 		else {
@@ -192,8 +192,8 @@ void distributeFilter(Mat& diff_wb, Mat& labels,Mat& stats, Mat& gray, vector<in
 			sum2 += shapes[i][j] * shapes[i][j];
 		}
 		variance[i] = sum2 / shapes[i].size() - (sum / shapes[i].size())*(sum / shapes[i].size());
-		cout << "variance is: " << variance[i]<<endl;
-		if (variance[i]/(double)area[i] >0.8) {
+		cout << "variance/area is: " << variance[i]/area[i]<<endl;
+		if (variance[i]/(double)area[i] >0.5) {
 			valid_labels2.push_back(valid_labels[i]);
 		}
 	}

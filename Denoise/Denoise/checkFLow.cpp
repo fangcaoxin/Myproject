@@ -1,4 +1,4 @@
-#include "core.h"
+#include "utility.h"
 #include <opencv2/video/tracking.hpp>
 
 static float getAverage(const std::vector<float>& values);
@@ -24,7 +24,7 @@ void check_FB(const std::vector<Mat>& oldImagePyr, const std::vector<Mat>& newIm
 
 	for (size_t i = 0; i<oldPoints.size(); i++) {
 		FBerror[i] = (float)norm(oldPoints[i] - pointsToTrackReprojection[i]);
-		cout << "error is " << FBerror[i] << endl;
+	
 	}
 	float FBerrorMedian = getMedian(FBerror);
 	//printf("point median=%f\n", FBerrorMedian);
@@ -196,3 +196,37 @@ void getKeyPoints(Mat& flow1, Mat flow2, vector<KeyPoint>& kp1, vector<KeyPoint>
 			}
 		}
 	}
+
+
+
+size_t filterPointsInVectors(std::vector<bool>& status, std::vector<Point2f>& vec1, std::vector<Point2f>& vec2, bool goodValue)
+{
+	CV_DbgAssert(status.size() == vec1.size() && status.size() == vec2.size());
+
+	size_t first_bad_idx = 0;
+	while (first_bad_idx < status.size())
+	{
+		if (status[first_bad_idx] != goodValue)
+			break;
+		first_bad_idx++;
+	}
+
+	if (first_bad_idx >= status.size())
+		return first_bad_idx;
+
+	for (size_t i = first_bad_idx + 1; i < status.size(); i++)
+	{
+		if (status[i] != goodValue)
+			continue;
+
+		status[first_bad_idx] = goodValue;
+		vec1[first_bad_idx] = vec1[i];
+		vec2[first_bad_idx] = vec2[i];
+		first_bad_idx++;
+	}
+	vec1.erase(vec1.begin() + first_bad_idx, vec1.end());
+	vec2.erase(vec2.begin() + first_bad_idx, vec2.end());
+	status.erase(status.begin() + first_bad_idx, status.end());
+
+	return first_bad_idx;
+}
