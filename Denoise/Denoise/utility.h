@@ -40,3 +40,6 @@ void refineFlow(Mat& flow1, Mat& flow2, int radius);
 void refineFlowTwice(Mat& flow1, int radius);
 /**to caculate optical flow using Lucas-Kanade method*/
 void calcPyrLKflow(vector<Mat>& imageList_gray, vector<Point>& flow_points);
+/**show the connected area label on the image*/
+void showAreaLabel(Mat& image, Mat& labels, Mat& centroids,int size);
+void contourSobel(Mat& image_gray, const vector<Vec4i>& hierarchy,  vector<vector<Point>>& contour_points);
