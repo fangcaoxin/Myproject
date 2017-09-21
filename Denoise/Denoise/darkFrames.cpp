@@ -95,6 +95,7 @@ void darkFrames(const vector<Mat>& imagelist, Mat& output, const vector<Mat>& ho
 		}
 	}
 }
+#define DARK
 
 void darkFramesByMask(vector<Mat>& imagelist, Mat& output, Mat& Mask) {
 	int height = imagelist[0].rows;
@@ -108,18 +109,24 @@ void darkFramesByMask(vector<Mat>& imagelist, Mat& output, Mat& Mask) {
 	}
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
+			int dark_frame_num = 1;
 			if (Mask.at<uchar>(i, j) == 0) {
 				output.at<Vec3b>(i, j) = imagelist[1].at<Vec3b>(i, j);
 			}
 			else {
-				Vec3b sum = {0,0,0};
+#ifdef DARK
+				dark_frame_num = imgListGray[0].at<uchar>(i, j) > imgListGray[2].at<uchar>(i, j) ? 2 : 0;
+				
+#else
+				Vec3b sum = { 0,0,0 };
 				int frame_num = 0;
-				
-			    sum = imagelist[0].at<Vec3b>(i, j)+ imagelist[2].at<Vec3b>(i, j);
-				
-				
-				output.at<Vec3b>(i, j) = sum/2;
+				sum = imagelist[0].at<Vec3b>(i, j) + imagelist[2].at<Vec3b>(i, j);
+				output.at<Vec3b>(i, j) = sum / 2;
+#endif //DARK
 			}
+#ifdef DARK
+			output.at<Vec3b>(i, j) = imagelist[dark_frame_num].at<Vec3b>(i, j);
+#endif //DARK
 		}
 	}
 }
@@ -132,7 +139,7 @@ void shapeFilter(Mat& diff_wb, Mat& labels, Mat& stats,int size,vector<int>& val
 		int area = stats.at<int>(k, 4);
 		float area_width = stats.at<int>(k, 2);
 		float area_height = stats.at<int>(k, 3);
-		if (area > 1000 || area < 4) {
+		if (area > (float)height*(float)width/(20*50) || area < 4) {
 			outlier.push_back(k);
 		}else if (area_width / area_height > 5 || area_width / area_height < 0.2) {
 			outlier.push_back(k);

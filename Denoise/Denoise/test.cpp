@@ -15,7 +15,8 @@
 
 //using namespace cv::optflow;
 Ptr<BackgroundSubtractor> pMOG;
-string folderName = "img_170721_01j";
+//string folderName = "img_170721_01j";
+string folderName = "img_170724_02j";
 string saveFolder = "..//..//..//image//" + folderName + "//" + folderName + "_";
 string saveImage = "..//..//..//result//img_170724_02j//img_170724_02j_";
 int width = 1358; //1358 without black range
@@ -42,6 +43,7 @@ int main(int argc, char* argv[]) {
 		Mat cur = imread(file_name);
 		Mat input_resize, cur_gray;
 		resize(cur, input_resize, Size(width_input, height_input));
+		dehaze(input_resize, input_resize);
 		image_list.push_back(input_resize);
 		cvtColor(input_resize, cur_gray, CV_BGR2GRAY);
 		image_list_gray.push_back(cur_gray);
@@ -57,9 +59,9 @@ int main(int argc, char* argv[]) {
 			Mat diff = image_list_gray[1] - image_list_gray[0];
 			Mat diff_wb, labels, stats, centroids;
 			Mat output(height_input, width_input, CV_8UC3);
-			threshold(diff, diff_wb, 5, 255, CV_THRESH_BINARY);
+			threshold(diff, diff_wb, 10, 255, CV_THRESH_BINARY);
 			//imshow("diff_wb after threshold", diff_wb);
-			int size=connectedComponentsWithStats(diff_wb, labels, stats, centroids, 4, 4);
+			int size=connectedComponentsWithStats(diff_wb, labels, stats, centroids, 8, 4);
 			vector<int> valid_label1,valid_label2;
 			shapeFilter(diff_wb, labels, stats, size,valid_label1);
 			//imshow("diff_wb after shape fliter", diff_wb);

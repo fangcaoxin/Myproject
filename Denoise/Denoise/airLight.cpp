@@ -25,7 +25,7 @@ void calcAirLight(Mat& darkChannel, Mat& input, double A[]) {
 			v_darkchannel[count++] = p;
 		}
 	}
-	sort(v_darkchannel, v_darkchannel + count, [](struct Pixel &a, struct Pixel &b) { return a.value < b.value; });
+	sort(v_darkchannel, v_darkchannel + count, [](struct Pixel &a, struct Pixel &b) { return a.value > b.value; });
 	Mat mask(height, width, CV_8UC1,Scalar(0));
 	for (int i = 0; i < count*0.001; i++) {
 		struct Pixel p = v_darkchannel[i];

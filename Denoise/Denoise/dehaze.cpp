@@ -9,7 +9,7 @@ void dehaze(Mat& recover, Mat& input) {
 	Mat transmission(height, width, CV_8UC1);
 	Mat refine_transmission(height, width, CV_8UC1);
 
-	int darkchannelradius = cvRound(MIN(width, height)*0.02);
+	int darkchannelradius = cvRound(MIN(width, height)*0.005);
 	double Airlight[3] = { 0,0,0 };
 	
 	printf("CalcDarkChannel...");
