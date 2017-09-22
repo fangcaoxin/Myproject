@@ -80,10 +80,10 @@ int main(int argc, char* argv[]) {
 			for (; idx >= 0; idx = hierarchy[idx][0]) {
 				drawContours(image_list[1], contours, idx, Scalar(0, 0, 255), 1, 8, hierarchy);
 			}
-			imshow("area label", img_label);
+			//imshow("area label", img_label);
 			imshow("diff", diff_wb);
-			imshow("output", output);
-			imshow("origial", image_list[1]);
+			//imshow("output", output);
+			//imshow("origial", image_list[1]);
 			image_list.erase(image_list.begin());
 			image_list_gray.erase(image_list_gray.begin());
 			count = 2;
