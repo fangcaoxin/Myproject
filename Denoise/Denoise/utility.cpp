@@ -132,3 +132,125 @@ void contourSobel(Mat& image_gray, const vector<Vec4i>& hierarchy, vector<vector
 	//imshow("grad", grad_show);
 }
 
+void combineTwoImg(Mat src1, Mat src2, Mat& dst) {
+	Rect rect1(0, 0, src1.cols, src1.rows);
+	Rect rect2(src1.cols, 0, src2.cols, src2.rows);
+	src1.copyTo(dst(rect1));
+	//dst(rect1) = src1;
+	src2.copyTo(dst(rect2));
+	//dst(rect2) = src2;
+}
+
+
+void FrameRelativeDiff(vector<Mat>& image_list_gray, vector<Mat>& diff) {
+	int size = image_list_gray.size();
+	int mid = size / 2;
+	vector<Mat> forward_diff;
+	vector<Mat> backward_diff;
+	for (int i = 0; i < mid;i++) {
+		forward_diff.push_back(image_list_gray[i + 1] - image_list_gray[i]);
+	}
+
+	for (int i = mid ; i < size - 1; i++) {
+		backward_diff.push_back(image_list_gray[i] - image_list_gray[i + 1]);
+	}
+
+	diff.insert(diff.end(), forward_diff.begin(), forward_diff.end());
+	diff.insert(diff.end(), backward_diff.begin(), backward_diff.end());
+}
+
+void diffByThreshold(vector<Mat>& diff, vector<Mat>& diff_wb, int threshold_wb) {
+	int size = diff.size();
+	
+	for (int i = 0; i < size; i++) {
+		Mat tmp_wb;
+		threshold(diff[i], tmp_wb, threshold_wb, 255, CV_THRESH_BINARY);
+		diff_wb.push_back(tmp_wb);
+	}
+}
+
+void diffByPreNext(vector<Mat>& diff_wb, Mat& diff_output) {
+	int size = diff_wb.size();
+	int mid = size / 2;
+	int width = diff_wb[0].cols;
+	int height = diff_wb[0].rows;
+
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			if (diff_wb[mid - 1].at<uchar>(i, j) == 255 && diff_wb[mid].at<uchar>(i, j) == 255) {
+				diff_output.at<uchar>(i, j) = 255;
+			}
+		}
+	}
+}
+
+static void nearBlockMatching(Mat& image1, Mat& image2,Rect& rect, int step,int& sad) {
+	int top_left_x = rect.x - 2 * rect.width <0 ? 0 : rect.x - 2 * rect.width;
+	int top_left_y = rect.y - 2 * rect.height < 0 ? 0 : rect.y - 2 * rect.height;
+	int right_bottom_x = top_left_x + 5 * rect.width > image2.cols - 1 ? image2.cols - 1 : top_left_x + 5 * rect.width;
+	int right_bottom_y = top_left_y + 5 * rect.height > image2.rows - 1 ? image2.rows - 1 : top_left_y + 5 * rect.height;
+	Rect search_area(top_left_x, top_left_y, right_bottom_x - top_left_x, right_bottom_y - top_left_y);
+	vector<int> sad_gray_list;
+	for (int i = top_left_y; i < right_bottom_y-rect.height; i++) {
+		for (int j = top_left_x; j < right_bottom_x-rect.width; j++) {
+			 int r_base = rect.y,sad_gray=0;
+			for (int r = i; r <i+ rect.height; r++) {
+				int c_base = rect.x;
+				for (int c = j; c < j+rect.width; c++) {
+					sad_gray += abs(image1.at<uchar>(r_base, c_base) - image2.at<uchar>(r, c));
+					c_base++;
+				}
+				r_base++;
+				//cout << "c_base " << c_base << "r_base " << r_base << endl;
+			}
+			sad_gray_list.push_back(sad_gray);
+		}
+	}
+	int min = 1e6;
+	for (int m = 0; m < sad_gray_list.size(); m++) {
+		if (sad_gray_list[m] < min) {
+			min = sad_gray_list[m];
+		}
+	}
+	sad = min;
+}
+
+void neighbourBlockMatching(Mat& labels, Mat& stats, Mat& centroids, vector<Mat>& image_list_gray,vector<int>& valid_labels) {
+	int width = labels.cols;
+	int height = labels.rows;
+	int mid = image_list_gray.size() / 2;
+
+
+	for (int k = 1; k < stats.rows; k++) {
+		if (stats.at<int>(k, 4) > 4) {
+			int sad = 0;
+			Rect rect(stats.at<int>(k, 0), stats.at<int>(k, 1), stats.at<int>(k, 2), stats.at<int>(k, 3));
+			nearBlockMatching(image_list_gray[mid], image_list_gray[mid - 1], rect, 0, sad);
+			int num = rect.width*rect.height;
+			if ((float)sad / num > 3) {
+				valid_labels.push_back(k);
+			}
+			//cout << "SAD "<<k<<":" << (float)sad / num << endl;
+
+		}
+
+	}
+}
+
+void spatialFilter(Mat& labels, Mat& diff_wb, vector<int>& valid_label) {
+	int width = diff_wb.cols;
+	int height = diff_wb.rows;
+
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			int label_val = labels.at<int>(i, j);
+			if (label_val != 0) {
+				vector<int>::iterator iter = find(valid_label.begin(), valid_label.end(), label_val);
+				if (iter == valid_label.end()) {
+					//cout << i << " " << j << endl;
+					diff_wb.at<uchar>(i, j) = 0;
+				}
+			}
+		}
+	}
+}

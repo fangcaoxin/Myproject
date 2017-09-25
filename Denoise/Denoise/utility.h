@@ -8,6 +8,7 @@
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/video/video.hpp>
+#include <iostream>
 using namespace cv;
 using namespace std;
 
@@ -43,3 +44,9 @@ void calcPyrLKflow(vector<Mat>& imageList_gray, vector<Point>& flow_points);
 /**show the connected area label on the image*/
 void showAreaLabel(Mat& image, Mat& labels, Mat& centroids,int size);
 void contourSobel(Mat& image_gray, const vector<Vec4i>& hierarchy,  vector<vector<Point>>& contour_points);
+void combineTwoImg(Mat src1, Mat src2, Mat& dst);
+void FrameRelativeDiff(vector<Mat>& image_list_gray, vector<Mat>& diff);
+void diffByThreshold(vector<Mat>& diff, vector<Mat>& diff_wb, int threshold_wb);
+void diffByPreNext(vector<Mat>& diff_wb, Mat& diff_output);
+void neighbourBlockMatching(Mat& labels, Mat& stats, Mat& centroids, vector<Mat>& image_list_gray,vector<int>& valid_label);
+void spatialFilter(Mat& labels, Mat& diff_wb, vector<int>& valid_label);
