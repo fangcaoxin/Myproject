@@ -57,4 +57,5 @@ void diffByThreshold(vector<Mat>& diff, vector<Mat>& diff_wb, int threshold_wb);
 void diffByPreNext(vector<Mat>& diff_wb, Mat& diff_output);
 void neighbourBlockMatching(Mat& labels, Mat& stats, Mat& centroids, vector<Mat>& image_list_gray,vector<int>& valid_label);
 void spatialFilter(Mat& labels, Mat& diff_wb, vector<int>& valid_label);
+double modelError(vector<Mat>& diff, Mat& diff_out);
 

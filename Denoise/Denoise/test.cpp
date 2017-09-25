@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 #ifdef CONNECTED
 		
 
-		if (count < 5) {
+		if (count < 3) {
 			continue;
 		}
 		else {

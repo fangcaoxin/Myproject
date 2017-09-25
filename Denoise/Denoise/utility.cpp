@@ -258,15 +258,32 @@ void modelError(vector<Mat>& diff_wb, vector<Mat>& diff, Mat& sigma) {
 		}
 	}
 }
-void temporalLikelihood(vector<Mat>& diff, vector<Mat>& diff_wb, Mat& temporal) {
+static int spatialDistance(vector<Mat>& image_list_gray, Point current_point,int radius) {
+	int dis = 0;
+	for (int i = -radius; i <=radius; i++) {
+		for (int j = -radius; j <= radius; j++) {
+			dis += abs(image_list_gray[0].at<uchar>(current_point + Point(j, i))- image_list_gray[1].at<uchar>(current_point));
+			dis += abs(image_list_gray[2].at<uchar>(current_point + Point(j, i))- image_list_gray[1].at<uchar>(current_point));
+		}
+		
+	}
+	return dis;
+}
+void LikelihoodTS(vector<Mat>& diff, Mat& diff_out, vector<Mat>& image_list_gray,Mat& p_likehood) {
 	int width = diff[0].cols;
 	int height = diff[0].rows;
 	int size = diff.size();
-
+	double alpha1 = 0.5;
+	double alpha2 = 0.5;
+	
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			double l = 0;
-			for (int k = 0; k < size; k++) {
+			if (diff_out.at<uchar>(i, j) == 255) {
+				p_likehood.at<float>(i, j) = exp(-alpha1*spatialDistance(image_list_gray, Point(j, i), 1));
+			}
+			else {
+				p_likehood.at<float>(i, j) = exp(-alpha2*(abs(image_list_gray[0].at<uchar>(i, j) -image_list_gray[1].at<uchar>(i, j)) + \
+					abs(image_list_gray[1].at<uchar>(i, j)-image_list_gray[2].at<uchar>(i, j))));
 			}
 		}
 	}
@@ -343,4 +360,23 @@ void spatialFilter(Mat& labels, Mat& diff_wb, vector<int>& valid_label) {
 			}
 		}
 	}
+}
+
+double modelError(vector<Mat>& diff, Mat& diff_out) {
+	int count = 0;
+	double error = 0.;
+	int width = diff_out.cols;
+	int height = diff_out.rows;
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			if (diff_out.at<uchar>(i, j) == 0) {
+				count++;
+				error += diff[0].at<uchar>(i, j);
+				error += diff[1].at<uchar>(i, j);
+					
+					
+			}
+		}
+	}
+	return error / count;
 }
