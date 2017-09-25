@@ -109,13 +109,22 @@ void darkFramesByMask(vector<Mat>& imagelist, Mat& output, Mat& Mask) {
 	}
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			int dark_frame_num = 1;
+			int dark_frame_num = frameNum / 2;
 			if (Mask.at<uchar>(i, j) == 0) {
-				output.at<Vec3b>(i, j) = imagelist[1].at<Vec3b>(i, j);
+				output.at<Vec3b>(i, j) = imagelist[frameNum/2].at<Vec3b>(i, j);
 			}
 			else {
+				
 #ifdef DARK
-				dark_frame_num = imgListGray[0].at<uchar>(i, j) > imgListGray[2].at<uchar>(i, j) ? 2 : 0;
+				int min = 255;
+			
+				for (int k = 0; k < frameNum; k++) {
+					if (imgListGray[k].at<uchar>(i, j) < min) {
+						min = imgListGray[k].at<uchar>(i, j);
+						dark_frame_num = k;
+					}
+				}
+				//dark_frame_num = imgListGray[0].at<uchar>(i, j) > imgListGray[2].at<uchar>(i, j) ? 2 : 0;
 				
 #else
 				Vec3b sum = { 0,0,0 };
@@ -139,9 +148,9 @@ void shapeFilter(Mat& diff_wb, Mat& labels, Mat& stats,int size,vector<int>& val
 		int area = stats.at<int>(k, 4);
 		float area_width = stats.at<int>(k, 2);
 		float area_height = stats.at<int>(k, 3);
-		if (area > (float)height*(float)width/(20*50) || area < 4) {
+		if (area > (float)height*(float)width/(10*50) || area < 4) {
 			outlier.push_back(k);
-		}else if (area_width / area_height > 5 || area_width / area_height < 0.2) {
+		}else if (area_width*area_height>3*area) {
 			outlier.push_back(k);
 		}
 		else {
@@ -200,7 +209,7 @@ void distributeFilter(Mat& diff_wb, Mat& labels,Mat& stats, Mat& gray, vector<in
 		}
 		variance[i] = sum2 / shapes[i].size() - (sum / shapes[i].size())*(sum / shapes[i].size());
 		cout << "variance/area is: " << variance[i]/area[i]<<endl;
-		if (variance[i]/(double)area[i] >0.5) {
+		if (variance[i]/(double)area[i] >0.2) {
 			valid_labels2.push_back(valid_labels[i]);
 		}
 	}

@@ -52,41 +52,47 @@ int main(int argc, char* argv[]) {
 #ifdef CONNECTED
 		
 
-		if (count < 3) {
+		if (count < 5) {
 			continue;
 		}
 		else {
-			Mat diff = image_list_gray[1] - image_list_gray[0];
-			Mat diff_wb, labels, stats, centroids;
-			Mat output(height_input, width_input, CV_8UC3);
-			Mat img_label(height_input, width_input, CV_8UC3);
-			threshold(diff, diff_wb, 10, 255, CV_THRESH_BINARY);
+			vector<Mat> diff;
+			vector<Mat> diff_wb(4);
 			vector<vector<Point>> contours;
 			vector<Vec4i> hierarchy;
+			Mat labels, stats, centroids;
+			Mat output(height_input, width_input, CV_8UC3);
+			Mat img_label(height_input, width_input, CV_8UC3);
+			Mat mask(height_input, width_input, CV_8UC1,Scalar(0));
+			diffFiveFrames(image_list_gray, diff);
+			diffWB(diff, diff_wb, 10);
+			snowMaskbyDiffWB(diff_wb, mask);
+			findContours(mask, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+			contourSobel(image_list_gray[2], hierarchy, contours);
 			
-			//imshow("diff_wb after threshold", diff_wb);
-			int size=connectedComponentsWithStats(diff_wb, labels, stats, centroids, 8, 4);
-			showAreaLabel(img_label, labels, centroids, size);
-			vector<int> valid_label1,valid_label2;
-			shapeFilter(diff_wb, labels, stats, size,valid_label1);
-			findContours(diff_wb, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-			contourSobel(image_list_gray[1], hierarchy, contours);
-			//imshow("diff_wb after shape fliter", diff_wb);
-			cout << "ShaperFilter finished" << endl;
-			//distributeFilter(diff_wb, labels, stats,image_list_gray[1],valid_label1, valid_label2);
-			//maskRefinement(diff_wb, labels, image_list_gray[1], valid_label2);
-			darkFramesByMask(image_list, output, diff_wb);
-			int idx = 0;
-			for (; idx >= 0; idx = hierarchy[idx][0]) {
-				drawContours(image_list[1], contours, idx, Scalar(0, 0, 255), 1, 8, hierarchy);
-			}
-			imshow("area label", img_label);
-			imshow("diff", diff_wb);
+			//int size=connectedComponentsWithStats(diff_wb, labels, stats, centroids, 8, 4);
+			//showAreaLabel(img_label, labels, centroids, size);
+			//vector<int> valid_label1,valid_label2;
+			//shapeFilter(diff_wb, labels, stats, size,valid_label1);
+			//findContours(diff_wb, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+			//contourSobel(image_list_gray[1], hierarchy, contours);
+			////imshow("diff_wb after shape fliter", diff_wb);
+			//cout << "ShaperFilter finished" << endl;
+			////distributeFilter(diff_wb, labels, stats,image_list_gray[1],valid_label1, valid_label2);
+			////maskRefinement(diff_wb, labels, image_list_gray[1], valid_label2);
+			darkFramesByMask(image_list, output, mask);
+			//int idx = 0;
+			//for (; idx >= 0; idx = hierarchy[idx][0]) {
+			//	drawContours(image_list[1], contours, idx, Scalar(0, 0, 255), 1, 8, hierarchy);
+			//}
+			//imshow("area label", img_label);
+			//imshow("diff", diff_wb);
 			imshow("output", output);
-			imshow("origial", image_list[1]);
+			//imshow("origial", image_list[1]);
+			imshow("mask", mask);
 			image_list.erase(image_list.begin());
 			image_list_gray.erase(image_list_gray.begin());
-			count = 2;
+			count = 4;
 			waitKey(0);
 
 		}
