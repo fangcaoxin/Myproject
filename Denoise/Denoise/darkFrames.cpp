@@ -1,5 +1,38 @@
 #include "core.h"
+#include "utility.h"
 #define USE_FLOW 
+
+using std::sort;
+
+template<typename T>
+T getMedian(const std::vector<T>& values)
+{
+	std::vector<T> copy(values);
+	return getMedianAndDoPartition(copy);
+}
+
+template<typename T>
+T getMedianAndDoPartition(std::vector<T>& values)
+{
+	size_t size = values.size();
+	if (size % 2 == 0)
+	{
+		std::nth_element(values.begin(), values.begin() + size / 2 - 1, values.end());
+		T firstMedian = values[size / 2 - 1];
+
+		std::nth_element(values.begin(), values.begin() + size / 2, values.end());
+		T secondMedian = values[size / 2];
+
+		return (firstMedian + secondMedian) / (T)2;
+	}
+	else
+	{
+		size_t medianIndex = (size - 1) / 2;
+		std::nth_element(values.begin(), values.begin() + medianIndex, values.end());
+
+		return values[medianIndex];
+	}
+}
 static Point2i matMultipyPoint(Point2i& input_point, Mat Homograhy) {
 	Point2i result = { 0 };
 	//double a = Homograhy.at<double>(0,0);
@@ -232,3 +265,58 @@ void maskRefinement(Mat& diff_wb, Mat& labels, Mat& gray, vector<int>& valid_lab
 	}
 }
 
+void medianFramesByMask(Mat& image,  Mat& stats, vector<int>& valid_labels) {
+	for (int i = 0; i < valid_labels.size(); i++) {
+		Rect rect(stats.at<int>(valid_labels[i], 0), stats.at<int>(valid_labels[i], 1), stats.at<int>(valid_labels[i], 2), stats.at<int>(valid_labels[i], 3));
+		int left_top_x = rect.x-rect.width;
+		int left_top_y= rect.y-rect.height;
+		int right_bottom_x = left_top_x +  3*rect.width;
+		int right_bottom_y=left_top_y+  3*rect.height;
+		left_top_x = left_top_x < 0 ? 0 : left_top_x;
+		left_top_y = left_top_y < 0 ? 0 : left_top_y;
+		right_bottom_x = right_bottom_x > image.cols - 1 ? image.cols - 1 : right_bottom_x;
+		right_bottom_y = right_bottom_y > image.rows - 1 ? image.rows - 1 : right_bottom_y;
+		Rect new_rect(left_top_x, left_top_y, right_bottom_x - left_top_x, right_bottom_y - left_top_y);
+		int ksize = MAX(rect.width, rect.height)*1.5;
+		ksize = ksize % 2 == 0 ? ksize + 1 : ksize;
+		medianBlur(image(new_rect), image(new_rect),ksize);
+		/*int st_row, ed_row;
+		int st_col, ed_col;
+		
+		vector<int> b_vals, g_vals, r_vals;
+		for (int i= left_top_y; i< right_bottom_y;i++) {
+			for (int j = left_top_x; j < right_bottom_y ; j++) {
+
+				st_row = i - rect.height, ed_row = i + rect.height;
+				st_col = j - rect.width, ed_col = j + rect.width;
+
+				st_row = st_row < 0 ? 0 : st_row;
+				ed_row = ed_row >= image.rows ? (image.rows - 1) : ed_row;
+				st_col = st_col < 0 ? 0 : st_col;
+				ed_col = ed_col >= image.cols ? (image.cols - 1) : ed_col;
+
+				for (int m = st_row; m <= ed_row; m++)
+				{
+					for (int n = st_col; n <= ed_col; n++)
+					{
+						b_vals.push_back(image.at<Vec3b>(m, n)[0]);
+						g_vals.push_back(image.at<Vec3b>(m, n)[1]);
+						r_vals.push_back(image.at<Vec3b>(m, n)[2]);
+					}
+				}
+				int b_val = getMedian(b_vals);
+				int g_val = getMedian(g_vals);
+				int r_val = getMedian(r_vals);
+				Vec3b new_val(b_val, g_val, r_val);
+				image.at<Vec3b>(i, j) = new_val;
+			}
+			
+		}*/
+		
+		
+		
+
+	}
+
+	
+}
