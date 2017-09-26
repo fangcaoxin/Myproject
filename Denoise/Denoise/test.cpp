@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
 
 	int width_input = width;
 	int height_input = height;
-	int beg_num = 0;
+	int beg_num = 40;
 	int frame_num = 100;
 	Mat backgroud;
 	int frame_count = 0;
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
 			Mat img_label(height_input, width_input, CV_8UC3);
 			Mat diff_output(height_input, width_input, CV_8UC1,Scalar(0));
 			FrameRelativeDiff(image_list_gray, diff);
-			diffByThreshold(diff, diff_wb, 10);
+			diffByThreshold(diff, diff_wb, 5);
 			diffByPreNext(diff_wb, diff_output);
 			vector<vector<Point>> contours;
 			vector<Vec4i> hierarchy;
@@ -79,7 +79,10 @@ int main(int argc, char* argv[]) {
 			//shapeFilter(diff_output, labels, stats, size,valid_label1);
 			//findContours(diff_output, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 			//contourSobel(image_list_gray[1], hierarchy, contours);
-			neighbourBlockMatching(labels, stats, centroids, image_list_gray,valid_labels);
+			//neighbourBlockMatching(labels, stats, centroids, image_list_gray,valid_labels);
+			imshow("diff1", diff_output);
+			double error = modelError(diff,diff_output);
+			neighbourBlockDiff(labels, stats, centroids, image_list_gray, valid_labels,100*error);
 			spatialFilter(labels, diff_output, valid_labels);
 			//imwrite("out2.jpg", diff_output);
 			//distributeFilter(diff_output, labels, stats,image_list_gray[1],valid_label1, valid_label2);
