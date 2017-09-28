@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 	Ptr<FastFeatureDetector> fast = FastFeatureDetector::create();
 	vector<Mat> image_list;
 	vector<Mat> image_list_gray;
-	
+	vector<Mat> image_list_red;
 	
 	int count = 0;
 	for (int i = beg_num; i < beg_num + frame_num; i = i + 1) {
@@ -43,11 +43,14 @@ int main(int argc, char* argv[]) {
 		cout << "file name :" << file_name << endl;
 		Mat cur = imread(file_name);
 		Mat input_resize, cur_gray;
+		vector<Mat> channels;
 		resize(cur, input_resize, Size(width_input, height_input));
 		//dehaze(input_resize, input_resize);
 		image_list.push_back(input_resize);
+		split(input_resize, channels);
 		cvtColor(input_resize, cur_gray, CV_BGR2GRAY);
 		image_list_gray.push_back(cur_gray);
+		image_list_red.push_back(channels[2]);
 		count++;
 #define CONNECTED
 #ifdef CONNECTED
@@ -64,15 +67,23 @@ int main(int argc, char* argv[]) {
 			Mat output(height_input, width_input, CV_8UC3);
 			Mat img_label(height_input, width_input, CV_8UC3);
 			Mat diff_output(height_input, width_input, CV_8UC1,Scalar(0));
-			FrameRelativeDiff(image_list_gray, diff);
+			Mat darkChannel(height_input, width_input, CV_8UC1, Scalar(0));
+			Mat brightChannel(height_input, width_input, CV_8UC1, Scalar(0));
+			FrameRelativeDiff(image_list_red, diff);
 			diffByThreshold(diff, diff_wb, 5);
-			diffByPreNext(diff_wb, diff_output);
+			sumAreaByRadius(diff_wb, diff_output, 5);
+			
+			/*for (int i = 0; i < diff.size(); i++) {
+				imwrite(to_string(i) + ".jpg", diff[i]);
+				imwrite(to_string(i) + "_wb.jpg", diff_wb[i]);
+			}*/
+			//diffByPreNext(diff_wb, diff_output);
 			vector<vector<Point>> contours;
 			vector<Vec4i> hierarchy;
 			vector<int> valid_labels;
 			
 			
-			int size=connectedComponentsWithStats(diff_output, labels, stats, centroids, 8, 4);
+			//int size=connectedComponentsWithStats(diff_output, labels, stats, centroids, 8, 4);
 			//imwrite("out1.jpg", diff_output);
 			//showAreaLabel(img_label, labels, centroids, size);
 			//vector<int> valid_label1,valid_label2;
@@ -80,10 +91,12 @@ int main(int argc, char* argv[]) {
 			//findContours(diff_output, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 			//contourSobel(image_list_gray[1], hierarchy, contours);
 			//neighbourBlockMatching(labels, stats, centroids, image_list_gray,valid_labels);
-			imshow("diff1", diff_output);
-			double error = modelError(diff,diff_output);
-			neighbourBlockDiff(labels, stats, centroids, image_list_gray, valid_labels,100*error);
-			spatialFilter(labels, diff_output, valid_labels);
+			calcDarkChannel(darkChannel, brightChannel, image_list[1], 0);
+			
+			//imshow("diff1", diff_output);
+			//double error = modelError(diff,diff_output);
+			//neighbourBlockDiff(labels, stats, centroids, image_list_gray, valid_labels,100*error);
+			//spatialFilter(labels, diff_output, valid_labels);
 			//imwrite("out2.jpg", diff_output);
 			//distributeFilter(diff_output, labels, stats,image_list_gray[1],valid_label1, valid_label2);
 			//maskRefinement(diff_output, labels, image_list_gray[1], valid_label2);
@@ -97,8 +110,12 @@ int main(int argc, char* argv[]) {
 			}*/
 			//imshow("area label", img_label);
 			imshow("diff", diff_output);
-			imshow("output", image);
+			//imshow("output", image);
 			//imshow("origial", image_list[1]);
+			imshow("brightChannel", brightChannel);
+			
+			imshow("darkChannel", darkChannel);
+
 			image_list.erase(image_list.begin());
 			image_list_gray.erase(image_list_gray.begin());
 			
