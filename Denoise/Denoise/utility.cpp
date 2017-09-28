@@ -371,12 +371,62 @@ double modelError(vector<Mat>& diff, Mat& diff_out) {
 		for (int j = 0; j < width; j++) {
 			if (diff_out.at<uchar>(i, j) == 0) {
 				count++;
-				error += diff[0].at<uchar>(i, j);
-				error += diff[1].at<uchar>(i, j);
+				error += diff[0].at<uchar>(i, j)*diff[0].at<uchar>(i, j);
+				error += diff[1].at<uchar>(i, j)*diff[1].at<uchar>(i, j);
 					
 					
 			}
 		}
 	}
 	return error / count;
+}
+
+static double neighbourDiff(Mat& labels, Rect rect, Mat& image) {
+	int top_left_x = rect.x - rect.width <0 ? 0 : rect.x -  rect.width;
+	int top_left_y = rect.y - rect.height < 0 ? 0 : rect.y - rect.height;
+	int right_bottom_x = top_left_x + 3 * rect.width > image.cols - 1 ? image.cols - 1 : top_left_x + 3* rect.width;
+	int right_bottom_y = top_left_y + 3 * rect.height > image.rows - 1 ? image.rows - 1 : top_left_y + 3 * rect.height;
+	Rect search_area(top_left_x, top_left_y, right_bottom_x - top_left_x, right_bottom_y - top_left_y);
+	vector<uchar> neighbourList;
+	for (int i = top_left_y; i < right_bottom_y - rect.height; i++) {
+		for (int j = top_left_x; j < right_bottom_x - rect.width; j++) {
+			if (labels.at<int>(i, j) == 0) {
+				neighbourList.push_back(image.at<uchar>(i,j));
+			}
+		}
+	}
+	double sum = 0, sum2 = 0;
+	for (int i = 0; i < neighbourList.size(); i++) {
+
+		
+		sum += neighbourList[i];
+		sum2 += neighbourList[i] * neighbourList[i];
+	}
+		
+		double variance = sum2 / neighbourList.size() - (sum / neighbourList.size())*(sum / neighbourList.size());
+		
+		return variance;
+	
+}
+
+void neighbourBlockDiff(Mat& labels, Mat& stats, Mat& centroids, vector<Mat>& image_list_gray, vector<int>& valid_label,double model_error) {
+	int width = labels.cols;
+	int height = labels.rows;
+	int mid = image_list_gray.size() / 2;
+
+
+	for (int k = 1; k < stats.rows; k++) {
+		if (stats.at<int>(k, 4) > 4) {
+			int sad = 0;
+			Rect rect(stats.at<int>(k, 0), stats.at<int>(k, 1), stats.at<int>(k, 2), stats.at<int>(k, 3));
+			double var = neighbourDiff(labels, rect, image_list_gray[1]);
+			if (var < model_error) {
+				valid_label.push_back(k);
+			}
+			
+			//cout << "VAR "<<k<<":" <<var<< endl;
+
+		}
+
+	}
 }

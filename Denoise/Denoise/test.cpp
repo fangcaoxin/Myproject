@@ -24,9 +24,11 @@ int width = 1358; //1358 without black range
 int height = 1080; //1080
 int main(int argc, char* argv[]) {
 
+
 	int width_input = width/4;
 	int height_input = height/4;
-	int beg_num = 40;
+
+	int beg_num = 0;
 	int frame_num = 100;
 	Mat backgroud;
 	int frame_count = 0;
@@ -60,20 +62,24 @@ int main(int argc, char* argv[]) {
 		else {
 			vector<Mat> diff;
 			vector<Mat> diff_wb;
+			vector<Mat> channels;
 			//Mat diff = image_list_gray[1] - image_list_gray[0];
 			Mat  labels, stats, centroids;
 			Mat output(height_input, width_input, CV_8UC3);
 			Mat img_label(height_input, width_input, CV_8UC3);
 			Mat diff_output(height_input, width_input, CV_8UC1,Scalar(0));
+			Mat diff_output1(height_input, width_input, CV_8UC1, Scalar(0));
 			Mat diff_iter(height_input, width_input, CV_8UC1, Scalar(0));
 			FrameRelativeDiff(image_list_gray, diff);
-			diffByThreshold(diff, diff_wb, 5);
-			diffByPreNext(diff_wb, diff_output);
+			diffByThreshold(diff, diff_wb, 3);
+			sumAreaByRadius(diff_wb, diff_output, 20);
+			double error = modelError(diff, diff_output);
+			diffByPreNext(diff_wb, diff_output1);
 			vector<vector<Point>> contours;
 			vector<Vec4i> hierarchy;
 			vector<int> valid_labels;
-			
-			bayesianEstimation(image_list_gray[1], diff_output, diff_iter, 2, 2, 3);
+			split(image_list[1], channels);
+			bayesianEstimation(channels[2], diff_output, diff_iter, 2, 5, 1);
 			//int size=connectedComponentsWithStats(diff_output, labels, stats, centroids, 8, 4);
 			//imwrite("out1.jpg", diff_output);
 			//showAreaLabel(img_label, labels, centroids, size);
@@ -82,7 +88,13 @@ int main(int argc, char* argv[]) {
 			//findContours(diff_output, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 			//contourSobel(image_list_gray[1], hierarchy, contours);
 			//neighbourBlockMatching(labels, stats, centroids, image_list_gray,valid_labels);
+
+			imshow("diff_by_sumarea", diff_output);
+			imshow("diff_by_preNext", diff_output1);
+			//double error = modelError(diff,diff_output);
+			//neighbourBlockDiff(labels, stats, centroids, image_list_gray, valid_labels,100*error);
 			//spatialFilter(labels, diff_output, valid_labels);
+
 			//imwrite("out2.jpg", diff_output);
 			//distributeFilter(diff_output, labels, stats,image_list_gray[1],valid_label1, valid_label2);
 			//maskRefinement(diff_output, labels, image_list_gray[1], valid_label2);
@@ -95,7 +107,7 @@ int main(int argc, char* argv[]) {
 				drawContours(image_list[1], contours, idx, Scalar(0, 0, 255), 1, 8, hierarchy);
 			}*/
 			//imshow("area label", img_label);
-			imshow("original diff", diff_output);
+			//imshow("original diff", diff_output);
 			imshow("result", diff_iter);
 			imshow("output", output);
 			//imshow("origial", image_list[1]);
