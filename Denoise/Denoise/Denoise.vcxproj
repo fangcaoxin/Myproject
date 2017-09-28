@@ -42,7 +42,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -75,7 +75,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\opencv\opencv\build\install\include;C:\opencv\opencv\build\install\include\opencv;C:\opencv\opencv\build\install\include\opencv2;$(IncludePath)</IncludePath>
+    <IncludePath>F:\OpenCV\build64\install\include;F:\OpenCV\build64\install\include\opencv;F:\OpenCV\build64\install\include\opencv2;F:\Research\boost_1_65_1;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -106,7 +106,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>C:\opencv\opencv\build\install\x64\vc15\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>F:\OpenCV\build64\install\x64\vc14\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencv_core330d.lib;opencv_highgui330d.lib;opencv_imgproc330d.lib;opencv_imgcodecs330d.lib;opencv_video330d.lib;opencv_videoio330d.lib;opencv_features2d330d.lib;opencv_ximgproc330d.lib;opencv_calib3d330d.lib;opencv_optflow330d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -144,19 +144,26 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="airLight.cpp" />
+    <ClCompile Include="bayesianEstimation.cpp" />
     <ClCompile Include="checkFLow.cpp" />
-    <ClCompile Include="combineTwoImg.cpp" />
     <ClCompile Include="darkChannel.cpp" />
     <ClCompile Include="darkChannelFrames.cpp" />
     <ClCompile Include="darkFrames.cpp" />
+    <ClCompile Include="dehaze.cpp" />
+    <ClCompile Include="denseFlow.cpp" />
+    <ClCompile Include="gmsMatch.cpp" />
+    <ClCompile Include="pyrLKflow.cpp" />
     <ClCompile Include="recover.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="transmission.cpp" />
+    <ClCompile Include="utility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core.h" />
+    <ClInclude Include="dehaze.h" />
     <ClInclude Include="include\gms_matcher.h" />
     <ClInclude Include="include\Header.h" />
+    <ClInclude Include="utility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

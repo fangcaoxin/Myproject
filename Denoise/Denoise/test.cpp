@@ -11,6 +11,7 @@
 //#define FLOW
 //#define MOG
 //#define DEHAZE
+#define BAYESIAN
 
 
 //using namespace cv::optflow;
@@ -23,9 +24,9 @@ int width = 1358; //1358 without black range
 int height = 1080; //1080
 int main(int argc, char* argv[]) {
 
-	int width_input = width;
-	int height_input = height;
-	int beg_num = 0;
+	int width_input = width/4;
+	int height_input = height/4;
+	int beg_num = 40;
 	int frame_num = 100;
 	Mat backgroud;
 	int frame_count = 0;
@@ -64,37 +65,39 @@ int main(int argc, char* argv[]) {
 			Mat output(height_input, width_input, CV_8UC3);
 			Mat img_label(height_input, width_input, CV_8UC3);
 			Mat diff_output(height_input, width_input, CV_8UC1,Scalar(0));
+			Mat diff_iter(height_input, width_input, CV_8UC1, Scalar(0));
 			FrameRelativeDiff(image_list_gray, diff);
-			diffByThreshold(diff, diff_wb, 10);
+			diffByThreshold(diff, diff_wb, 5);
 			diffByPreNext(diff_wb, diff_output);
 			vector<vector<Point>> contours;
 			vector<Vec4i> hierarchy;
 			vector<int> valid_labels;
 			
-			
-			int size=connectedComponentsWithStats(diff_output, labels, stats, centroids, 8, 4);
+			bayesianEstimation(image_list_gray[1], diff_output, diff_iter, 2, 2, 3);
+			//int size=connectedComponentsWithStats(diff_output, labels, stats, centroids, 8, 4);
 			//imwrite("out1.jpg", diff_output);
 			//showAreaLabel(img_label, labels, centroids, size);
 			//vector<int> valid_label1,valid_label2;
 			//shapeFilter(diff_output, labels, stats, size,valid_label1);
 			//findContours(diff_output, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 			//contourSobel(image_list_gray[1], hierarchy, contours);
-			neighbourBlockMatching(labels, stats, centroids, image_list_gray,valid_labels);
-			spatialFilter(labels, diff_output, valid_labels);
+			//neighbourBlockMatching(labels, stats, centroids, image_list_gray,valid_labels);
+			//spatialFilter(labels, diff_output, valid_labels);
 			//imwrite("out2.jpg", diff_output);
 			//distributeFilter(diff_output, labels, stats,image_list_gray[1],valid_label1, valid_label2);
 			//maskRefinement(diff_output, labels, image_list_gray[1], valid_label2);
-			Mat image;
-			image_list[1].copyTo(image);
-			medianFramesByMask(image, stats, valid_labels);
-			//darkFramesByMask(image_list, output, diff_output);
+			//Mat image;
+			//image_list[1].copyTo(image);
+			//medianFramesByMask(image, stats, valid_labels);
+			darkFramesByMask(image_list, output, diff_output);
 			/*int idx = 0;
 			for (; idx >= 0; idx = hierarchy[idx][0]) {
 				drawContours(image_list[1], contours, idx, Scalar(0, 0, 255), 1, 8, hierarchy);
 			}*/
 			//imshow("area label", img_label);
-			imshow("diff", diff_output);
-			imshow("output", image);
+			imshow("original diff", diff_output);
+			imshow("result", diff_iter);
+			imshow("output", output);
 			//imshow("origial", image_list[1]);
 			image_list.erase(image_list.begin());
 			image_list_gray.erase(image_list_gray.begin());
