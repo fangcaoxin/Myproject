@@ -145,18 +145,23 @@
   <ItemGroup>
     <ClCompile Include="airLight.cpp" />
     <ClCompile Include="checkFLow.cpp" />
-    <ClCompile Include="combineTwoImg.cpp" />
     <ClCompile Include="darkChannel.cpp" />
     <ClCompile Include="darkChannelFrames.cpp" />
     <ClCompile Include="darkFrames.cpp" />
+    <ClCompile Include="dehaze.cpp" />
+    <ClCompile Include="denseFlow.cpp" />
+    <ClCompile Include="pyrLKflow.cpp" />
     <ClCompile Include="recover.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="transmission.cpp" />
+    <ClCompile Include="utility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core.h" />
+    <ClInclude Include="dehaze.h" />
     <ClInclude Include="include\gms_matcher.h" />
     <ClInclude Include="include\Header.h" />
+    <ClInclude Include="utility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

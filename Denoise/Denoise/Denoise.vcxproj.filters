@@ -24,9 +24,6 @@
     <ClCompile Include="darkChannelFrames.cpp">
       <Filter>资源文件</Filter>
     </ClCompile>
-    <ClCompile Include="combineTwoImg.cpp">
-      <Filter>资源文件</Filter>
-    </ClCompile>
     <ClCompile Include="checkFLow.cpp">
       <Filter>资源文件</Filter>
     </ClCompile>
@@ -45,6 +42,18 @@
     <ClCompile Include="darkFrames.cpp">
       <Filter>资源文件</Filter>
     </ClCompile>
+    <ClCompile Include="dehaze.cpp">
+      <Filter>资源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="denseFlow.cpp">
+      <Filter>资源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pyrLKflow.cpp">
+      <Filter>资源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="utility.cpp">
+      <Filter>资源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core.h">
@@ -55,6 +64,12 @@
     </ClInclude>
     <ClInclude Include="include\Header.h">
       <Filter>头文件\include</Filter>
+    </ClInclude>
+    <ClInclude Include="dehaze.h">
+      <Filter>资源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="utility.h">
+      <Filter>资源文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
