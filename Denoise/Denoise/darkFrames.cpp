@@ -143,7 +143,7 @@ void darkFramesByMask(vector<Mat>& imagelist, Mat& output, Mat& Mask) {
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 			int dark_frame_num = frameNum / 2;
-			if (Mask.at<uchar>(i, j) == 0) {
+			if (Mask.at<uchar>(i, j) == 0|| Mask.at<uchar>(i, j) == 1) {
 				output.at<Vec3b>(i, j) = imagelist[frameNum/2].at<Vec3b>(i, j);
 			}
 			else {

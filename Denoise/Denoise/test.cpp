@@ -70,26 +70,29 @@ int main(int argc, char* argv[]) {
 			Mat diff_output(height_input, width_input, CV_8UC1,Scalar(0));
 			Mat diff_output1(height_input, width_input, CV_8UC1, Scalar(0));
 			Mat diff_iter(height_input, width_input, CV_8UC1, Scalar(0));
+			Mat label_init(height_input, width_input, CV_8UC1, Scalar(0));
 			FrameRelativeDiff(image_list_gray, diff);
 			diffByThreshold(diff, diff_wb, 3);
-			sumAreaByRadius(diff_wb, diff_output, 20);
+			//sumAreaByRadius(diff_wb, diff_output, 20);
+			labelInitByDiff(diff_wb, label_init);
+			//imwrite("diff_sum.jpg", diff_output);
 			double error = modelError(diff, diff_output);
 			diffByPreNext(diff_wb, diff_output1);
 			vector<vector<Point>> contours;
 			vector<Vec4i> hierarchy;
 			vector<int> valid_labels;
 			split(image_list[1], channels);
-			bayesianEstimation(channels[2], diff_output, diff_iter, 2, 5, 1);
+			bayesianEstimation(image_list[1], label_init, diff_iter, 3, 2, 1);
 			//int size=connectedComponentsWithStats(diff_output, labels, stats, centroids, 8, 4);
-			//imwrite("out1.jpg", diff_output);
+			
 			//showAreaLabel(img_label, labels, centroids, size);
 			//vector<int> valid_label1,valid_label2;
 			//shapeFilter(diff_output, labels, stats, size,valid_label1);
 			//findContours(diff_output, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 			//contourSobel(image_list_gray[1], hierarchy, contours);
 			//neighbourBlockMatching(labels, stats, centroids, image_list_gray,valid_labels);
-
-			imshow("diff_by_sumarea", diff_output);
+			
+			//imshow("diff_by_sumarea", diff_output);
 			imshow("diff_by_preNext", diff_output1);
 			//double error = modelError(diff,diff_output);
 			//neighbourBlockDiff(labels, stats, centroids, image_list_gray, valid_labels,100*error);
@@ -101,7 +104,8 @@ int main(int argc, char* argv[]) {
 			//Mat image;
 			//image_list[1].copyTo(image);
 			//medianFramesByMask(image, stats, valid_labels);
-			darkFramesByMask(image_list, output, diff_output);
+			darkFramesByMask(image_list, output, diff_iter);
+			showLabelImg(diff_iter);
 			/*int idx = 0;
 			for (; idx >= 0; idx = hierarchy[idx][0]) {
 				drawContours(image_list[1], contours, idx, Scalar(0, 0, 255), 1, 8, hierarchy);

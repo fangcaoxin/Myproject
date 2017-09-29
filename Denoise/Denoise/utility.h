@@ -59,4 +59,5 @@ void neighbourBlockMatching(Mat& labels, Mat& stats, Mat& centroids, vector<Mat>
 void spatialFilter(Mat& labels, Mat& diff_wb, vector<int>& valid_label);
 double modelError(vector<Mat>& diff, Mat& diff_out);
 void neighbourBlockDiff(Mat& labels, Mat& stats, Mat& centroids, vector<Mat>& image_list_gray, vector<int>& valid_label,double model_error);
+void showLabelImg(Mat& label);
 

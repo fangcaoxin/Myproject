@@ -3,7 +3,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #define MAX_ITER 10
-static void priorModel(Mat& image, Mat& diff, Point current_point,vector<float>& p,int radius,int seg_num) {
+static void priorModel(Mat& image, Mat& diff, Point current_point,vector<double>& p,int radius,int seg_num) {
 	int height = image.rows;
 	int width = image.cols;
 
@@ -27,7 +27,7 @@ static void priorModel(Mat& image, Mat& diff, Point current_point,vector<float>&
 
 			int count = 0;
 			
-			
+			double* pp = (double *)malloc(sizeof(double)*seg_num);
 			int* seg_count = (int *)malloc(sizeof(int)*seg_num);
 			for (int k = 0; k < seg_num; k++) {
 				seg_count[k] = 0;
@@ -37,35 +37,34 @@ static void priorModel(Mat& image, Mat& diff, Point current_point,vector<float>&
 					if (r == i&&c == j) continue;
 					else{
 						count++;
-						int seg = diff.at<uchar>(r, c) == 255 ? 0 : 1;
+						int seg = diff.at<uchar>(r, c);
 						seg_count[seg]++;
 					}
 				}
 			}
-			float p_0 = seg_count[0] == 0 ? 0.001 : (float)seg_count[0] / (float)count;
-			float p_1 = seg_count[1] == 0 ? 0.001 : (float)seg_count[1] / (float)count;
-			
-			
-			
-			p.push_back(p_0);
-			p.push_back(p_1);
+			for (int k = 0; k < seg_num; k++) {
+				 pp[k] = seg_count[k] == 0 ? 0.001 : (double)seg_count[k] / (double)count;
+				p.push_back(pp[k]);
+			}
 
 }
 
-static void gaussianPram(vector<int>& list, float& mean, float& var) {
-	if (list.size() == 0) {
-		mean = 0;
-		var = 0.1;
-	}
-	else {
-		float sum_0 = std::accumulate(list.begin(), list.end(), 0.0);
-		mean = sum_0 / list.size();
-		float sq_sum_0 = std::inner_product(list.begin(), list.end(), list.begin(), 0.0);
-		var = std::sqrt(sq_sum_0 / list.size() - mean*mean);
-	}
+static void gaussianPram(vector<int>& list, double& mean, double& var) {
+	
+		if (list.size() == 0) {
+			mean = 0;
+			var = 0.1;
+		}
+		else {
+			double sum_0 = std::accumulate(list.begin(), list.end(), 0.0);
+			mean = sum_0 / list.size();
+			double sq_sum_0 = std::inner_product(list.begin(), list.end(), list.begin(), 0.0);
+			var = std::sqrt(sq_sum_0 / list.size() - mean*mean);
+		}
+	
 }
 
-static void likelihoodModel(Mat& image, Mat& diff, Point current_point,vector<float>& p, int radius, int num) {
+static void likelihoodModel(Mat& image, Mat& diff, Point current_point,vector<double>& p, int radius, int num) {
 	int height = image.rows;
 	int width = image.cols;
 
@@ -83,29 +82,43 @@ static void likelihoodModel(Mat& image, Mat& diff, Point current_point,vector<fl
 			ed_row = ed_row >= height ? (height - 1) : ed_row;
 			st_col = st_col < 0 ? 0 : st_col;
 			ed_col = ed_col >= width ? (width - 1) : ed_col;
-			vector<int> seg_0, seg_1;
+			vector<vector<int>> seg_b(num);
+			vector<vector<int>> seg_g(num);
+			vector<vector<int>> seg_r(num);
 
 			for (int r = st_row; r <= ed_row; r++) {
 				for (int c = st_col; c <= ed_col; c++) {
 					if (r == i&&c == j) continue;
 					else{
-						if (diff.at<uchar>(r, c) == 255) {
-							seg_0.push_back(image.at<uchar>(r, c));
-						}
-						else {
-							seg_1.push_back(image.at<uchar>(r, c));
-						}
+						int label = diff.at<uchar>(r, c);
+						seg_b[label].push_back(image.at<Vec3b>(r, c)[0]);
+						seg_g[label].push_back(image.at<Vec3b>(r, c)[1]);
+						seg_r[label].push_back(image.at<Vec3b>(r, c)[2]);
 					}
 				}
 			}
-			float mean_0=0., mean_1=0., var_0=0., var_1=0.;
-			gaussianPram(seg_0, mean_0, var_0);
-			gaussianPram(seg_1, mean_1, var_1);
-			int cur_val = image.at<uchar>(current_point);
-			float p0 = exp(-(cur_val - mean_0)*(cur_val - mean_0) / (2 * var_0*var_0)) / (var_0*sqrt(2 * CV_PI));
-			float p1= exp(-(cur_val - mean_1)*(cur_val - mean_1) / (2 * var_1*var_1)) / (var_1*sqrt(2 * CV_PI));
-			p.push_back(p0);
-			p.push_back(p1);
+			double **mean = (double **)malloc(sizeof(double)*num);
+			double **var = (double **)malloc(sizeof(double*)*num);
+			double **pl = (double **)malloc(sizeof(double*)*num);
+			Vec3b cur_val = image.at<Vec3b>(current_point);
+			for (int k = 0; k < num; k++) {
+				mean[k] = (double *)malloc(sizeof(double) * 3);
+				var[k] = (double *)malloc(sizeof(double) * 3);
+				pl[k] = (double *)malloc(sizeof(double) * 3);
+				gaussianPram(seg_b[k], mean[k][0], var[k][0]);
+				gaussianPram(seg_g[k], mean[k][1], var[k][1]);
+				gaussianPram(seg_r[k], mean[k][2], var[k][2]);
+				for (int ch = 0; ch < 3; ch++) {
+					
+					var[k][ch] = var[k][ch] < 1 ? 1 : var[k][ch]; /*avoid 0*/
+					pl[k][ch] = exp(-(cur_val[ch] - mean[k][ch])*(cur_val[ch] - mean[k][ch]) / (2 * var[k][ch] * var[k][ch])) / (var[k][ch] * sqrt(2 * CV_PI));
+					pl[k][ch] = pl[k][ch] < 0.001 ? 0.001 : pl[k][ch]; //avoid 0
+					//p.push_back(pl[k][0]+ pl[k][1]+pl[k][2]);
+					
+				}
+				//p.push_back(pl[k][2]);
+				p.push_back(pl[k][0]*pl[k][1]*pl[k][2]);
+			}
 }
 
 void bayesianEstimation(Mat& image, Mat& labels_init, Mat& labels_estimation,int seg_num, int max_iter, int radius) {
@@ -116,14 +129,22 @@ void bayesianEstimation(Mat& image, Mat& labels_init, Mat& labels_estimation,int
 
 	while (iter < max_iter) {
 		
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
+		for (int i = 3; i < height; i++) {
+			for (int j = 4; j < width; j++) {
 				Point cur(j, i);
-				vector<float>pp, pl;
+				vector<double>pp, pl;
 				priorModel(image, labels_estimation, cur, pp, radius, seg_num);
 				likelihoodModel(image, labels_estimation, cur, pl, radius, seg_num);
-				int label_val = log(pp[0]) + log(pl[0]) > log(pp[1]) + log(pl[1]) ? 255 : 0;
+				double max = log(pp[0]) + log(pl[0]);
+				int label_val = 0;
+				for (int k = 1; k < seg_num; k++) {
+					if (log(pp[k]) + log(pl[k]) > max) {
+						max = log(pp[k]) + log(pl[k]);
+						label_val = k;
+					}
+				}
 				labels_estimation.at<uchar>(i, j) = label_val;
+				//cout << "label: " << label_val << endl;
 			}
 		}
 		iter++;
@@ -136,3 +157,24 @@ void bayesianEstimation(Mat& image, Mat& labels_init, Mat& labels_estimation,int
 
 }
 
+void labelInitByDiff(vector<Mat>& diff_wb, Mat& label_init) {
+	int width = diff_wb[0].cols;
+	int height = diff_wb[0].rows;
+
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			if (diff_wb[0].at<uchar>(i, j) == 255 && diff_wb[1].at<uchar>(i, j)==0) {
+				label_init.at<uchar>(i, j) = 1; //object
+			}
+			else if (diff_wb[0].at<uchar>(i, j) == 0 && diff_wb[1].at<uchar>(i, j) == 255) {
+				label_init.at<uchar>(i, j) = 1;
+			}
+			else if (diff_wb[0].at<uchar>(i, j) == 0 & diff_wb[1].at<uchar>(i, j) == 0) {
+				label_init.at<uchar>(i, j) = 0; //background
+			}
+			else {
+				label_init.at<uchar>(i, j) = 2; //snow
+			}
+		}
+	}
+}
