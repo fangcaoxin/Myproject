@@ -116,8 +116,8 @@ static void likelihoodModel(Mat& image, Mat& diff, Point current_point,vector<do
 					//p.push_back(pl[k][0]+ pl[k][1]+pl[k][2]);
 					
 				}
-				//p.push_back(pl[k][2]);
-				p.push_back(pl[k][0]*pl[k][1]*pl[k][2]);
+				p.push_back(pl[k][0]);
+				//p.push_back(pl[k][0]*pl[k][1]*pl[k][2]);
 			}
 }
 
@@ -174,6 +174,19 @@ void labelInitByDiff(vector<Mat>& diff_wb, Mat& label_init) {
 			}
 			else {
 				label_init.at<uchar>(i, j) = 2; //snow
+			}
+		}
+	}
+}
+
+void labelInitByRedDarkChannel(Mat& red_dark, Mat& label_init) {
+	int width = red_dark.cols;
+	int height = red_dark.rows;
+
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			if (red_dark.at<uchar>(i, j) == 255) {
+				label_init.at<uchar>(i, j) = 1;
 			}
 		}
 	}

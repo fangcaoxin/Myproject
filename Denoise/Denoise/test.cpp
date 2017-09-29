@@ -16,8 +16,8 @@
 
 //using namespace cv::optflow;
 Ptr<BackgroundSubtractor> pMOG;
-//string folderName = "img_170721_01j";
-string folderName = "img_170724_02j";
+string folderName = "img_170721_01j";
+//string folderName = "img_170724_02j";
 string saveFolder = "..//..//..//image//" + folderName + "//" + folderName + "_";
 string saveImage = "..//..//..//result//img_170724_02j//img_170724_02j_";
 int width = 1358; //1358 without black range
@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
 	int width_input = width/4;
 	int height_input = height/4;
 
-	int beg_num = 0;
+	int beg_num = 140;
 	int frame_num = 100;
 	Mat backgroud;
 	int frame_count = 0;
@@ -71,17 +71,22 @@ int main(int argc, char* argv[]) {
 			Mat diff_output1(height_input, width_input, CV_8UC1, Scalar(0));
 			Mat diff_iter(height_input, width_input, CV_8UC1, Scalar(0));
 			Mat label_init(height_input, width_input, CV_8UC1, Scalar(0));
+			Mat darkChannel(height_input, width_input, CV_8UC1, Scalar(0));
 			FrameRelativeDiff(image_list_gray, diff);
 			diffByThreshold(diff, diff_wb, 3);
 			//sumAreaByRadius(diff_wb, diff_output, 20);
+			calcDarkChannel(darkChannel, diff_output, image_list[1], 0);
 			labelInitByDiff(diff_wb, label_init);
 			//imwrite("diff_sum.jpg", diff_output);
-			double error = modelError(diff, diff_output);
+			//double error = modelError(diff, diff_output);
 			diffByPreNext(diff_wb, diff_output1);
 			vector<vector<Point>> contours;
 			vector<Vec4i> hierarchy;
 			vector<int> valid_labels;
 			split(image_list[1], channels);
+			Mat trans = channels[2] - darkChannel;
+			threshold(trans, trans, 5, 255, CV_THRESH_BINARY);
+			labelInitByRedDarkChannel(trans, label_init);
 			bayesianEstimation(image_list[1], label_init, diff_iter, 3, 2, 1);
 			//int size=connectedComponentsWithStats(diff_output, labels, stats, centroids, 8, 4);
 			
@@ -114,6 +119,7 @@ int main(int argc, char* argv[]) {
 			//imshow("original diff", diff_output);
 			imshow("result", diff_iter);
 			imshow("output", output);
+			imshow("trans", trans);
 			//imshow("origial", image_list[1]);
 			image_list.erase(image_list.begin());
 			image_list_gray.erase(image_list_gray.begin());

@@ -28,3 +28,4 @@ void medianFramesByMask(Mat& image, Mat& stats, vector<int>& valid_labels);
 void bayesianEstimation(Mat& image, Mat& labels_init, Mat& labels_estimation,int seg_num, int iter, int radius);
 void sumAreaByRadius(vector<Mat>& diff_wb, Mat& sum, int radius);
 void labelInitByDiff(vector<Mat>& diff_wb, Mat& label_init);
+void labelInitByRedDarkChannel(Mat& red_dark, Mat& label_init);
