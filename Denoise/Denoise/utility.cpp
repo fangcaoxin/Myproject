@@ -430,3 +430,14 @@ void neighbourBlockDiff(Mat& labels, Mat& stats, Mat& centroids, vector<Mat>& im
 
 	}
 }
+
+void showLabelImg(Mat& label) {
+	int width = label.cols;
+	int height = label.rows;
+
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			label.at<uchar>(i, j) = label.at<uchar>(i, j) == 2 ? 255 : 0;
+		}
+	}
+}
