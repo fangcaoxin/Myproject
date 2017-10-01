@@ -4,3 +4,4 @@
 
 using namespace cv::ximgproc;
 void dehaze(Mat& recover, Mat& input);
+void dehazeDC(Mat image, Mat &dehaze);

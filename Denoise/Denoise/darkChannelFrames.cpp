@@ -69,7 +69,7 @@ void darkChannelFrames(const vector<Mat> &imgList, int frameNum, Mat& ouput, con
 	}
 }
 
-void sumAreaByRadius(vector<Mat>& diff_wb, Mat& sum, int radius) {
+int sumAreaByRadius(vector<Mat>& diff_wb, Mat& sum, int radius) {
 	int size = diff_wb.size();
 	int height = diff_wb[0].rows;
 	int width = diff_wb[0].cols;
@@ -111,7 +111,7 @@ void sumAreaByRadius(vector<Mat>& diff_wb, Mat& sum, int radius) {
 			}
 		}
 	}
-
+	int num = 0;
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 			int label_0 = labels[0].at<int>(i, j);
@@ -119,9 +119,11 @@ void sumAreaByRadius(vector<Mat>& diff_wb, Mat& sum, int radius) {
 			vector<int>::iterator iter_0 = find(list_0.begin(), list_0.end(), label_0);
 			vector<int>::iterator iter_1 = find(list_1.begin(), list_1.end(), label_1);
 			if (iter_0 != list_0.end() || iter_1 != list_1.end()) {
-				sum.at<uchar>(i,j) = 255;
+				sum.at<uchar>(i,j) = 1;
+				num++;
 			}
 		}
 	}
+	return num;
 
 }

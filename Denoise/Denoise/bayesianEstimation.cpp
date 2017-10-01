@@ -46,6 +46,8 @@ static void priorModel(Mat& image, Mat& diff, Point current_point,vector<double>
 				 pp[k] = seg_count[k] == 0 ? 0.001 : (double)seg_count[k] / (double)count;
 				p.push_back(pp[k]);
 			}
+			free(pp);
+			free(seg_count);
 
 }
 
@@ -116,9 +118,12 @@ static void likelihoodModel(Mat& image, Mat& diff, Point current_point,vector<do
 					//p.push_back(pl[k][0]+ pl[k][1]+pl[k][2]);
 					
 				}
-				p.push_back(pl[k][0]);
+				p.push_back(pl[k][2]);
 				//p.push_back(pl[k][0]*pl[k][1]*pl[k][2]);
 			}
+			free(mean);
+			free(var);
+			free(pl);
 }
 
 void bayesianEstimation(Mat& image, Mat& labels_init, Mat& labels_estimation,int seg_num, int max_iter, int radius) {
@@ -169,7 +174,7 @@ void labelInitByDiff(vector<Mat>& diff_wb, Mat& label_init) {
 			else if (diff_wb[0].at<uchar>(i, j) == 0 && diff_wb[1].at<uchar>(i, j) == 255) {
 				label_init.at<uchar>(i, j) = 1;
 			}
-			else if (diff_wb[0].at<uchar>(i, j) == 0 & diff_wb[1].at<uchar>(i, j) == 0) {
+			else if (diff_wb[0].at<uchar>(i, j) == 0 && diff_wb[1].at<uchar>(i, j) == 0) {
 				label_init.at<uchar>(i, j) = 0; //background
 			}
 			else {
