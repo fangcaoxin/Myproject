@@ -82,9 +82,10 @@ int sumAreaByRadius(vector<Mat>& diff_wb, Mat& sum, int radius) {
 	}
 	int st_row, ed_row;
 	int st_col, ed_col;
+	
 	vector<int> list_0;
 	vector<int> list_1;
-	for (int k =1 ; k < centroids[0].rows; k++) {
+	for (int k = 1; k < centroids[0].rows; k++) {
 		int i = centroids[0].at<double>(k, 1);
 		int j = centroids[0].at<double>(k, 0);
 		st_row = i - radius, ed_row = i + radius;
@@ -94,7 +95,7 @@ int sumAreaByRadius(vector<Mat>& diff_wb, Mat& sum, int radius) {
 		ed_row = ed_row >= height ? (height - 1) : ed_row;
 		st_col = st_col < 0 ? 0 : st_col;
 		ed_col = ed_col >= width ? (width - 1) : ed_col;
-		
+
 		for (int m = st_row; m <= ed_row; m++)
 		{
 			for (int n = st_col; n <= ed_col; n++)
@@ -102,8 +103,8 @@ int sumAreaByRadius(vector<Mat>& diff_wb, Mat& sum, int radius) {
 				if (labels[1].at<int>(m, n) != 0) {
 					int label = labels[1].at<int>(m, n);
 					double dis = (centroids[1].at<double>(label, 1) - i)*(centroids[1].at<double>(label, 1) - i) + (centroids[1].at<double>(label, 0) - j)*(centroids[1].at<double>(label, 0) - j);
-					if (dis < radius*radius&&stats[1].at<int>(label,4)<width*height*0.002&&stats[0].at<int>(k,4)<width*height*0.002) {
-						
+					if (dis < radius*radius&&stats[1].at<int>(label, 4) < width*height*0.003&&stats[0].at<int>(k, 4) < width*height*0.003) {
+
 						list_0.push_back(k);
 						list_1.push_back(label);
 					}

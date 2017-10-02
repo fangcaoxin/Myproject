@@ -437,7 +437,7 @@ void showLabelImg(Mat& label) {
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			label.at<uchar>(i, j) = label.at<uchar>(i, j) == 2 ? 255 : 0;
+			label.at<uchar>(i, j) = label.at<uchar>(i, j) == 1 ? 255 : 0;
 		}
 	}
 }
