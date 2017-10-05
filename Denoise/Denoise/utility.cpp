@@ -173,23 +173,41 @@ void FrameRelativeDiffBaseCameraMotion(vector<Mat>& image_list_gray, vector<Mat>
 		for (int r = 0; r < height; r++) {
 			for (int c = 0; c < width; c++) {
 				Point pre_pos,next_pos;
-				pre_pos.x = c - camera_motion[0].x;
-				pre_pos.y = r - camera_motion[0].y;
-				pre_pos.x = pre_pos.x < 0 ? 0 : pre_pos.x;
+				pre_pos.x = c + camera_motion[0].x;
+				pre_pos.y = r + camera_motion[0].y;
+				/*pre_pos.x = pre_pos.x < 0 ? 0 : pre_pos.x;
 				pre_pos.x = pre_pos.x > width - 1 ? width - 1 : pre_pos.x;
 				pre_pos.y = pre_pos.y < 0 ? 0 : pre_pos.y;
-				pre_pos.y = pre_pos.y > height - 1 ? height - 1 : pre_pos.y;
+				pre_pos.y = pre_pos.y > height - 1 ? height - 1 : pre_pos.y;*/
 
-				next_pos.x = c - camera_motion[1].x;
-				next_pos.y = r - camera_motion[1].y;
-				next_pos.x = next_pos.x < 0 ? 0 : next_pos.x;
+				next_pos.x = c + camera_motion[1].x;
+				next_pos.y = r + camera_motion[1].y;
+				/*next_pos.x = next_pos.x < 0 ? 0 : next_pos.x;
 				next_pos.x = next_pos.x > width - 1 ? width - 1 : next_pos.x;
 				next_pos.y = next_pos.y < 0 ? 0 : next_pos.y;
-				next_pos.y = next_pos.y > height - 1 ? height - 1 : next_pos.y;
+				next_pos.y = next_pos.y > height - 1 ? height - 1 : next_pos.y;*/
 
+				if (pre_pos.x<0 || pre_pos.x>width - 1 || pre_pos.y<0 || pre_pos.y>height - 1) {
+					tmp.at<uchar>(r, c) = 0;
+				}
+				else {
+					tmp.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[0].at<uchar>(pre_pos) >= 0 ? \
+						image_list_gray[1].at<uchar>(r, c) - image_list_gray[0].at<uchar>(pre_pos) : 0;
+				}
+				if (next_pos.x<0 || next_pos.x>width - 1 || next_pos.y<0 || next_pos.y>height - 1) {
+					tmp1.at<uchar>(r, c) = 0;
+				}
+				else {
+					tmp1.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[2].at<uchar>(next_pos) >= 0 ? \
+						image_list_gray[1].at<uchar>(r, c) - image_list_gray[2].at<uchar>(next_pos) : 0;
+				}
 
-				tmp.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[0].at<uchar>(pre_pos);
-				tmp1.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[2].at<uchar>(next_pos);
+				
+				
+				//cout << "tmp " << (int)tmp.at<uchar>(r, c) << endl;
+				
+				/*tmp.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[0].at<uchar>(r,c);
+				tmp1.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[2].at<uchar>(r,c);*/
 			}
 		}
 		diff.push_back(tmp);

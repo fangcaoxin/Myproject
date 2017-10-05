@@ -81,6 +81,8 @@ int main(int argc, char* argv[]) {
 		}
 		else {
 			vector<Mat> diff;
+			vector<Mat> diff_c;
+			vector<Mat> diff_wb_c;
 			vector<Mat> diff_wb;
 			vector<Mat> channels;
 			Mat  labels, stats, centroids;
@@ -93,8 +95,8 @@ int main(int argc, char* argv[]) {
 			Mat label_init(height_input, width_input, CV_8UC1, Scalar(0));
 			Mat darkChannel(height_input, width_input, CV_8UC1, Scalar(0));
 			Mat brightChannel(height_input, width_input, CV_8UC1, Scalar(0));
-			//FrameRelativeDiff(image_list_gray, diff);
-			//diffByThreshold(diff, diff_wb, 5);
+			FrameRelativeDiff(image_list_gray, diff);
+			diffByThreshold(diff, diff_wb, 5);
 #ifdef CAMERAMOTION
 			/*calcDarkChannel(darkChannel, brightChannel, image_list[1], 0);
 			split(image_list[1], channels);
@@ -102,8 +104,8 @@ int main(int argc, char* argv[]) {
 			threshold(trans, trans, 20, 255, CV_THRESH_BINARY);*/
 			vector<Point2f> camera_motion;
 			calcPyrLKflow(image_list_gray, camera_motion);
-			FrameRelativeDiffBaseCameraMotion(image_list_gray, diff, camera_motion);
-			diffByThreshold(diff, diff_wb, 30);
+			FrameRelativeDiffBaseCameraMotion(image_list_gray, diff_c, camera_motion);
+			diffByThreshold(diff_c, diff_wb_c, 5);
 #endif //CAMERAMOTION
 #ifdef CONNECTED
 			int num = sumAreaByRadius(diff_wb, diff_output, 20);
@@ -161,6 +163,8 @@ int main(int argc, char* argv[]) {
 			//imshow("origial", image_list[1]);
 			imshow("diff_cur_pre", diff_wb[0]);
 			imshow("diff_cur_next", diff_wb[1]);
+			imshow("diff_cur_pre_camera", diff_wb_c[0]);
+			imshow("diff_cur_next_camera", diff_wb_c[1]);
 			
 			image_list.erase(image_list.begin());
 			image_list_gray.erase(image_list_gray.begin());
