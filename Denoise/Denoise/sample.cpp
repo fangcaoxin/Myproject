@@ -8,8 +8,8 @@
 //#define MOG
 //#define DEHAZE
 #define BAYESIAN
-#define SAVERESULT
-
+//#define SAVERESULT
+#define MOTIONESTIMATION
 //using namespace cv::optflow;
 Ptr<BackgroundSubtractor> pMOG;
  //string folderName = "img_170721_01j";
@@ -84,7 +84,6 @@ int main(int argc, char* argv[]) {
 			vector<Mat> diff;
 			vector<Mat> diff_wb;
 			vector<Mat> channels;
-			//Mat diff = image_list_gray[1] - image_list_gray[0];
 			Mat  labels, stats, centroids;
 			Mat output(height_input, width_input, CV_8UC3);
 			Mat img_label(height_input, width_input, CV_8UC3);
@@ -94,20 +93,20 @@ int main(int argc, char* argv[]) {
 			Mat diff_iter(height_input, width_input, CV_8UC1, Scalar(0));
 			Mat label_init(height_input, width_input, CV_8UC1, Scalar(0));
 			Mat darkChannel(height_input, width_input, CV_8UC1, Scalar(0));
+#ifdef EM
 			FrameRelativeDiff(image_list_gray, diff);
 			diffByThreshold(diff, diff_wb, 5);
 			int num= sumAreaByRadius(diff_wb, diff_output, 20);
 			Mat cdfd;
 			diff_output.copyTo(cdfd);
 			EMSegmetation(image_list[1], diff_output,num,3);
+#endif //EM
 			//calcDarkChannel(darkChannel, diff_output, image_list[0], 0);
 			//labelInitByDiff(diff_wb, label_init);
 			//imwrite("diff_sum.jpg", diff_output);
 			//double error = modelError(diff, diff_output);
 			//diffByPreNext(diff_wb, diff_output1);
-			vector<vector<Point>> contours;
-			vector<Vec4i> hierarchy;
-			vector<int> valid_labels;
+			
 			//split(image_list[0], channels);
 			//Mat trans = channels[2] - darkChannel;
 			//threshold(trans, trans, 20, 255, CV_THRESH_BINARY);
@@ -126,20 +125,20 @@ int main(int argc, char* argv[]) {
 			//imshow("diff_by_sumarea", diff_output);
 			darkFramesByMask(image_list, output, diff_output);
 			showLabelImg(diff_output);
-			showLabelImg(cdfd);
+			
 #ifdef SAVERESULT
 			Mat combine1, combine2, combine;
-			cvtColor(cdfd, cdfd, CV_GRAY2BGR);
+			//cvtColor(cdfd, cdfd, CV_GRAY2BGR);
 			cvtColor(diff_output, diff_output, CV_GRAY2BGR);
 			putText(image_list[1], "Original", Point(10, 10),CV_FONT_HERSHEY_PLAIN,1,Scalar(0,255,0));
 			putText(output, "Processed", Point(10,10), CV_FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0));
-			putText(cdfd, "Combined DFD", Point(10, 10), CV_FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0));
+			//putText(cdfd, "Combined DFD", Point(10, 10), CV_FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0));
 			putText(diff_output, "After EM", Point(10, 10), CV_FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0));
 
 			
 			
 			hconcat(image_list[1], output, combine1);
-			hconcat(cdfd, diff_output, combine2);
+			//hconcat(cdfd, diff_output, combine2);
 			vconcat(combine1, combine2, combine);
 			imshow("combine", combine);
 			imwrite(save_name, combine);
