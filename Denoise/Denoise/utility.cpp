@@ -140,15 +140,6 @@ void contourSobel(Mat& image_gray, const vector<Vec4i>& hierarchy, vector<vector
 	//imshow("grad", grad_show);
 }
 
-void combineTwoImg(Mat src1, Mat src2, Mat& dst) {
-	Rect rect1(0, 0, src1.cols, src1.rows);
-	Rect rect2(src1.cols, 0, src2.cols, src2.rows);
-	src1.copyTo(dst(rect1));
-	//dst(rect1) = src1;
-	src2.copyTo(dst(rect2));
-	//dst(rect2) = src2;
-}
-
 
 void FrameRelativeDiff(vector<Mat>& image_list_gray, vector<Mat>& diff) {
 	int size = image_list_gray.size();
@@ -165,6 +156,45 @@ void FrameRelativeDiff(vector<Mat>& image_list_gray, vector<Mat>& diff) {
 
 	diff.insert(diff.end(), forward_diff.begin(), forward_diff.end());
 	diff.insert(diff.end(), backward_diff.begin(), backward_diff.end());
+}
+
+void FrameRelativeDiffBaseCameraMotion(vector<Mat>& image_list_gray, vector<Mat>& diff,vector<Point2f>& camera_motion) 
+{
+	int size = image_list_gray.size();
+	int mid = size / 2;
+	int width = image_list_gray[0].cols;
+	int height = image_list_gray[1].rows;
+
+	
+
+	
+		Mat tmp(height, width, CV_8UC1);
+		Mat tmp1(height, width, CV_8UC1);
+		for (int r = 0; r < height; r++) {
+			for (int c = 0; c < width; c++) {
+				Point pre_pos,next_pos;
+				pre_pos.x = c - camera_motion[0].x;
+				pre_pos.y = r - camera_motion[0].y;
+				pre_pos.x = pre_pos.x < 0 ? 0 : pre_pos.x;
+				pre_pos.x = pre_pos.x > width - 1 ? width - 1 : pre_pos.x;
+				pre_pos.y = pre_pos.y < 0 ? 0 : pre_pos.y;
+				pre_pos.y = pre_pos.y > height - 1 ? height - 1 : pre_pos.y;
+
+				next_pos.x = c - camera_motion[1].x;
+				next_pos.y = r - camera_motion[1].y;
+				next_pos.x = next_pos.x < 0 ? 0 : next_pos.x;
+				next_pos.x = next_pos.x > width - 1 ? width - 1 : next_pos.x;
+				next_pos.y = next_pos.y < 0 ? 0 : next_pos.y;
+				next_pos.y = next_pos.y > height - 1 ? height - 1 : next_pos.y;
+
+
+				tmp.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[0].at<uchar>(pre_pos);
+				tmp1.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[2].at<uchar>(next_pos);
+			}
+		}
+		diff.push_back(tmp);
+		diff.push_back(tmp1);
+
 }
 
 void diffByThreshold(vector<Mat>& diff, vector<Mat>& diff_wb, int threshold_wb) {

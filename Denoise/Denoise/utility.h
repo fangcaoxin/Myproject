@@ -40,7 +40,7 @@ void refineFlow(Mat& flow1, Mat& flow2, int radius);
 * the block is filled of flow as the same value as neighours*/
 void refineFlowTwice(Mat& flow1, int radius);
 /**to caculate optical flow using Lucas-Kanade method*/
-void calcPyrLKflow(vector<Mat>& imageList_gray, vector<Point>& flow_points);
+void calcPyrLKflow(vector<Mat>& imageList_gray, vector<Point2f>& camera_motion);
 /**show the connected area label on the image*/
 void showAreaLabel(Mat& image, Mat& labels, Mat& centroids,int size);
 void contourSobel(Mat& image_gray, const vector<Vec4i>& hierarchy,  vector<vector<Point>>& contour_points);
@@ -51,8 +51,8 @@ void snowMaskbyDiffWB(vector<Mat>& diff_wb, Mat& mask);
 void temporalLikelihood(vector<Mat>& diff, vector<Mat>& diff_wb, Mat& temporal);
 void modelError(vector<Mat>& diff_wb, vector<Mat>& diff, Mat& sigma);
 
-void combineTwoImg(Mat src1, Mat src2, Mat& dst);
 void FrameRelativeDiff(vector<Mat>& image_list_gray, vector<Mat>& diff);
+void FrameRelativeDiffBaseCameraMotion(vector<Mat>& image_list_gray, vector<Mat>& diff, vector<Point2f>& camera_motion);
 void diffByThreshold(vector<Mat>& diff, vector<Mat>& diff_wb, int threshold_wb);
 void diffByPreNext(vector<Mat>& diff_wb, Mat& diff_output);
 void neighbourBlockMatching(Mat& labels, Mat& stats, Mat& centroids, vector<Mat>& image_list_gray,vector<int>& valid_label);

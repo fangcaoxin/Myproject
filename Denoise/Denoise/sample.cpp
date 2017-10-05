@@ -8,8 +8,10 @@
 //#define MOG
 //#define DEHAZE
 #define BAYESIAN
-#define SAVERESULT
-
+//#define SAVERESULT
+//#define EM
+#define CAMERAMOTION
+//#define CONNECTED
 //using namespace cv::optflow;
 Ptr<BackgroundSubtractor> pMOG;
  //string folderName = "img_170721_01j";
@@ -25,7 +27,7 @@ int main(int argc, char* argv[]) {
 	int width_input = width /4;
 	int height_input = height/4;
 
-	int beg_num = 196;
+	int beg_num = 0;
 	int frame_num = 100;
 	Mat backgroud;
 	int frame_count = 0;
@@ -73,9 +75,6 @@ int main(int argc, char* argv[]) {
 		imwrite("..//..//..//result//inter_1_2.jpg", inter);
 	}
 #endif //TEST
-#define CONNECTED
-#ifdef CONNECTED
-
 
 		if (count < 3) {
 			continue;
@@ -84,7 +83,6 @@ int main(int argc, char* argv[]) {
 			vector<Mat> diff;
 			vector<Mat> diff_wb;
 			vector<Mat> channels;
-			//Mat diff = image_list_gray[1] - image_list_gray[0];
 			Mat  labels, stats, centroids;
 			Mat output(height_input, width_input, CV_8UC3);
 			Mat img_label(height_input, width_input, CV_8UC3);
@@ -94,23 +92,33 @@ int main(int argc, char* argv[]) {
 			Mat diff_iter(height_input, width_input, CV_8UC1, Scalar(0));
 			Mat label_init(height_input, width_input, CV_8UC1, Scalar(0));
 			Mat darkChannel(height_input, width_input, CV_8UC1, Scalar(0));
-			FrameRelativeDiff(image_list_gray, diff);
-			diffByThreshold(diff, diff_wb, 5);
-			int num= sumAreaByRadius(diff_wb, diff_output, 20);
+			Mat brightChannel(height_input, width_input, CV_8UC1, Scalar(0));
+			//FrameRelativeDiff(image_list_gray, diff);
+			//diffByThreshold(diff, diff_wb, 5);
+#ifdef CAMERAMOTION
+			/*calcDarkChannel(darkChannel, brightChannel, image_list[1], 0);
+			split(image_list[1], channels);
+			Mat trans = channels[2] - darkChannel;
+			threshold(trans, trans, 20, 255, CV_THRESH_BINARY);*/
+			vector<Point2f> camera_motion;
+			calcPyrLKflow(image_list_gray, camera_motion);
+			FrameRelativeDiffBaseCameraMotion(image_list_gray, diff, camera_motion);
+			diffByThreshold(diff, diff_wb, 30);
+#endif //CAMERAMOTION
+#ifdef CONNECTED
+			int num = sumAreaByRadius(diff_wb, diff_output, 20);
 			Mat cdfd;
 			diff_output.copyTo(cdfd);
+#endif //CONNECTED
+#ifdef EM
+			
 			EMSegmetation(image_list[1], diff_output,num,3);
-			//calcDarkChannel(darkChannel, diff_output, image_list[0], 0);
-			//labelInitByDiff(diff_wb, label_init);
-			//imwrite("diff_sum.jpg", diff_output);
-			//double error = modelError(diff, diff_output);
-			//diffByPreNext(diff_wb, diff_output1);
+#endif //EM
 			vector<vector<Point>> contours;
 			vector<Vec4i> hierarchy;
 			vector<int> valid_labels;
-			//split(image_list[0], channels);
-			//Mat trans = channels[2] - darkChannel;
-			//threshold(trans, trans, 20, 255, CV_THRESH_BINARY);
+			
+			
 			//labelInitByRedDarkChannel(trans, label_init);
 			//bayesianEstimation(image_list[1], diff_output, diff_iter,2, 2, 1);
 			//int size=connectedComponentsWithStats(diff_output, labels, stats, centroids, 8, 4);
@@ -124,12 +132,12 @@ int main(int argc, char* argv[]) {
 			//neighbourBlockMatching(labels, stats, centroids, image_list_gray,valid_labels);
 
 			//imshow("diff_by_sumarea", diff_output);
-			darkFramesByMask(image_list, output, diff_output);
-			showLabelImg(diff_output);
-			showLabelImg(cdfd);
+			//darkFramesByMask(image_list, output, diff_output);
+			//showLabelImg(diff_output);
+			//showLabelImg(cdfd);
 #ifdef SAVERESULT
 			Mat combine1, combine2, combine;
-			cvtColor(cdfd, cdfd, CV_GRAY2BGR);
+			//cvtColor(cdfd, cdfd, CV_GRAY2BGR);
 			cvtColor(diff_output, diff_output, CV_GRAY2BGR);
 			putText(image_list[1], "Original", Point(10, 10),CV_FONT_HERSHEY_PLAIN,1,Scalar(0,255,0));
 			putText(output, "Processed", Point(10,10), CV_FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0));
@@ -151,7 +159,8 @@ int main(int argc, char* argv[]) {
 			//imshow("output", output);
 			//imshow("trans", trans);
 			//imshow("origial", image_list[1]);
-			
+			imshow("diff_cur_pre", diff_wb[0]);
+			imshow("diff_cur_next", diff_wb[1]);
 			
 			image_list.erase(image_list.begin());
 			image_list_gray.erase(image_list_gray.begin());
@@ -162,7 +171,7 @@ int main(int argc, char* argv[]) {
 
 		}
 	}
-#endif //CONNECTED
+
 
 
 
