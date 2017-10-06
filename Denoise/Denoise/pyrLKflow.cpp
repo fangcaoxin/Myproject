@@ -1,6 +1,6 @@
 #include "utility.h"
 static Point2f getAverage(const std::vector<Point2f>& values);
-void calcPyrLKflow(vector<Mat>& imageList_gray, vector<Point2f>& camera_motion) {
+void calcPyrLKflow(vector<Mat>& imageList_gray, vector<Mat>& camera_motion) {
 	vector<Point2f> points[3];
 	
 	TermCriteria termcrit(TermCriteria::COUNT | TermCriteria::EPS, 20, 0.03);
@@ -30,18 +30,18 @@ void calcPyrLKflow(vector<Mat>& imageList_gray, vector<Point2f>& camera_motion) 
 	vector<Point2f> points1 = points[1];
 	size_t good_points_after_filter = filterPointsInVectors(filter_status, points[1], points[0], true);
 	size_t good_points_after_filter1 = filterPointsInVectors(filter_status1, points1, points[2], true);
-	vector<Mat>homo_list;
-
-	Point2f cur_pre_vector = getAverage(points[0])-getAverage(points[1]);
-	Point2f cur_next_vector = getAverage(points[2]) - getAverage(points1);
-
-	//Mat fundamentalMat1 = findFundamentalMat(points[0], points[1], CV_RANSAC, 3.0);
 	
-	//Mat fundamentalMat2 = findFundamentalMat(points0, points[2], CV_RANSAC, 3.0);
-	
-	camera_motion.push_back(cur_pre_vector);
-	camera_motion.push_back(cur_next_vector);
-	cout << "camera motion " << cur_pre_vector << " " << cur_next_vector << endl;
+
+	/*Point2f cur_pre_vector = getAverage(points[0])-getAverage(points[1]);
+	Point2f cur_next_vector = getAverage(points[2]) - getAverage(points1);*/
+
+	Mat homo_10 = findHomography(points[0], points[1], CV_RANSAC, 3.0);
+	Mat homo_12 = findHomography(points[2], points1, CV_RANSAC, 3.0);
+	camera_motion.push_back(homo_10);
+	camera_motion.push_back(homo_12);
+	//camera_motion.push_back(cur_pre_vector);
+	//camera_motion.push_back(cur_next_vector);
+	cout << "camera motion " << homo_10 << " " << homo_12 << endl;
 	//homo_list.push_back(homoMat);
 	//homo_list.push_back(homoMat1);
 	

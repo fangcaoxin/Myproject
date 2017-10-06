@@ -11,7 +11,7 @@
 //#define SAVERESULT
 //#define EM
 #define CAMERAMOTION
-//#define CONNECTED
+#define CONNECTED
 //using namespace cv::optflow;
 Ptr<BackgroundSubtractor> pMOG;
  //string folderName = "img_170721_01j";
@@ -20,12 +20,12 @@ string saveFolder = "..//..//..//image//" + folderName + "//" + folderName + "_"
 string saveImage = "..//..//..//result//20171002//" + folderName + "_";
 int width = 1358; //1358 without black range
 int height = 1080; //1080
-
+Rect rect(6, 4, width - 6, height - 8);
 int main(int argc, char* argv[]) {
 
 
-	int width_input = width /4;
-	int height_input = height/4;
+	int width_input = rect.width /4;
+	int height_input = rect.height/4;
 
 	int beg_num = 0;
 	int frame_num = 100;
@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
 		Mat cur = imread(file_name);
 		Mat input_resize, cur_gray;
 		Mat dehaze_out(height_input, width_input, CV_8UC3);
-		resize(cur, input_resize, Size(width_input, height_input));
+		resize(cur(rect), input_resize, Size(width_input, height_input));
 		//dehazeDC(input_resize, dehaze);
 		//dehaze(dehaze_out,input_resize);
 		image_list.push_back(input_resize);
@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
 			Mat img_label(height_input, width_input, CV_8UC3);
 
 			Mat diff_output(height_input, width_input, CV_8UC1, Scalar(0));
-			Mat diff_output1(height_input, width_input, CV_8UC1, Scalar(0));
+			Mat diff_output_c(height_input, width_input, CV_8UC1, Scalar(0));
 			Mat diff_iter(height_input, width_input, CV_8UC1, Scalar(0));
 			Mat label_init(height_input, width_input, CV_8UC1, Scalar(0));
 			Mat darkChannel(height_input, width_input, CV_8UC1, Scalar(0));
@@ -102,15 +102,15 @@ int main(int argc, char* argv[]) {
 			split(image_list[1], channels);
 			Mat trans = channels[2] - darkChannel;
 			threshold(trans, trans, 20, 255, CV_THRESH_BINARY);*/
-			vector<Point2f> camera_motion;
+			vector<Mat> camera_motion;
 			calcPyrLKflow(image_list_gray, camera_motion);
 			FrameRelativeDiffBaseCameraMotion(image_list_gray, diff_c, camera_motion);
 			diffByThreshold(diff_c, diff_wb_c, 5);
 #endif //CAMERAMOTION
 #ifdef CONNECTED
-			int num = sumAreaByRadius(diff_wb, diff_output, 20);
+			int num = sumAreaByRadius(diff_wb_c, diff_output_c, 20);
 			Mat cdfd;
-			diff_output.copyTo(cdfd);
+			diff_output_c.copyTo(cdfd);
 #endif //CONNECTED
 #ifdef EM
 			
@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
 			//imshow("diff_by_sumarea", diff_output);
 			//darkFramesByMask(image_list, output, diff_output);
 			//showLabelImg(diff_output);
-			//showLabelImg(cdfd);
+			showLabelImg(cdfd);
 #ifdef SAVERESULT
 			Mat combine1, combine2, combine;
 			//cvtColor(cdfd, cdfd, CV_GRAY2BGR);
@@ -157,12 +157,12 @@ int main(int argc, char* argv[]) {
 			//imshow("diff_by_sum", diff_output);
 			//imshow("area label", img_label);
 			//imshow("original diff", diff_output);
-			//imshow("cdfd", cdfd);
+			imshow("cdfd", cdfd);
 			//imshow("output", output);
 			//imshow("trans", trans);
 			//imshow("origial", image_list[1]);
-			imshow("diff_cur_pre", diff_wb[0]);
-			imshow("diff_cur_next", diff_wb[1]);
+			//imshow("diff_cur_pre", diff_wb[0]);
+			//imshow("diff_cur_next", diff_wb[1]);
 			imshow("diff_cur_pre_camera", diff_wb_c[0]);
 			imshow("diff_cur_next_camera", diff_wb_c[1]);
 			

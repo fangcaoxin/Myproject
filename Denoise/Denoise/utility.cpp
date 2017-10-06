@@ -158,61 +158,29 @@ void FrameRelativeDiff(vector<Mat>& image_list_gray, vector<Mat>& diff) {
 	diff.insert(diff.end(), backward_diff.begin(), backward_diff.end());
 }
 
-void FrameRelativeDiffBaseCameraMotion(vector<Mat>& image_list_gray, vector<Mat>& diff,vector<Point2f>& camera_motion) 
+void FrameRelativeDiffBaseCameraMotion(vector<Mat>& image_list_gray, vector<Mat>& diff,vector<Mat>& camera_motion) 
 {
 	int size = image_list_gray.size();
 	int mid = size / 2;
 	int width = image_list_gray[0].cols;
-	int height = image_list_gray[1].rows;
+	int height = image_list_gray[0].rows;
 
+	Mat image_pre_compensation(height, width, CV_8UC1, Scalar(0));
+	Mat image_next_compensation(height, width, CV_8UC1, Scalar(0));
 	
-
+	//Mat image_current;
+	//image_list_gray[1].copyTo(image_current);
+	//image_current.convertTo(image_current, CV_32F);
+	Mat p0;
+	Mat p1;
 	
-		Mat tmp(height, width, CV_8UC1);
-		Mat tmp1(height, width, CV_8UC1);
-		for (int r = 0; r < height; r++) {
-			for (int c = 0; c < width; c++) {
-				Point pre_pos,next_pos;
-				pre_pos.x = c + camera_motion[0].x;
-				pre_pos.y = r + camera_motion[0].y;
-				/*pre_pos.x = pre_pos.x < 0 ? 0 : pre_pos.x;
-				pre_pos.x = pre_pos.x > width - 1 ? width - 1 : pre_pos.x;
-				pre_pos.y = pre_pos.y < 0 ? 0 : pre_pos.y;
-				pre_pos.y = pre_pos.y > height - 1 ? height - 1 : pre_pos.y;*/
+	warpPerspective(image_list_gray[0], image_pre_compensation, camera_motion[0], Size(width, height),1,BORDER_REPLICATE);
+	warpPerspective(image_list_gray[2], image_next_compensation,  camera_motion[1], Size(width, height),1,BORDER_REPLICATE);
 
-				next_pos.x = c + camera_motion[1].x;
-				next_pos.y = r + camera_motion[1].y;
-				/*next_pos.x = next_pos.x < 0 ? 0 : next_pos.x;
-				next_pos.x = next_pos.x > width - 1 ? width - 1 : next_pos.x;
-				next_pos.y = next_pos.y < 0 ? 0 : next_pos.y;
-				next_pos.y = next_pos.y > height - 1 ? height - 1 : next_pos.y;*/
-
-				if (pre_pos.x<0 || pre_pos.x>width - 1 || pre_pos.y<0 || pre_pos.y>height - 1) {
-					tmp.at<uchar>(r, c) = 0;
-				}
-				else {
-					tmp.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[0].at<uchar>(pre_pos) >= 0 ? \
-						image_list_gray[1].at<uchar>(r, c) - image_list_gray[0].at<uchar>(pre_pos) : 0;
-				}
-				if (next_pos.x<0 || next_pos.x>width - 1 || next_pos.y<0 || next_pos.y>height - 1) {
-					tmp1.at<uchar>(r, c) = 0;
-				}
-				else {
-					tmp1.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[2].at<uchar>(next_pos) >= 0 ? \
-						image_list_gray[1].at<uchar>(r, c) - image_list_gray[2].at<uchar>(next_pos) : 0;
-				}
-
-				
-				
-				//cout << "tmp " << (int)tmp.at<uchar>(r, c) << endl;
-				
-				/*tmp.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[0].at<uchar>(r,c);
-				tmp1.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[2].at<uchar>(r,c);*/
-			}
-		}
-		diff.push_back(tmp);
-		diff.push_back(tmp1);
-
+	diff.push_back(image_list_gray[1]-image_pre_compensation);
+	diff.push_back(image_list_gray[1]-image_next_compensation);
+	
+		
 }
 
 void diffByThreshold(vector<Mat>& diff, vector<Mat>& diff_wb, int threshold_wb) {
