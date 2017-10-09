@@ -9,9 +9,10 @@
 //#define DEHAZE
 #define BAYESIAN
 //#define SAVERESULT
-//#define EM
+#define EM
 #define CAMERAMOTION
-//#define CONNECTED
+#define CONNECTED
+#define CONTOURS
 //using namespace cv::optflow;
 Ptr<BackgroundSubtractor> pMOG;
 //string folderName = "img_170721_01j";
@@ -20,12 +21,12 @@ string saveFolder = "..//..//..//image//" + folderName + "//" + folderName + "_"
 string saveImage = "..//..//..//result//20171002//" + folderName + "_";
 int width = 1358; //1358 without black range
 int height = 1080; //1080
-Rect rect()
+Rect rect(6, 4, width - 6, height - 8);
 int main(int argc, char* argv[]) {
 
 
-	int width_input = width / 4;
-	int height_input = height / 4;
+	int width_input = rect.width /4;
+	int height_input = rect.height/4;
 
 	int beg_num = 0;
 	int frame_num = 100;
@@ -46,7 +47,7 @@ int main(int argc, char* argv[]) {
 		Mat cur = imread(file_name);
 		Mat input_resize, cur_gray;
 		Mat dehaze_out(height_input, width_input, CV_8UC3);
-		resize(cur, input_resize, Size(width_input, height_input));
+		resize(cur(rect), input_resize, Size(width_input, height_input));
 		//dehazeDC(input_resize, dehaze);
 		//dehaze(dehaze_out,input_resize);
 		image_list.push_back(input_resize);
@@ -76,67 +77,84 @@ int main(int argc, char* argv[]) {
 	}
 #endif //TEST
 
-	if (count < 3) {
-		continue;
-	}
-	else {
-		vector<Mat> diff;
-		vector<Mat> diff_c;
-		vector<Mat> diff_wb_c;
-		vector<Mat> diff_wb;
-		vector<Mat> channels;
-		Mat  labels, stats, centroids;
-		Mat output(height_input, width_input, CV_8UC3);
-		Mat img_label(height_input, width_input, CV_8UC3);
+		if (count < 3) {
+			continue;
+		}
+		else {
+			vector<Mat> diff;
+			vector<Mat> diff_c;
+			vector<Mat> diff_wb_c;
+			vector<Mat> diff_wb;
+			vector<Mat> channels;
+		
+			Mat output(height_input, width_input, CV_8UC3);
+			Mat img_label(height_input, width_input, CV_8UC3);
 
-		Mat diff_output(height_input, width_input, CV_8UC1, Scalar(0));
-		Mat diff_output1(height_input, width_input, CV_8UC1, Scalar(0));
-		Mat diff_iter(height_input, width_input, CV_8UC1, Scalar(0));
-		Mat label_init(height_input, width_input, CV_8UC1, Scalar(0));
-		Mat darkChannel(height_input, width_input, CV_8UC1, Scalar(0));
-		Mat brightChannel(height_input, width_input, CV_8UC1, Scalar(0));
-		FrameRelativeDiff(image_list_gray, diff);
-		diffByThreshold(diff, diff_wb, 5);
+			Mat diff_output(height_input, width_input, CV_8UC1, Scalar(0));
+			Mat diff_output_c(height_input, width_input, CV_8UC1, Scalar(0));
+			Mat diff_iter(height_input, width_input, CV_8UC1, Scalar(0));
+			Mat label_init(height_input, width_input, CV_8UC1, Scalar(0));
+			Mat darkChannel(height_input, width_input, CV_8UC1, Scalar(0));
+			Mat brightChannel(height_input, width_input, CV_8UC1, Scalar(0));
+			FrameRelativeDiff(image_list_gray, diff);
+			diffByThreshold(diff, diff_wb, 5);
 #ifdef CAMERAMOTION
-		/*calcDarkChannel(darkChannel, brightChannel, image_list[1], 0);
-		split(image_list[1], channels);
-		Mat trans = channels[2] - darkChannel;
-		threshold(trans, trans, 20, 255, CV_THRESH_BINARY);*/
-		vector<Point2f> camera_motion;
-		calcPyrLKflow(image_list_gray, camera_motion);
-		FrameRelativeDiffBaseCameraMotion(image_list_gray, diff_c, camera_motion);
-		diffByThreshold(diff_c, diff_wb_c, 10);
+			calcDarkChannel(darkChannel, brightChannel, image_list[1], 0);
+			split(image_list[1], channels);
+			Mat trans = channels[2] - darkChannel;
+			threshold(trans, trans, 20, 255, CV_THRESH_BINARY);
+			vector<Mat> camera_motion;
+			calcPyrLKflow(image_list_gray, trans,camera_motion);
+			FrameRelativeDiffBaseCameraMotion(image_list_gray, diff_c, camera_motion);
+			diffByThreshold(diff_c, diff_wb_c, 7);
 #endif //CAMERAMOTION
 #ifdef CONNECTED
-		int num = sumAreaByRadius(diff_wb, diff_output, 20);
-		Mat cdfd;
-		diff_output.copyTo(cdfd);
+			int num = sumAreaByRadius(diff_wb_c, diff_output_c, 20);
+			Mat cdfd;
+			diff_output_c.copyTo(cdfd);
+			showLabelImg(diff_output_c);
+			Mat labels, stats, centroids;
+			int size= connectedComponentsWithStats(diff_output_c, labels, stats, centroids, 8, 4);
 #endif //CONNECTED
 #ifdef EM
-
-		EMSegmetation(image_list[1], diff_output, num, 3);
+			Mat samples;
+			vector<int> valid_labels;
+			vector<float> probs_color;
+			createSamples(image_list[1], stats,labels, samples);
+			EMSegmetationSamples(image_list[1], samples, valid_labels,probs_color,2);
+		
+			//getMaskFromValidLabels(labels, valid_labels);
+			//imwrite("valid_label.jpg", labels);
+			//showAreaLabel(img_label, labels, centroids, size);
+			//showMaskImg(labels);
+		//EMSegmetation(image_list[1], diff_output_c, num, 3);
 #endif //EM
+#ifdef CONTOURS
 		vector<vector<Point>> contours;
 		vector<Vec4i> hierarchy;
-		vector<int> valid_labels;
+		
+		vector<float> probs_grad;
+		findContours(diff_output_c, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+		contourSobel(image_list_gray[1], hierarchy, probs_grad, contours);
+#endif //CONTOURS
+		float sum = 0.;
+		for (int i = 0; i < size-1; i++) {
+			float prob = probs_color[i] * probs_grad[i];
+			sum += prob;
+			
+			
+		}
 
+		for (int k = 0; k < size-1; k++) {
+			float prob= probs_color[k] * probs_grad[k];
+			/*prob /= sum;*/
+			cout << "prob " << prob << endl;
+		}
 
-		//labelInitByRedDarkChannel(trans, label_init);
-		//bayesianEstimation(image_list[1], diff_output, diff_iter,2, 2, 1);
-		//int size=connectedComponentsWithStats(diff_output, labels, stats, centroids, 8, 4);
-		//showLabelImg(diff_iter);
-
-		//showAreaLabel(img_label, labels, centroids, size);
-		//vector<int> valid_label1,valid_label2;
-		//shapeFilter(diff_output, labels, stats, size,valid_label1);
-		//findContours(diff_output, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-		//contourSobel(image_list_gray[1], hierarchy, contours);
-		//neighbourBlockMatching(labels, stats, centroids, image_list_gray,valid_labels);
-
-		//imshow("diff_by_sumarea", diff_output);
-		//darkFramesByMask(image_list, output, diff_output);
-		//showLabelImg(diff_output);
-		//showLabelImg(cdfd);
+		getMaskFromProbs(labels, probs_color, probs_grad);
+		showLabelImg(cdfd);
+		Mat show_img(height_input, width_input, CV_8UC1, Scalar(0));
+		showMaskImg(labels, show_img);
 #ifdef SAVERESULT
 		Mat combine1, combine2, combine;
 		//cvtColor(cdfd, cdfd, CV_GRAY2BGR);
@@ -154,27 +172,31 @@ int main(int argc, char* argv[]) {
 		imshow("combine", combine);
 		imwrite(save_name, combine);
 #endif //SAVERESULT
-		//imshow("diff_by_sum", diff_output);
-		//imshow("area label", img_label);
-		//imshow("original diff", diff_output);
-		//imshow("cdfd", cdfd);
-		//imshow("output", output);
-		//imshow("trans", trans);
-		//imshow("origial", image_list[1]);
-		imshow("diff_cur_pre", diff_wb[0]);
-		imshow("diff_cur_next", diff_wb[1]);
-		imshow("diff_cur_pre_camera", diff_wb_c[0]);
-		imshow("diff_cur_next_camera", diff_wb_c[1]);
 
-		image_list.erase(image_list.begin());
-		image_list_gray.erase(image_list_gray.begin());
+			//imshow("diff_by_sum", diff_output);
+			imshow("area label", show_img);
+			//imshow("original diff", diff_output);
+			imshow("cdfd", cdfd);
+			//imwrite("cdfd.jpg", cdfd);
+			
+			//imshow("trans", trans);
+			
+			//imshow("diff_cur_pre", diff_wb[0]);
+			//imshow("diff_cur_next", diff_wb[1]);
+			//imshow("diff_cur_pre_camera", diff_wb_c[0]);
+			//imshow("diff_cur_next_camera", diff_wb_c[1]);
+			
+			image_list.erase(image_list.begin());
+			image_list_gray.erase(image_list_gray.begin());
 
-		count = 2;
-		waitKey(0);
+			count = 2;
+			waitKey(0);
 
+
+		}
 
 	}
-}
+
 
 
 

@@ -1,6 +1,7 @@
 #include "utility.h"
 static Point2f getAverage(const std::vector<Point2f>& values);
-void calcPyrLKflow(vector<Mat>& imageList_gray, vector<Point2f>& camera_motion) {
+static void checkValidArea(Mat& valid_area, vector<Point2f>& points, vector<bool>& filter_status);
+void calcPyrLKflow(vector<Mat>& imageList_gray,Mat& object_area, vector<Mat>& camera_motion) {
 	vector<Point2f> points[3];
 	
 	TermCriteria termcrit(TermCriteria::COUNT | TermCriteria::EPS, 20, 0.03);
@@ -21,27 +22,31 @@ void calcPyrLKflow(vector<Mat>& imageList_gray, vector<Point2f>& camera_motion) 
 	cv::buildOpticalFlowPyramid(imageList_gray[2], newImagePyr1, winSize, maxLevel, false);
 	cv::calcOpticalFlowPyrLK(oldImagePyr, newImagePyr, points[1], points[0], status, err, winSize, 3, termcrit, 0, 0.001);
 	cv::calcOpticalFlowPyrLK(oldImagePyr, newImagePyr1, points[1], points[2], status, err, winSize, 3, termcrit, 0, 0.001);
+	
 	std::vector<bool>filter_status(points[1].size(), true);
 	std::vector<bool> filter_status1(points[1].size(), true);
+	checkValidArea(object_area, points[1], filter_status);
 	check_FB(oldImagePyr, newImagePyr, points[1], points[0], filter_status);
 	check_NCC(imageList_gray[1], imageList_gray[0], points[1], points[0], filter_status);
+	checkValidArea(object_area, points[1], filter_status1);
 	check_FB(oldImagePyr, newImagePyr1, points[1], points[2], filter_status1);
 	check_NCC(imageList_gray[1], imageList_gray[2], points[1], points[2], filter_status1);
 	vector<Point2f> points1 = points[1];
+
 	size_t good_points_after_filter = filterPointsInVectors(filter_status, points[1], points[0], true);
 	size_t good_points_after_filter1 = filterPointsInVectors(filter_status1, points1, points[2], true);
-	vector<Mat>homo_list;
-
-	Point2f cur_pre_vector = getAverage(points[0])-getAverage(points[1]);
-	Point2f cur_next_vector = getAverage(points[2]) - getAverage(points1);
-
-	//Mat fundamentalMat1 = findFundamentalMat(points[0], points[1], CV_RANSAC, 3.0);
 	
-	//Mat fundamentalMat2 = findFundamentalMat(points0, points[2], CV_RANSAC, 3.0);
-	
-	camera_motion.push_back(cur_pre_vector);
-	camera_motion.push_back(cur_next_vector);
-	cout << "camera motion " << cur_pre_vector << " " << cur_next_vector << endl;
+
+	/*Point2f cur_pre_vector = getAverage(points[0])-getAverage(points[1]);
+	Point2f cur_next_vector = getAverage(points[2]) - getAverage(points1);*/
+
+	Mat homo_10 = findHomography(points[0], points[1], CV_RANSAC, 3.0);
+	Mat homo_12 = findHomography(points[2], points1, CV_RANSAC, 3.0);
+	camera_motion.push_back(homo_10);
+	camera_motion.push_back(homo_12);
+	//camera_motion.push_back(cur_pre_vector);
+	//camera_motion.push_back(cur_next_vector);
+	cout << "camera motion " << homo_10 << " " << homo_12 << endl;
 	//homo_list.push_back(homoMat);
 	//homo_list.push_back(homoMat1);
 	
@@ -77,4 +82,18 @@ static Point2f getAverage(const std::vector<Point2f>& values) {
 	}
 	Point2f res(sum.x / size, sum.y / size);
 	return res;
+}
+
+static void checkValidArea(Mat& valid_area, vector<Point2f>& points, vector<bool>& status) {
+	if (status.empty()) {
+		status = std::vector<bool>(points.size(), true);
+	}
+	for (int i = 0; i < points.size(); i++) {
+		Point point_int;
+		point_int.x = floor(points[i].x)<0?0: floor(points[i].x);
+		point_int.y= floor(points[i].y)<0?0: floor(points[i].y);
+		//cout << "point_int " << point_int << endl;
+		status[i] = status[i] && valid_area.at<uchar>(point_int) == 255;
+		
+	}
 }

@@ -40,10 +40,10 @@ void refineFlow(Mat& flow1, Mat& flow2, int radius);
 * the block is filled of flow as the same value as neighours*/
 void refineFlowTwice(Mat& flow1, int radius);
 /**to caculate optical flow using Lucas-Kanade method*/
-void calcPyrLKflow(vector<Mat>& imageList_gray, vector<Point2f>& camera_motion);
+void calcPyrLKflow(vector<Mat>& imageList_gray, Mat& object_area,vector<Mat>& camera_motion);
 /**show the connected area label on the image*/
 void showAreaLabel(Mat& image, Mat& labels, Mat& centroids,int size);
-void contourSobel(Mat& image_gray, const vector<Vec4i>& hierarchy,  vector<vector<Point>>& contour_points);
+void contourSobel(Mat& image_gray, const vector<Vec4i>& hierarchy,  vector<float>& probs,vector<vector<Point>>& contour_points);
 
 void diffFiveFrames(vector<Mat>& image_list_gray, vector<Mat>& diff);
 void diffWB(vector<Mat>& diff, vector<Mat>& diff_wb, int threshold);
@@ -52,7 +52,7 @@ void temporalLikelihood(vector<Mat>& diff, vector<Mat>& diff_wb, Mat& temporal);
 void modelError(vector<Mat>& diff_wb, vector<Mat>& diff, Mat& sigma);
 
 void FrameRelativeDiff(vector<Mat>& image_list_gray, vector<Mat>& diff);
-void FrameRelativeDiffBaseCameraMotion(vector<Mat>& image_list_gray, vector<Mat>& diff, vector<Point2f>& camera_motion);
+void FrameRelativeDiffBaseCameraMotion(vector<Mat>& image_list_gray, vector<Mat>& diff, vector<Mat>& camera_motion);
 void diffByThreshold(vector<Mat>& diff, vector<Mat>& diff_wb, int threshold_wb);
 void diffByPreNext(vector<Mat>& diff_wb, Mat& diff_output);
 void neighbourBlockMatching(Mat& labels, Mat& stats, Mat& centroids, vector<Mat>& image_list_gray,vector<int>& valid_label);
@@ -60,4 +60,8 @@ void spatialFilter(Mat& labels, Mat& diff_wb, vector<int>& valid_label);
 double modelError(vector<Mat>& diff, Mat& diff_out);
 void neighbourBlockDiff(Mat& labels, Mat& stats, Mat& centroids, vector<Mat>& image_list_gray, vector<int>& valid_label,double model_error);
 void showLabelImg(Mat& label);
+void showMaskImg(Mat& label,Mat& show_img);
+void getMaskFromValidLabels(Mat& mask, vector<int>& valid_labels);
+void getMaskFromProbs(Mat& mask, vector<float>& prob1, vector<float>& prob2);
+void nearNeighourSimilarity(Mat& image, Mat& stats, vector<float>& probs_similar);
 

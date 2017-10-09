@@ -134,8 +134,8 @@ void bayesianEstimation(Mat& image, Mat& labels_init, Mat& labels_estimation,int
 
 	while (iter < max_iter) {
 		
-		for (int i = 3; i < height; i++) {
-			for (int j = 4; j < width; j++) {
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
 				Point cur(j, i);
 				vector<double>pp, pl;
 				priorModel(image, labels_estimation, cur, pp, radius, seg_num);

@@ -97,7 +97,7 @@ static void pointSobel(Mat& image_gray, Point& center_point, Point2f& dst_gradie
 	dst_gradient.y /= 16;
 }
 
-void contourSobel(Mat& image_gray, const vector<Vec4i>& hierarchy, vector<vector<Point>>& contour_points) {
+void contourSobel(Mat& image_gray, const vector<Vec4i>& hierarchy, vector<float>& probs,vector<vector<Point>>& contour_points) {
 	int idx = 0;
 	Mat grad_show(image_gray.size(), CV_8UC1,Scalar(0));
 	
@@ -106,36 +106,52 @@ void contourSobel(Mat& image_gray, const vector<Vec4i>& hierarchy, vector<vector
 		vector<Point2f> gradient_list;
 
 		vector<float> angles;
-
+		//vector<int> scores;
 		int max = 0, min = 255;
-
+		/*if (contourArea(contour_points[idx]) < 4) {
+			continue;
+		}*/
+		int bins[12] = {0};
 		for (int i = 0; i < contour_points_of_each; i++) {
+			
 			Point2f dst_gradient(0, 0);
 			pointSobel(image_gray, contour_points[idx][i], dst_gradient);
-			
 			gradient_list.push_back(dst_gradient);
-
 			angles.push_back(fastAtan2(dst_gradient.y, dst_gradient.x));
 			//cout << "idx "<<idx<<" angle: " << angles[i] << endl;
-
-			int grad = abs(dst_gradient.x) +abs(dst_gradient.y);
+			int index = angles[i] / 30 == 12 ? 0 : angles[i] / 30;
+			//cout << "index " << index << endl;
+			bins[index]++;
+			/*int grad = 3*abs(dst_gradient.x) +3*abs(dst_gradient.y);
 			
 			if (grad > max) max = grad;
 			if (grad < min) min = grad;
-			//grad = grad > 255 ? 255 : grad;
-			//grad_show.at<uchar>(contour_points[idx][i]) = grad;
+			grad = grad > 255 ? 255 : grad;
+			grad_show.at<uchar>(contour_points[idx][i]) = grad;*/
 		}
-		int* gradient_table = (int *)malloc(sizeof(int)*(max - min + 1));
+		/*int* gradient_table = (int *)malloc(sizeof(int)*(max - min + 1));
 		for (int k = 0; k < max - min + 1; k++) {
 			gradient_table[k] = 0;
+		}*/
+		int sub_score = 0;
+		for (int bins_index = 0; bins_index < 6; bins_index++) {
+			if (bins[bins_index] > 0) sub_score++;
 		}
-		for (int i = 0; i < contour_points_of_each; i++) {
+		for (int bins_index = 6; bins_index < 12; bins_index++) {
+			if (bins[bins_index] > 0) sub_score++;
+		}
+		//scores.push_back(sub_score);
+		probs.push_back((float)sub_score / 12.);
+		/*if (sub_score>4) {
+			drawContours(image_gray, contour_points, idx, Scalar(0, 0, 255), 1, 8);
+		}*/
+	/*	for (int i = 0; i < contour_points_of_each; i++) {
 			int grad = abs(gradient_list[i].x) + abs(gradient_list[i].y);
 			gradient_table[grad - min]++;
-		}
-		for (int j = 0; j < max - min + 1; j++) {
+		}*/
+		/*for (int j = 0; j < max - min + 1; j++) {
 			printf("%d: %d\n", j, gradient_table[j]);
-		}
+		}*/
 	}
 	//imshow("grad", grad_show);
 }
@@ -158,61 +174,29 @@ void FrameRelativeDiff(vector<Mat>& image_list_gray, vector<Mat>& diff) {
 	diff.insert(diff.end(), backward_diff.begin(), backward_diff.end());
 }
 
-void FrameRelativeDiffBaseCameraMotion(vector<Mat>& image_list_gray, vector<Mat>& diff,vector<Point2f>& camera_motion) 
+void FrameRelativeDiffBaseCameraMotion(vector<Mat>& image_list_gray, vector<Mat>& diff,vector<Mat>& camera_motion) 
 {
 	int size = image_list_gray.size();
 	int mid = size / 2;
 	int width = image_list_gray[0].cols;
-	int height = image_list_gray[1].rows;
+	int height = image_list_gray[0].rows;
 
+	Mat image_pre_compensation(height, width, CV_8UC1, Scalar(0));
+	Mat image_next_compensation(height, width, CV_8UC1, Scalar(0));
 	
-
+	//Mat image_current;
+	//image_list_gray[1].copyTo(image_current);
+	//image_current.convertTo(image_current, CV_32F);
+	Mat p0;
+	Mat p1;
 	
-		Mat tmp(height, width, CV_8UC1);
-		Mat tmp1(height, width, CV_8UC1);
-		for (int r = 0; r < height; r++) {
-			for (int c = 0; c < width; c++) {
-				Point pre_pos,next_pos;
-				pre_pos.x = c + camera_motion[0].x;
-				pre_pos.y = r + camera_motion[0].y;
-				/*pre_pos.x = pre_pos.x < 0 ? 0 : pre_pos.x;
-				pre_pos.x = pre_pos.x > width - 1 ? width - 1 : pre_pos.x;
-				pre_pos.y = pre_pos.y < 0 ? 0 : pre_pos.y;
-				pre_pos.y = pre_pos.y > height - 1 ? height - 1 : pre_pos.y;*/
+	warpPerspective(image_list_gray[0], image_pre_compensation, camera_motion[0], Size(width, height),1,BORDER_REPLICATE);
+	warpPerspective(image_list_gray[2], image_next_compensation,  camera_motion[1], Size(width, height),1,BORDER_REPLICATE);
 
-				next_pos.x = c + camera_motion[1].x;
-				next_pos.y = r + camera_motion[1].y;
-				/*next_pos.x = next_pos.x < 0 ? 0 : next_pos.x;
-				next_pos.x = next_pos.x > width - 1 ? width - 1 : next_pos.x;
-				next_pos.y = next_pos.y < 0 ? 0 : next_pos.y;
-				next_pos.y = next_pos.y > height - 1 ? height - 1 : next_pos.y;*/
-
-				if (pre_pos.x<0 || pre_pos.x>width - 1 || pre_pos.y<0 || pre_pos.y>height - 1) {
-					tmp.at<uchar>(r, c) = 0;
-				}
-				else {
-					tmp.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[0].at<uchar>(pre_pos) >= 0 ? \
-						image_list_gray[1].at<uchar>(r, c) - image_list_gray[0].at<uchar>(pre_pos) : 0;
-				}
-				if (next_pos.x<0 || next_pos.x>width - 1 || next_pos.y<0 || next_pos.y>height - 1) {
-					tmp1.at<uchar>(r, c) = 0;
-				}
-				else {
-					tmp1.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[2].at<uchar>(next_pos) >= 0 ? \
-						image_list_gray[1].at<uchar>(r, c) - image_list_gray[2].at<uchar>(next_pos) : 0;
-				}
-
-				
-				
-				//cout << "tmp " << (int)tmp.at<uchar>(r, c) << endl;
-				
-				/*tmp.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[0].at<uchar>(r,c);
-				tmp1.at<uchar>(r, c) = image_list_gray[1].at<uchar>(r, c) - image_list_gray[2].at<uchar>(r,c);*/
-			}
-		}
-		diff.push_back(tmp);
-		diff.push_back(tmp1);
-
+	diff.push_back(image_list_gray[1]-image_pre_compensation);
+	diff.push_back(image_list_gray[1]-image_next_compensation);
+	
+		
 }
 
 void diffByThreshold(vector<Mat>& diff, vector<Mat>& diff_wb, int threshold_wb) {
@@ -485,7 +469,79 @@ void showLabelImg(Mat& label) {
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			label.at<uchar>(i, j) = label.at<uchar>(i, j) == 1 ? 255 : 0;
+			label.at<uchar>(i, j) = label.at<uchar>(i, j) >0  ? 255 : 0;
 		}
 	}
+}
+
+void showMaskImg(Mat& label,Mat& show_img) {
+	int width = label.cols;
+	int height = label.rows;
+
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			show_img.at<uchar>(i, j) = label.at<int>(i, j) >0 ? 255 : 0;
+		}
+	}
+}
+
+void getMaskFromValidLabels(Mat& mask, vector<int>& valid_labels) {
+	int width = mask.cols;
+	int height = mask.rows;
+
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			int cur = mask.at<int>(i, j);
+			vector<int>::iterator iter = find(valid_labels.begin(), valid_labels.end(), cur);
+			if (iter == valid_labels.end()) {
+				mask.at<int>(i, j) = 0;
+			}
+		}
+	}
+}
+
+void getMaskFromProbs(Mat& mask, vector<float>& prob1, vector<float>& prob2) {
+	int width = mask.cols;
+	int height = mask.rows;
+
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			
+			int cur = mask.at<int>(i, j);
+			if (cur == 0) continue;
+			if (prob1[cur-1] < 0.5) {
+				mask.at<int>(i, j) = 0;
+			}
+		}
+	}
+}
+static void getPatchCenter(int img_width, int img_height, Size winSize, Point center, Point& patch_center) {
+
+}
+void nearNeighourSimilarity(Mat& image, Mat& stats, vector<float>& probs_similar) {
+	for (int i = 1; i < stats.row; i++) {
+		vector<double> sads;
+		Point center_point(stats.at<int>(i, 0) + stats.at<int>(i, 2) / 2, stats.at<int>(i, 1) + stats.at<int>(i, 3) / 2);
+		int patch_width = stats.at<int>(i, 2);
+		int patch_height = stats.at<int>(i, 3);
+		Mat center_patch = getPatch(image, Size(patch_width, patch_height), center_point);
+		int area = patch_width*patch_height;
+		double s0 = sum(center_patch)(0)/area;
+		
+		for (int m = -1; m <= 1; m++) {
+			for (int n = -1; n <= 1; n++) {
+				if (m == 0 && n == 0) continue;
+				Point patch_center(center_point.x - n*patch_width, center_point.y - m*patch_height);
+				patch_center.x = patch_center.x < 0 ? 0 : patch_center.x;
+				patch_center.y = patch_center.y < 0 ? 0 : patch_center.y;
+				patch_center.x = patch_center.x > image.cols - 1 ? image.cols - 1 : patch_center.x;
+				patch_center.y = patch_center.y > image.rows - 1 ? image.rows - 1 : patch_center.y;
+				Mat neig= getPatch(image, Size(patch_width, patch_height), patch_center);
+				double s1 = sum(neig)(0)/area;
+				sads.push_back(abs(s1 - s0));
+			}
+		}
+
+	}
+	
 }
