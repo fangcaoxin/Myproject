@@ -441,7 +441,7 @@ static double neighbourDiff(Mat& labels, Rect rect, Mat& image) {
 	
 }
 
-void neighbourBlockDiff(Mat& labels, Mat& stats, Mat& centroids, vector<Mat>& image_list_gray, vector<int>& valid_label,double model_error) {
+void neighbourBlockDiff(Mat& labels, Mat& stats, Mat& centroids, vector<Mat>& image_list_gray, vector<int>& valid_label, double model_error) {
 	int width = labels.cols;
 	int height = labels.rows;
 	int mid = image_list_gray.size() / 2;
@@ -455,8 +455,8 @@ void neighbourBlockDiff(Mat& labels, Mat& stats, Mat& centroids, vector<Mat>& im
 			if (var < model_error) {
 				valid_label.push_back(k);
 			}
-			
-			//cout << "VAR "<<k<<":" <<var<< endl;
+
+//cout << "VAR "<<k<<":" <<var<< endl;
 
 		}
 
@@ -469,18 +469,18 @@ void showLabelImg(Mat& label) {
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			label.at<uchar>(i, j) = label.at<uchar>(i, j) >0  ? 255 : 0;
+			label.at<uchar>(i, j) = label.at<uchar>(i, j) > 0 ? 255 : 0;
 		}
 	}
 }
 
-void showMaskImg(Mat& label,Mat& show_img) {
+void showMaskImg(Mat& label, Mat& show_img) {
 	int width = label.cols;
 	int height = label.rows;
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			show_img.at<uchar>(i, j) = label.at<int>(i, j) >0 ? 255 : 0;
+			show_img.at<uchar>(i, j) = label.at<int>(i, j) > 0 ? 255 : 0;
 		}
 	}
 }
@@ -506,10 +506,10 @@ void getMaskFromProbs(Mat& mask, vector<float>& prob1, vector<float>& prob2) {
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			
+
 			int cur = mask.at<int>(i, j);
 			if (cur == 0) continue;
-			if (prob1[cur-1] < 0.5) {
+			if (prob1[cur - 1] < 0.1) {
 				mask.at<int>(i, j) = 0;
 			}
 		}
@@ -519,15 +519,16 @@ static void getPatchCenter(int img_width, int img_height, Size winSize, Point ce
 
 }
 void nearNeighourSimilarity(Mat& image, Mat& stats, vector<float>& probs_similar) {
-	for (int i = 1; i < stats.row; i++) {
+	vector<double> similar;
+	for (int i = 1; i < stats.rows; i++) {
 		vector<double> sads;
 		Point center_point(stats.at<int>(i, 0) + stats.at<int>(i, 2) / 2, stats.at<int>(i, 1) + stats.at<int>(i, 3) / 2);
 		int patch_width = stats.at<int>(i, 2);
 		int patch_height = stats.at<int>(i, 3);
 		Mat center_patch = getPatch(image, Size(patch_width, patch_height), center_point);
 		int area = patch_width*patch_height;
-		double s0 = sum(center_patch)(0)/area;
-		
+		double s0 = sum(center_patch)(0) / area;
+
 		for (int m = -1; m <= 1; m++) {
 			for (int n = -1; n <= 1; n++) {
 				if (m == 0 && n == 0) continue;
@@ -536,12 +537,44 @@ void nearNeighourSimilarity(Mat& image, Mat& stats, vector<float>& probs_similar
 				patch_center.y = patch_center.y < 0 ? 0 : patch_center.y;
 				patch_center.x = patch_center.x > image.cols - 1 ? image.cols - 1 : patch_center.x;
 				patch_center.y = patch_center.y > image.rows - 1 ? image.rows - 1 : patch_center.y;
-				Mat neig= getPatch(image, Size(patch_width, patch_height), patch_center);
-				double s1 = sum(neig)(0)/area;
+				Mat neig = getPatch(image, Size(patch_width, patch_height), patch_center);
+				double s1 = sum(neig)(0) / area;
 				sads.push_back(abs(s1 - s0));
 			}
 		}
-
+		double min = sads[0];
+		for (int k = 1; k < sads.size(); k++) {
+			if (sads[k] < min) min = sads[k];
+		}
+		similar.push_back(exp(-min));
+		//probs_similar.push_back(min);
+		
 	}
-	
+	double sum = 0.;
+	for (int r = 0; r < similar.size(); r++) {
+		sum += similar[r];
+	}
+
+	for (int c = 0; c < similar.size(); c++) {
+		probs_similar.push_back(similar[c] / sum);
+		cout << "similar" << similar[c] / sum << endl;
+	}
+
 }
+
+void rgbStdDev(Mat& image, Mat& labels, Mat& normalize_std, int size) {
+	int width = image.cols;
+	int height = image.rows;
+	Mat normalize_std_tmp(size, 2, CV_32FC1);
+	vector<float> rgb_std(3);
+	vector<float> rgb_sum(3);
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			if (labels.at<int>(i, j) == 0) continue;
+			for (int k = 0; k < 3; k++) {
+
+			}
+		}
+	}
+}
+	

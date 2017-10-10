@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
 	int width_input = rect.width /4;
 	int height_input = rect.height/4;
 
-	int beg_num = 0;
+	int beg_num = 53;
 	int frame_num = 100;
 	Mat backgroud;
 	int frame_count = 0;
@@ -115,6 +115,8 @@ int main(int argc, char* argv[]) {
 			showLabelImg(diff_output_c);
 			Mat labels, stats, centroids;
 			int size= connectedComponentsWithStats(diff_output_c, labels, stats, centroids, 8, 4);
+			vector<float> probs_similar;
+			nearNeighourSimilarity(image_list[1], stats, probs_similar);
 #endif //CONNECTED
 #ifdef EM
 			Mat samples;
@@ -151,7 +153,7 @@ int main(int argc, char* argv[]) {
 			cout << "prob " << prob << endl;
 		}
 
-		getMaskFromProbs(labels, probs_color, probs_grad);
+		getMaskFromProbs(labels, probs_similar, probs_grad);
 		showLabelImg(cdfd);
 		Mat show_img(height_input, width_input, CV_8UC1, Scalar(0));
 		showMaskImg(labels, show_img);
