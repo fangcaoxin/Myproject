@@ -519,7 +519,7 @@ static void getPatchCenter(int img_width, int img_height, Size winSize, Point ce
 
 }
 void nearNeighourSimilarity(Mat& image, Mat& stats, vector<float>& probs_similar) {
-	for (int i = 1; i < stats.row; i++) {
+	for (int i = 1; i < stats.rows; i++) {
 		vector<double> sads;
 		Point center_point(stats.at<int>(i, 0) + stats.at<int>(i, 2) / 2, stats.at<int>(i, 1) + stats.at<int>(i, 3) / 2);
 		int patch_width = stats.at<int>(i, 2);

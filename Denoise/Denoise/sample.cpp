@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
 			vector<Mat> camera_motion;
 			calcPyrLKflow(image_list_gray, trans,camera_motion);
 			FrameRelativeDiffBaseCameraMotion(image_list_gray, diff_c, camera_motion);
-			diffByThreshold(diff_c, diff_wb_c, 7);
+			diffByThreshold(diff_c, diff_wb_c, 5);
 #endif //CAMERAMOTION
 #ifdef CONNECTED
 			int num = sumAreaByRadius(diff_wb_c, diff_output_c, 20);
