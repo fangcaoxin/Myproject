@@ -69,25 +69,18 @@ void darkChannelFrames(const vector<Mat> &imgList, int frameNum, Mat& ouput, con
 	}
 }
 
-int sumAreaByRadius(vector<Mat>& diff_wb, Mat& sum, int radius) {
-	int size = diff_wb.size();
-	int height = diff_wb[0].rows;
-	int width = diff_wb[0].cols;
-	vector<Mat> diff_1(size);
-	vector<Mat> labels(size);
-	vector<Mat> stats(size);
-	vector<Mat> centroids(size);
-	for (int i = 0; i < size; i++) {
-	   connectedComponentsWithStats(diff_wb[i], labels[i], stats[i], centroids[i], 8, 4);
-	}
+int sumAreaByRadius(Mat& label_pre,Mat& label_next,Mat& centroids_pre,Mat& centroids_next, Mat& sum, int radius) {
+	int height = label_pre.rows;
+	int width =label_pre.cols;
+
 	int st_row, ed_row;
 	int st_col, ed_col;
 	
 	vector<int> list_0;
 	vector<int> list_1;
-	for (int k = 1; k < centroids[0].rows; k++) {
-		int i = centroids[0].at<double>(k, 1);
-		int j = centroids[0].at<double>(k, 0);
+	for (int k = 1; k < centroids_pre.rows; k++) {
+		int i = centroids_pre.at<double>(k, 1);
+		int j = centroids_pre.at<double>(k, 0);
 		st_row = i - radius, ed_row = i + radius;
 		st_col = j - radius, ed_col = j + radius;
 
@@ -100,10 +93,10 @@ int sumAreaByRadius(vector<Mat>& diff_wb, Mat& sum, int radius) {
 		{
 			for (int n = st_col; n <= ed_col; n++)
 			{
-				if (labels[1].at<int>(m, n) != 0) {
-					int label = labels[1].at<int>(m, n);
-					double dis = (centroids[1].at<double>(label, 1) - i)*(centroids[1].at<double>(label, 1) - i) + (centroids[1].at<double>(label, 0) - j)*(centroids[1].at<double>(label, 0) - j);
-					if (dis < radius*radius&&stats[1].at<int>(label, 4) < width*height*0.003&&stats[0].at<int>(k, 4) < width*height*0.003) {
+				if (label_next.at<int>(m, n) != 0) {
+					int label = label_next.at<int>(m, n);
+					double dis = (centroids_next.at<double>(label, 1) - i)*(centroids_next.at<double>(label, 1) - i) + (centroids_next.at<double>(label, 0) - j)*(centroids_next.at<double>(label, 0) - j);
+					if (dis < radius*radius) {
 
 						list_0.push_back(k);
 						list_1.push_back(label);
@@ -115,12 +108,17 @@ int sumAreaByRadius(vector<Mat>& diff_wb, Mat& sum, int radius) {
 	int num = 0;
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			int label_0 = labels[0].at<int>(i, j);
-			int label_1 = labels[1].at<int>(i, j);
+			int label_0 = label_pre.at<int>(i, j);
+			int label_1 = label_next.at<int>(i, j);
 			vector<int>::iterator iter_0 = find(list_0.begin(), list_0.end(), label_0);
 			vector<int>::iterator iter_1 = find(list_1.begin(), list_1.end(), label_1);
-			if (iter_0 != list_0.end() || iter_1 != list_1.end()) {
+			if (iter_0 != list_0.end()) {
 				sum.at<uchar>(i,j) = 1;
+				num++;
+			}
+
+			if (iter_1 != list_1.end()) {
+				sum.at<uchar>(i, j) = 1;
 				num++;
 			}
 		}

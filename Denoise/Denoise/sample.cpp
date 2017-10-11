@@ -9,7 +9,7 @@
 //#define DEHAZE
 #define BAYESIAN
 //#define SAVERESULT
-#define EM
+//#define EM
 #define CAMERAMOTION
 #define CONNECTED
 //#define CONTOURS
@@ -96,8 +96,8 @@ int main(int argc, char* argv[]) {
 			Mat label_init(height_input, width_input, CV_8UC1, Scalar(0));
 			Mat darkChannel(height_input, width_input, CV_8UC1, Scalar(0));
 			Mat brightChannel(height_input, width_input, CV_8UC1, Scalar(0));
-			FrameRelativeDiff(image_list_gray, diff);
-			diffByThreshold(diff, diff_wb, 5);
+			/*FrameRelativeDiff(image_list_gray, diff);
+			diffByThreshold(diff, diff_wb, 5);*/
 #ifdef CAMERAMOTION
 			calcDarkChannel(darkChannel, brightChannel, image_list[1], 0);
 			split(image_list[1], channels);
@@ -109,14 +109,21 @@ int main(int argc, char* argv[]) {
 			diffByThreshold(diff_c, diff_wb_c, 5);
 #endif //CAMERAMOTION
 #ifdef CONNECTED
-			int num = sumAreaByRadius(diff_wb_c, diff_output_c, 20);
-			Mat cdfd,normalize_std;
-			diff_output_c.copyTo(cdfd);
-			showLabelImg(diff_output_c);
+			
+			Mat cdfd,normalize_std,normalize_std1;
+			
 			Mat labels, stats, centroids;
-			int size= connectedComponentsWithStats(diff_output_c, labels, stats, centroids, 8, 4);
+			Mat labels1, stats1, centroids1;
+			vector<Mat> diff_wb_c_std;
+			int size= connectedComponentsWithStats(diff_wb_c[0], labels, stats, centroids, 8, 4);
+			int size1 = connectedComponentsWithStats(diff_wb_c[1], labels1, stats1, centroids1, 8, 4);
 			rgbStdDev(image_list[1], labels, stats, normalize_std, size-1);
+			rgbStdDev(image_list[1], labels1, stats1, normalize_std1, size1 - 1);
 			getMaskFromStd(labels, normalize_std);
+			getMaskFromStd(labels1, normalize_std1);
+			int num = sumAreaByRadius(labels, labels1, centroids, centroids1, diff_output_c, 10);
+			/*diff_output_c.copyTo(cdfd);*/
+			showLabelImg(diff_output_c);
 			//vector<float> probs_similar;
 			//nearNeighourSimilarity(image_list[1], stats, probs_similar);
 #endif //CONNECTED
@@ -124,14 +131,14 @@ int main(int argc, char* argv[]) {
 			Mat samples;
 			vector<int> valid_labels;
 			vector<float> probs_color;
-			//createSamples(image_list[1], stats,labels, samples);
-			//EMSegmetationSamples(image_list[1], samples, valid_labels,probs_color,2);
+			createSamples(image_list[1], stats,labels, samples);
+			EMSegmetationSamples(image_list[1], samples, valid_labels,probs_color,2);
 		
-			//getMaskFromValidLabels(labels, valid_labels);
-			//imwrite("valid_label.jpg", labels);
-			//showAreaLabel(img_label, labels, centroids, size);
-			//showMaskImg(labels);
-		//EMSegmetation(image_list[1], diff_output_c, num, 3);
+			getMaskFromValidLabels(labels, valid_labels);
+			imwrite("valid_label.jpg", labels);
+			showAreaLabel(img_label, labels, centroids, size);
+			showMaskImg(labels);
+		EMSegmetation(image_list[1], diff_output_c, num, 3);
 #endif //EM
 #ifdef CONTOURS
 		vector<vector<Point>> contours;
@@ -158,9 +165,9 @@ int main(int argc, char* argv[]) {
 		
 
 		//getMaskFromProbs(labels, probs_similar, probs_grad);
-		showLabelImg(cdfd);
-		Mat show_img(height_input, width_input, CV_8UC1, Scalar(0));
-		showMaskImg(labels, show_img);
+		/*showLabelImg(cdfd);*/
+		//Mat show_img(height_input, width_input, CV_8UC1, Scalar(0));
+		//showMaskImg(labels, show_img);
 #ifdef SAVERESULT
 		Mat combine1, combine2, combine;
 		//cvtColor(cdfd, cdfd, CV_GRAY2BGR);
@@ -180,17 +187,17 @@ int main(int argc, char* argv[]) {
 #endif //SAVERESULT
 
 			//imshow("diff_by_sum", diff_output);
-			imshow("area label", show_img);
+			//imshow("area label", show_img);
 			//imshow("original diff", diff_output);
-			imshow("cdfd", cdfd);
+			imshow("cdfd", diff_output_c);
 			//imwrite("cdfd.jpg", cdfd);
 			
 			//imshow("trans", trans);
 			
 			//imshow("diff_cur_pre", diff_wb[0]);
 			//imshow("diff_cur_next", diff_wb[1]);
-			//imshow("diff_cur_pre_camera", diff_wb_c[0]);
-			//imshow("diff_cur_next_camera", diff_wb_c[1]);
+			imshow("diff_cur_pre_camera", diff_wb_c[0]);
+			imshow("diff_cur_next_camera", diff_wb_c[1]);
 			
 			image_list.erase(image_list.begin());
 			image_list_gray.erase(image_list_gray.begin());

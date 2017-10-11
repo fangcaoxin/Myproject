@@ -53,7 +53,7 @@ void calcPyrLKflow(vector<Mat>& imageList_gray,Mat& object_area, vector<Mat>& ca
 	/*flow_points.push_back(points[0]);
 	flow_points.push_back(points[1]);
 	flow_points.push_back(points[2]);*/
-#define DUMP
+//#define DUMP
 #ifdef DUMP
 	Mat flow;
 	size_t i, k;

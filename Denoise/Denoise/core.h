@@ -26,6 +26,6 @@ void distributeFilter(Mat& diff_wb, Mat& labels,Mat& stats, Mat& gray,vector<int
 void maskRefinement(Mat& diff_wb, Mat& labels, Mat& gray, vector<int>& valid_labels2);
 void medianFramesByMask(Mat& image, Mat& stats, vector<int>& valid_labels);
 void bayesianEstimation(Mat& image, Mat& labels_init, Mat& labels_estimation,int seg_num, int iter, int radius);
-int sumAreaByRadius(vector<Mat>& diff_wb, Mat& sum, int radius);
+int sumAreaByRadius(Mat& label_pre, Mat& label_next, Mat& centroids_pre, Mat& centroids_next, Mat& sum, int radius);
 void labelInitByDiff(vector<Mat>& diff_wb, Mat& label_init);
 void labelInitByRedDarkChannel(Mat& red_dark, Mat& label_init);

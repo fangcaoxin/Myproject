@@ -585,18 +585,20 @@ void rgbStdDev(Mat& image, Mat& labels,Mat& stats, Mat& normalize_std, int size)
 			rgb_std.at<float>(m, k) = rgb_sum2.at<float>(m, k) / stats.at<int>(m+1, 4) - (rgb_sum.at<float>(m, k) / stats.at<int>(m+1, 4))*(rgb_sum.at<float>(m, k) / stats.at<int>(m+1, 4));
 		}
 		float sum_bgr = rgb_std.at<float>(m, 0) + rgb_std.at<float>(m, 1) + rgb_std.at<float>(m, 2);
-		float abs_bg = abs(sqrt(rgb_std.at<float>(m, 0)) - sqrt(rgb_std.at<float>(m, 1)));
-		float abs_gr = abs(sqrt(rgb_std.at<float>(m, 1)) - sqrt(rgb_std.at<float>(m, 2)));
-		if (sum_bgr < 1e-6) {
+		
+		if (stats.at<int>(m+1,4) < 2||sum_bgr<0.001) {
 			normalize_std_tmp.at<float>(m, 0) = 20;
 
 		}
 		else {
+			float abs_bg = abs(sqrt(rgb_std.at<float>(m, 0) / sum_bgr) - sqrt(rgb_std.at<float>(m, 1) / sum_bgr));
+			float abs_gr = abs(sqrt(rgb_std.at<float>(m, 1) / sum_bgr) - sqrt(rgb_std.at<float>(m, 2) / sum_bgr));
 			normalize_std_tmp.at<float>(m, 0) = cv::abs(abs_bg - abs_gr);
 
 
-			cout << "t_std " << normalize_std_tmp.at<float>(m, 0) << endl;
+			
 		}
+		cout << "t_std " << normalize_std_tmp.at<float>(m, 0) << endl;
 	}
 
 	normalize_std = normalize_std_tmp;
@@ -611,7 +613,7 @@ void getMaskFromStd(Mat& mask, Mat& normalize_std) {
 
 			int cur = mask.at<int>(i, j);
 			if (cur == 0) continue;
-			if (normalize_std.at<float>(cur-1,0) > 0.3) {
+			if (normalize_std.at<float>(cur-1,0) > 0.05) {
 				mask.at<int>(i, j) = 0;
 			}
 		}
