@@ -12,7 +12,7 @@
 #define EM
 #define CAMERAMOTION
 #define CONNECTED
-#define CONTOURS
+//#define CONTOURS
 //using namespace cv::optflow;
 Ptr<BackgroundSubtractor> pMOG;
 //string folderName = "img_170721_01j";
@@ -110,18 +110,22 @@ int main(int argc, char* argv[]) {
 #endif //CAMERAMOTION
 #ifdef CONNECTED
 			int num = sumAreaByRadius(diff_wb_c, diff_output_c, 20);
-			Mat cdfd;
+			Mat cdfd,normalize_std;
 			diff_output_c.copyTo(cdfd);
 			showLabelImg(diff_output_c);
 			Mat labels, stats, centroids;
 			int size= connectedComponentsWithStats(diff_output_c, labels, stats, centroids, 8, 4);
+			rgbStdDev(image_list[1], labels, stats, normalize_std, size-1);
+			getMaskFromStd(labels, normalize_std);
+			//vector<float> probs_similar;
+			//nearNeighourSimilarity(image_list[1], stats, probs_similar);
 #endif //CONNECTED
 #ifdef EM
 			Mat samples;
 			vector<int> valid_labels;
 			vector<float> probs_color;
-			createSamples(image_list[1], stats,labels, samples);
-			EMSegmetationSamples(image_list[1], samples, valid_labels,probs_color,2);
+			//createSamples(image_list[1], stats,labels, samples);
+			//EMSegmetationSamples(image_list[1], samples, valid_labels,probs_color,2);
 		
 			//getMaskFromValidLabels(labels, valid_labels);
 			//imwrite("valid_label.jpg", labels);
@@ -136,22 +140,24 @@ int main(int argc, char* argv[]) {
 		vector<float> probs_grad;
 		findContours(diff_output_c, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 		contourSobel(image_list_gray[1], hierarchy, probs_grad, contours);
-#endif //CONTOURS
 		float sum = 0.;
-		for (int i = 0; i < size-1; i++) {
+		for (int i = 0; i < size - 1; i++) {
 			float prob = probs_color[i] * probs_grad[i];
 			sum += prob;
-			
-			
-		}
 
-		for (int k = 0; k < size-1; k++) {
-			float prob= probs_color[k] * probs_grad[k];
+
+		}
+		for (int k = 0; k < size - 1; k++) {
+			float prob = probs_color[k] * probs_grad[k];
 			/*prob /= sum;*/
 			cout << "prob " << prob << endl;
 		}
+#endif //CONTOURS
+		
 
-		getMaskFromProbs(labels, probs_color, probs_grad);
+		
+
+		//getMaskFromProbs(labels, probs_similar, probs_grad);
 		showLabelImg(cdfd);
 		Mat show_img(height_input, width_input, CV_8UC1, Scalar(0));
 		showMaskImg(labels, show_img);

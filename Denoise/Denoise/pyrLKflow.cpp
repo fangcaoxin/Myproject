@@ -65,7 +65,7 @@ void calcPyrLKflow(vector<Mat>& imageList_gray,Mat& object_area, vector<Mat>& ca
 	}
 	for (i = k = 0; i < points[2].size(); i++)
 	{
-		circle(flow, points[2][i], 2, Scalar(0, 255, 0), -1, 8);
+		circle(flow, points[2][i], 1, Scalar(0, 255, 0), -1, 8);
 	}
 	imshow("flow", flow);
 #endif //DUMP

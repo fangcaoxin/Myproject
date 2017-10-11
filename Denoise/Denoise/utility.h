@@ -64,4 +64,5 @@ void showMaskImg(Mat& label,Mat& show_img);
 void getMaskFromValidLabels(Mat& mask, vector<int>& valid_labels);
 void getMaskFromProbs(Mat& mask, vector<float>& prob1, vector<float>& prob2);
 void nearNeighourSimilarity(Mat& image, Mat& stats, vector<float>& probs_similar);
-
+void rgbStdDev(Mat& image, Mat& labels,Mat& stats, Mat& normalize_std, int size);
+void getMaskFromStd(Mat& mask, Mat& normalize_std);
