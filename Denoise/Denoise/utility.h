@@ -66,3 +66,5 @@ void getMaskFromProbs(Mat& mask, vector<float>& prob1, vector<float>& prob2);
 void nearNeighourSimilarity(Mat& image, Mat& stats, vector<float>& probs_similar);
 void rgbStdDev(Mat& image, Mat& labels,Mat& stats, Mat& normalize_std, int size);
 void getMaskFromStd(Mat& mask, Mat& normalize_std);
+void imageListCompensation(vector<Mat>& image_list, vector<Mat>& image_list_compensation, vector<Mat>& camera_motion);
+void imageListGrayCompensation(vector<Mat>& image_list_gray, vector<Mat>& image_list_gray_compensation, vector<Mat>& camera_motion);
