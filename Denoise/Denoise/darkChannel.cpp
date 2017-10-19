@@ -2,9 +2,13 @@
 #include  <opencv2/highgui/highgui.hpp>
 
 void calcDarkChannel(Mat& darkchannel,Mat& brightchannel, Mat& input, int radius) {
+
+	
 	int height = input.rows;
 	int width = input.cols;
-	
+	darkchannel.create(height, width, CV_8UC1);
+	brightchannel.create(height, width, CV_8UC1);
+
 	int st_row, ed_row;
 	int st_col, ed_col;
 

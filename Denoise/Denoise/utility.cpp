@@ -475,9 +475,10 @@ void showLabelImg(Mat& label) {
 }
 
 void showMaskImg(Mat& label, Mat& show_img) {
+	
 	int width = label.cols;
 	int height = label.rows;
-
+	show_img.create(height, width, CV_8UC1);
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 			show_img.at<uchar>(i, j) = label.at<int>(i, j) > 0 ? 255 : 0;
@@ -585,18 +586,30 @@ void rgbStdDev(Mat& image, Mat& labels,Mat& stats, Mat& normalize_std, int size)
 			rgb_std.at<float>(m, k) = rgb_sum2.at<float>(m, k) / stats.at<int>(m+1, 4) - (rgb_sum.at<float>(m, k) / stats.at<int>(m+1, 4))*(rgb_sum.at<float>(m, k) / stats.at<int>(m+1, 4));
 		}
 		float sum_bgr = rgb_std.at<float>(m, 0) + rgb_std.at<float>(m, 1) + rgb_std.at<float>(m, 2);
-		float abs_bg = abs(sqrt(rgb_std.at<float>(m, 0)) - sqrt(rgb_std.at<float>(m, 1)));
-		float abs_gr = abs(sqrt(rgb_std.at<float>(m, 1)) - sqrt(rgb_std.at<float>(m, 2)));
-		if (sum_bgr < 1e-6) {
+		
+		if (stats.at<int>(m+1,4) < 3||sum_bgr<0.001) {
 			normalize_std_tmp.at<float>(m, 0) = 20;
 
 		}
 		else {
-			normalize_std_tmp.at<float>(m, 0) = cv::abs(abs_bg - abs_gr);
+			float b_stddev = sqrt(rgb_std.at<float>(m, 0) / 1);
+			float g_stddev = sqrt(rgb_std.at<float>(m, 1) / 1);
+			float r_stddev = sqrt(rgb_std.at<float>(m, 2) / 1);
 
 
-			cout << "t_std " << normalize_std_tmp.at<float>(m, 0) << endl;
+			float average_std = (b_stddev + g_stddev + r_stddev) / 3;
+			float n_stddev = ((r_stddev - average_std)*(r_stddev - average_std) + \
+				(g_stddev - average_std)*(g_stddev - average_std) + \
+				(b_stddev - average_std)*(b_stddev - average_std)) / 3;
+			/*float abs_bg = abs(sqrt(rgb_std.at<float>(m, 0) / sum_bgr) - sqrt(rgb_std.at<float>(m, 1) / sum_bgr));
+			float abs_gr = abs(sqrt(rgb_std.at<float>(m, 1) / sum_bgr) - sqrt(rgb_std.at<float>(m, 2) / sum_bgr));
+			normalize_std_tmp.at<float>(m, 0) = cv::abs(abs_bg - abs_gr);*/
+			normalize_std_tmp.at<float>(m, 0) = sqrt(n_stddev);
+
+
+			
 		}
+		cout << "t_std " << normalize_std_tmp.at<float>(m, 0) << endl;
 	}
 
 	normalize_std = normalize_std_tmp;
@@ -611,9 +624,35 @@ void getMaskFromStd(Mat& mask, Mat& normalize_std) {
 
 			int cur = mask.at<int>(i, j);
 			if (cur == 0) continue;
-			if (normalize_std.at<float>(cur-1,0) > 0.3) {
+			if (normalize_std.at<float>(cur-1,0) > 2) {
 				mask.at<int>(i, j) = 0;
 			}
 		}
 	}
+}
+
+void imageListCompensation(vector<Mat>& image_list, vector<Mat>& image_list_compensation, vector<Mat>& camera_motion) {
+
+	Mat image_pre_compensation;
+	Mat image_next_compensation;
+
+	warpPerspective(image_list[0], image_pre_compensation, camera_motion[0], image_list[0].size(), 1, BORDER_REPLICATE);
+	warpPerspective(image_list[2], image_next_compensation, camera_motion[1], image_list[1].size(), 1, BORDER_REPLICATE);
+
+	image_list_compensation.push_back(image_pre_compensation);
+	image_list_compensation.push_back(image_list[1]);
+	image_list_compensation.push_back(image_next_compensation);
+
+}
+void imageListGrayCompensation(vector<Mat>& image_list_gray, vector<Mat>& image_list_gray_compensation, vector<Mat>& camera_motion) 
+{
+	Mat image_pre_compensation;
+	Mat image_next_compensation;
+
+	warpPerspective(image_list_gray[0], image_pre_compensation, camera_motion[0], image_list_gray[0].size(), 1, BORDER_REPLICATE);
+	warpPerspective(image_list_gray[2], image_next_compensation, camera_motion[1], image_list_gray[1].size(), 1, BORDER_REPLICATE);
+
+	image_list_gray_compensation.push_back(image_pre_compensation);
+	image_list_gray_compensation.push_back(image_list_gray[1]);
+	image_list_gray_compensation.push_back(image_next_compensation);
 }

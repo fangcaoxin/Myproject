@@ -1,6 +1,8 @@
 #include "utility.h"
+#include <opencv2/highgui/highgui.hpp>
 static Point2f getAverage(const std::vector<Point2f>& values);
 static void checkValidArea(Mat& valid_area, vector<Point2f>& points, vector<bool>& filter_status);
+static void drawCorrespondance(Mat& img, Mat& img1, vector<Point2f>& points, vector<Point2f>& points1, Mat& output);
 void calcPyrLKflow(vector<Mat>& imageList_gray,Mat& object_area, vector<Mat>& camera_motion) {
 	vector<Point2f> points[3];
 	
@@ -13,7 +15,7 @@ void calcPyrLKflow(vector<Mat>& imageList_gray,Mat& object_area, vector<Mat>& ca
 	vector<float> err;
 	
 
-	cv::goodFeaturesToTrack(imageList_gray[1], points[1], MAX_COUNT, 0.01, 10, Mat(), 3, 0, 0.04);
+	cv::goodFeaturesToTrack(imageList_gray[1], points[1], MAX_COUNT, 0.01, 10, object_area, 3, 0, 0.04);
 	cv::cornerSubPix(imageList_gray[1], points[1], subPixWinSize, Size(-1, -1), termcrit);
 
 	vector<Mat> oldImagePyr, newImagePyr, newImagePyr1;
@@ -25,10 +27,10 @@ void calcPyrLKflow(vector<Mat>& imageList_gray,Mat& object_area, vector<Mat>& ca
 	
 	std::vector<bool>filter_status(points[1].size(), true);
 	std::vector<bool> filter_status1(points[1].size(), true);
-	checkValidArea(object_area, points[1], filter_status);
+	//checkValidArea(object_area, points[1], filter_status);
 	check_FB(oldImagePyr, newImagePyr, points[1], points[0], filter_status);
 	check_NCC(imageList_gray[1], imageList_gray[0], points[1], points[0], filter_status);
-	checkValidArea(object_area, points[1], filter_status1);
+	//checkValidArea(object_area, points[1], filter_status1);
 	check_FB(oldImagePyr, newImagePyr1, points[1], points[2], filter_status1);
 	check_NCC(imageList_gray[1], imageList_gray[2], points[1], points[2], filter_status1);
 	vector<Point2f> points1 = points[1];
@@ -53,21 +55,25 @@ void calcPyrLKflow(vector<Mat>& imageList_gray,Mat& object_area, vector<Mat>& ca
 	/*flow_points.push_back(points[0]);
 	flow_points.push_back(points[1]);
 	flow_points.push_back(points[2]);*/
-#define DUMP
+//#define DUMP
 #ifdef DUMP
-	Mat flow;
+	Mat flow,flow1,output;
 	size_t i, k;
 	imageList_gray[1].copyTo(flow);
-	cvtColor(flow, flow, CV_GRAY2BGR);
-	for (i = k = 0; i < points1.size(); i++)
-	{
-		circle(flow, points1[i], 1, Scalar(0, 0, 255), -1, 8);
-	}
-	for (i = k = 0; i < points[2].size(); i++)
-	{
-		circle(flow, points[2][i], 1, Scalar(0, 255, 0), -1, 8);
-	}
-	imshow("flow", flow);
+	imageList_gray[2].copyTo(flow1);
+	//cvtColor(flow, flow, CV_GRAY2BGR);
+	drawCorrespondance(flow, flow1, points1, points[2], output);
+	
+	//for (i = k = 0; i < points1.size(); i++)
+	//{
+	//	circle(flow, points1[i], 1, Scalar(0, 0, 255), -1, 8);
+	//}
+	//for (i = k = 0; i < points[2].size(); i++)
+	//{
+	//	circle(flow, points[2][i], 1, Scalar(0, 255, 0), -1, 8);
+	//}
+	imwrite("match_image.jpg", output);
+	imshow("flow", output);
 #endif //DUMP
 	
 }
@@ -97,3 +103,18 @@ static void checkValidArea(Mat& valid_area, vector<Point2f>& points, vector<bool
 		
 	}
 }
+
+static void drawCorrespondance(Mat& img, Mat& img1, vector<Point2f>& points, vector<Point2f>& points1, Mat& output) {
+	hconcat(img, img1, output);
+	cvtColor(output, output, CV_GRAY2BGR);
+	int width = img.cols;
+	int height = img.rows;
+	Point move(width, 0);
+	for (int i = 0; i < points.size(); i++) {
+		circle(output, (Point)points[i], 2, Scalar(0, 0, 255));
+		circle(output, (Point)points1[i] + move, 2,Scalar(255, 0, 0));
+		line(output, points[i], (Point)points1[i] + move,Scalar(255,255,0), 0.2, 8, 0);
+	}
+	
+}
+

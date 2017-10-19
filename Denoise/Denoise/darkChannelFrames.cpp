@@ -69,25 +69,18 @@ void darkChannelFrames(const vector<Mat> &imgList, int frameNum, Mat& ouput, con
 	}
 }
 
-int sumAreaByRadius(vector<Mat>& diff_wb, Mat& sum, int radius) {
-	int size = diff_wb.size();
-	int height = diff_wb[0].rows;
-	int width = diff_wb[0].cols;
-	vector<Mat> diff_1(size);
-	vector<Mat> labels(size);
-	vector<Mat> stats(size);
-	vector<Mat> centroids(size);
-	for (int i = 0; i < size; i++) {
-	   connectedComponentsWithStats(diff_wb[i], labels[i], stats[i], centroids[i], 8, 4);
-	}
+int sumAreaByRadius(Mat& label_pre,Mat& label_next,Mat& centroids_pre,Mat& centroids_next, Mat& sum1, int radius) {
+	int height = label_pre.rows;
+	int width =label_pre.cols;
+	Mat sum(height, width, CV_8UC1, Scalar(0));
 	int st_row, ed_row;
 	int st_col, ed_col;
 	
 	vector<int> list_0;
 	vector<int> list_1;
-	for (int k = 1; k < centroids[0].rows; k++) {
-		int i = centroids[0].at<double>(k, 1);
-		int j = centroids[0].at<double>(k, 0);
+	for (int k = 1; k < centroids_pre.rows; k++) {
+		int i = centroids_pre.at<double>(k, 1);
+		int j = centroids_pre.at<double>(k, 0);
 		st_row = i - radius, ed_row = i + radius;
 		st_col = j - radius, ed_col = j + radius;
 
@@ -100,10 +93,10 @@ int sumAreaByRadius(vector<Mat>& diff_wb, Mat& sum, int radius) {
 		{
 			for (int n = st_col; n <= ed_col; n++)
 			{
-				if (labels[1].at<int>(m, n) != 0) {
-					int label = labels[1].at<int>(m, n);
-					double dis = (centroids[1].at<double>(label, 1) - i)*(centroids[1].at<double>(label, 1) - i) + (centroids[1].at<double>(label, 0) - j)*(centroids[1].at<double>(label, 0) - j);
-					if (dis < radius*radius&&stats[1].at<int>(label, 4) < width*height*0.003&&stats[0].at<int>(k, 4) < width*height*0.003) {
+				if (label_next.at<int>(m, n) != 0) {
+					int label = label_next.at<int>(m, n);
+					double dis = (centroids_next.at<double>(label, 1) - i)*(centroids_next.at<double>(label, 1) - i) + (centroids_next.at<double>(label, 0) - j)*(centroids_next.at<double>(label, 0) - j);
+					if (dis < radius*radius) {
 
 						list_0.push_back(k);
 						list_1.push_back(label);
@@ -115,16 +108,82 @@ int sumAreaByRadius(vector<Mat>& diff_wb, Mat& sum, int radius) {
 	int num = 0;
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			int label_0 = labels[0].at<int>(i, j);
-			int label_1 = labels[1].at<int>(i, j);
+			int label_0 = label_pre.at<int>(i, j);
+			int label_1 = label_next.at<int>(i, j);
 			vector<int>::iterator iter_0 = find(list_0.begin(), list_0.end(), label_0);
 			vector<int>::iterator iter_1 = find(list_1.begin(), list_1.end(), label_1);
-			if (iter_0 != list_0.end() || iter_1 != list_1.end()) {
-				sum.at<uchar>(i,j) = 1;
+			if (iter_0 != list_0.end()) {
+				sum.at<uchar>(i,j) = 255;
+				num++;
+			}
+
+			if (iter_1 != list_1.end()) {
+				sum.at<uchar>(i, j) = 255;
 				num++;
 			}
 		}
 	}
+	sum1 = sum;
 	return num;
+
+}
+
+void restorationBaseMationBrightEM(vector<Mat>& image_list_compensation,vector<Mat>& image_list_gray, Mat& label, vector<Ptr<EM>>& models,Mat& output) {
+	int width = image_list_compensation[0].cols;
+	int height = image_list_compensation[0].rows;
+
+	image_list_compensation[1].copyTo(output);
+	struct max_probs_labels {
+		Point pos;
+		int frame_num;
+		float prob;
+	};
+	vector<int> flag;
+	vector<max_probs_labels> label_max(models.size());
+	vector<Point> need_to_repair;
+	for (int k = 0; k < models.size(); k++) {
+		Mat means = models[k]->getMeans();
+		int flag_tmp = means.at<double>(0, 0) > means.at<double>(1, 0) ? 1 : 0;
+		flag.push_back(flag_tmp);
+	}
+
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			int label_num = label.at<int>(i, j);
+			if (label_num > 0) {
+				float max = 0.;
+				int frame_num = 1;
+				label_max[label_num - 1].prob = 0.5;
+				for (int k = 0; k < 3; k++) {
+					vector<float> probs;
+					models[label_num-1]->predict2(image_list_gray[k].at<uchar>(i, j), probs);
+					if (probs[flag[label_num-1]] > max) {
+						max = probs[flag[label_num-1]];				
+						frame_num = k;
+					}
+					if (probs[flag[label_num - 1]] > label_max[label_num - 1].prob) {
+						label_max[label_num - 1].frame_num = k;
+						label_max[label_num - 1].pos = Point(j, i);
+						label_max[label_num - 1].prob = probs[flag[label_num - 1]];
+					}
+				}
+				//cout << "probs " << max << " frame "<< frame_num<< endl;
+				if (max > 0) {
+					output.at<Vec3b>(i, j) = image_list_compensation[frame_num].at<Vec3b>(i, j);
+				}
+				else {
+					//output.at<Vec3b>(i, j) = Vec3b(0, 0, 255);
+					need_to_repair.push_back(Point(j, i));
+				}
+			}
+		}
+	}
+	if (need_to_repair.size() > 0) {
+		for (int k = 0; k < need_to_repair.size(); k++) {
+			int label_num = label.at<int>(need_to_repair[k]);
+			output.at<Vec3b>(need_to_repair[k]) = image_list_compensation[label_max[label_num - 1].frame_num].at<Vec3b>(label_max[label_num - 1].pos);
+		}
+	}
+
 
 }

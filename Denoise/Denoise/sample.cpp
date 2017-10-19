@@ -4,21 +4,23 @@
 #include "dehaze.h"
 #include "utility.h"
 #include "EM.h"
+#include "restoration.h"
 //#define FLOW
 //#define MOG
 //#define DEHAZE
 #define BAYESIAN
 //#define SAVERESULT
-#define EM
+//#define EM
 #define CAMERAMOTION
 #define CONNECTED
 //#define CONTOURS
+#define RGBSTDANALYSIS
 //using namespace cv::optflow;
 Ptr<BackgroundSubtractor> pMOG;
 //string folderName = "img_170721_01j";
 string folderName = "img_170724_02j";
 string saveFolder = "..//..//..//image//" + folderName + "//" + folderName + "_";
-string saveImage = "..//..//..//result//20171002//" + folderName + "_";
+string saveImage = "..//..//..//result//20171016//" + folderName + "_";
 int width = 1358; //1358 without black range
 int height = 1080; //1080
 Rect rect(6, 4, width - 6, height - 8);
@@ -42,11 +44,11 @@ int main(int argc, char* argv[]) {
 	int count = 0;
 	for (int i = beg_num; i < beg_num + frame_num; i = i + 1) {
 		string file_name = saveFolder + to_string(i) + ".jpg";
-		string save_name = saveImage + to_string(i - 1) + "_1002out.jpg";
+		string save_name = saveImage + to_string(i - 1) + "_1016out.jpg";
 		cout << "file name :" << file_name << endl;
 		Mat cur = imread(file_name);
 		Mat input_resize, cur_gray;
-		Mat dehaze_out(height_input, width_input, CV_8UC3);
+		//Mat dehaze_out(height_input, width_input, CV_8UC3);
 		resize(cur(rect), input_resize, Size(width_input, height_input));
 		//dehazeDC(input_resize, dehaze);
 		//dehaze(dehaze_out,input_resize);
@@ -81,23 +83,19 @@ int main(int argc, char* argv[]) {
 			continue;
 		}
 		else {
-			vector<Mat> diff;
 			vector<Mat> diff_c;
 			vector<Mat> diff_wb_c;
-			vector<Mat> diff_wb;
 			vector<Mat> channels;
-		
-			Mat output(height_input, width_input, CV_8UC3);
-			Mat img_label(height_input, width_input, CV_8UC3);
+			vector<Mat> image_list_compensation;
+			vector<Mat> image_list_gray_compensation;
+			Mat output;
 
-			Mat diff_output(height_input, width_input, CV_8UC1, Scalar(0));
-			Mat diff_output_c(height_input, width_input, CV_8UC1, Scalar(0));
-			Mat diff_iter(height_input, width_input, CV_8UC1, Scalar(0));
-			Mat label_init(height_input, width_input, CV_8UC1, Scalar(0));
-			Mat darkChannel(height_input, width_input, CV_8UC1, Scalar(0));
-			Mat brightChannel(height_input, width_input, CV_8UC1, Scalar(0));
-			FrameRelativeDiff(image_list_gray, diff);
-			diffByThreshold(diff, diff_wb, 5);
+			
+			Mat diff_output_c, darkChannel, brightChannel;
+#ifdef RGBSTDANALYSIS
+		
+#endif //RGBSTDANALYSIS
+			
 #ifdef CAMERAMOTION
 			calcDarkChannel(darkChannel, brightChannel, image_list[1], 0);
 			split(image_list[1], channels);
@@ -105,18 +103,34 @@ int main(int argc, char* argv[]) {
 			threshold(trans, trans, 20, 255, CV_THRESH_BINARY);
 			vector<Mat> camera_motion;
 			calcPyrLKflow(image_list_gray, trans,camera_motion);
-			FrameRelativeDiffBaseCameraMotion(image_list_gray, diff_c, camera_motion);
+			imageListCompensation(image_list, image_list_compensation, camera_motion);
+			imageListGrayCompensation(image_list_gray, image_list_gray_compensation, camera_motion);
+			
+			FrameRelativeDiff(image_list_gray_compensation, diff_c);
 			diffByThreshold(diff_c, diff_wb_c, 5);
 #endif //CAMERAMOTION
 #ifdef CONNECTED
-			int num = sumAreaByRadius(diff_wb_c, diff_output_c, 20);
-			Mat cdfd,normalize_std;
-			diff_output_c.copyTo(cdfd);
-			showLabelImg(diff_output_c);
+			
+			Mat cdfd,normalize_std,normalize_std1;
+			
 			Mat labels, stats, centroids;
-			int size= connectedComponentsWithStats(diff_output_c, labels, stats, centroids, 8, 4);
+			Mat labels1, stats1, centroids1;
+			Mat labels_final, stats_final, centroids_final;
+			Mat labels_show, labels1_show;
+			vector<Mat> diff_wb_c_std;
+			int size= connectedComponentsWithStats(diff_wb_c[0], labels, stats, centroids, 8, 4);
+			int size1 = connectedComponentsWithStats(diff_wb_c[1], labels1, stats1, centroids1, 8, 4);
 			rgbStdDev(image_list[1], labels, stats, normalize_std, size-1);
+			rgbStdDev(image_list[1], labels1, stats1, normalize_std1, size1 - 1);
 			getMaskFromStd(labels, normalize_std);
+			getMaskFromStd(labels1, normalize_std1);
+			int num = sumAreaByRadius(labels, labels1, centroids, centroids1, diff_output_c, 5);
+			int size_final = connectedComponentsWithStats(diff_output_c, labels_final, stats_final, centroids_final);
+			floatingAreaRestoration(image_list_compensation, image_list_gray_compensation, stats_final, labels_final, output);
+			showMaskImg(labels, labels_show);
+			showMaskImg(labels1, labels1_show);
+			/*diff_output_c.copyTo(cdfd);*/
+			showLabelImg(diff_output_c);
 			//vector<float> probs_similar;
 			//nearNeighourSimilarity(image_list[1], stats, probs_similar);
 #endif //CONNECTED
@@ -124,14 +138,14 @@ int main(int argc, char* argv[]) {
 			Mat samples;
 			vector<int> valid_labels;
 			vector<float> probs_color;
-			//createSamples(image_list[1], stats,labels, samples);
-			//EMSegmetationSamples(image_list[1], samples, valid_labels,probs_color,2);
+			createSamples(image_list[1], stats,labels, samples);
+			EMSegmetationSamples(image_list[1], samples, valid_labels,probs_color,2);
 		
-			//getMaskFromValidLabels(labels, valid_labels);
-			//imwrite("valid_label.jpg", labels);
-			//showAreaLabel(img_label, labels, centroids, size);
-			//showMaskImg(labels);
-		//EMSegmetation(image_list[1], diff_output_c, num, 3);
+			getMaskFromValidLabels(labels, valid_labels);
+			imwrite("valid_label.jpg", labels);
+			showAreaLabel(img_label, labels, centroids, size);
+			showMaskImg(labels);
+		EMSegmetation(image_list[1], diff_output_c, num, 3);
 #endif //EM
 #ifdef CONTOURS
 		vector<vector<Point>> contours;
@@ -158,9 +172,9 @@ int main(int argc, char* argv[]) {
 		
 
 		//getMaskFromProbs(labels, probs_similar, probs_grad);
-		showLabelImg(cdfd);
-		Mat show_img(height_input, width_input, CV_8UC1, Scalar(0));
-		showMaskImg(labels, show_img);
+		/*showLabelImg(cdfd);*/
+		//Mat show_img(height_input, width_input, CV_8UC1, Scalar(0));
+		//showMaskImg(labels, show_img);
 #ifdef SAVERESULT
 		Mat combine1, combine2, combine;
 		//cvtColor(cdfd, cdfd, CV_GRAY2BGR);
@@ -180,18 +194,19 @@ int main(int argc, char* argv[]) {
 #endif //SAVERESULT
 
 			//imshow("diff_by_sum", diff_output);
-			imshow("area label", show_img);
+			//imshow("area label", show_img);
 			//imshow("original diff", diff_output);
-			imshow("cdfd", cdfd);
-			//imwrite("cdfd.jpg", cdfd);
-			
+			imshow("cdfd", diff_output_c);
+			imwrite("cdfd.jpg", diff_output_c);
+			imshow("output", output);
 			//imshow("trans", trans);
-			
-			//imshow("diff_cur_pre", diff_wb[0]);
-			//imshow("diff_cur_next", diff_wb[1]);
+			//imwrite(save_name, output);
 			//imshow("diff_cur_pre_camera", diff_wb_c[0]);
 			//imshow("diff_cur_next_camera", diff_wb_c[1]);
-			
+			//imwrite(save_name, diff_wb_c[0]);
+			imshow("diff_cur_pre_std", labels_show);
+			imshow("diff_cur_next_std", labels1_show);
+			//imwrite(save_name, labels_show);
 			image_list.erase(image_list.begin());
 			image_list_gray.erase(image_list_gray.begin());
 
