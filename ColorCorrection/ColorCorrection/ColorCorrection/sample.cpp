@@ -7,7 +7,7 @@ using namespace cv;
 int main(int argv, char** argc) {
 	String file_src = "../../image/target01.jpg";
 	String file_ref = "../../image/reference01.jpg";
-	Color3d m_s, s_s, m_r, s_r;
+	Mat m_s, s_s, m_r, s_r;
 	Mat dst, dst1,res;
 	Mat src = imread(file_src);
 	Mat ref = imread(file_ref);

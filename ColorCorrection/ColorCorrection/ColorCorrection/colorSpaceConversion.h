@@ -4,6 +4,6 @@
 
 using namespace cv;
 
-void bgrTlab(Mat& src, Mat& dst, Color3d& m, Color3d& s);
+void bgrTlab(Mat& src, Mat& dst, Mat& m, Mat& s);
 void labtbgr(Mat& src, Mat& dst);
-void colorTransfer(Mat& src, Mat& ref, Color3d& m_src, Color3d& s_src, Color3d& m_ref, Color3d& s_ref);
+void colorTransfer(Mat& src, Mat& ref, Mat& m_src, Mat& s_src, Mat& m_ref, Mat& s_ref);

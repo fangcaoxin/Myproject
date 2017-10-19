@@ -43,23 +43,24 @@ const double LMS2lab2[3][3] = {
 };
 
 const double eps = 1.0e-4;
-static Color3d vecTColor3d(Vec3d& src) {
-	Color3d v;
-	v(0) = src[0];
-	v(1) = src[1];
-	v(2) = src[2];
+static Mat vecTMat(Vec3d& src) {
+	Mat v(3, 1, CV_64FC1);
+	v.at<double>(0,0) = src[0];
+	v.at<double>(1, 0) = src[1];
+	v.at<double>(2, 0) = src[2];
+	//cout << v.data[0] << " " << v.data[1] << " " << v.data[2] << endl;
 	return v;
 }
 
-static Vec3d color3dTVec(Color3d& v) {
+static Vec3d MatTVec(Mat v) {
 	Vec3d a;
-	a[0] = v(0);
-	a[1] = v(1);
-	a[2] = v(2);
+	a[0] = v.at<double>(0, 0);
+	a[1] = v.at<double>(1, 0);
+	a[2] = v.at<double>(2, 0);
 	return a;
 }
 const size_t bufsize = sizeof(double) * 3 * 3;
-void bgrTlab(Mat& src, Mat& dst,Color3d& m,Color3d& s) {
+void bgrTlab(Mat& src, Mat& dst,Mat& m,Mat& s) {
 	dst = Mat(src.size(), CV_64FC3);
 	Mat src_tmp;
 	Mat mRGB2LMS = Mat(3, 3, CV_64FC1);
@@ -74,26 +75,28 @@ void bgrTlab(Mat& src, Mat& dst,Color3d& m,Color3d& s) {
 
 	cv::Mat mLMS2lab = mLMS2lab2 * mLMS2lab1;
 	
-	Color3d v;
+	Mat v;
 	
-	Color3d mt = Color3d(0., 0., 0.);
-	Color3d st = Color3d(0., 0., 0.);
+	Mat mt(3,1,CV_64FC1,Scalar(0));
+	Mat st(3, 1, CV_64FC1, Scalar(0));
+	
 	cvtColor(src, src_tmp, CV_BGR2RGB);
 	src_tmp.convertTo(src_tmp, CV_64FC3, 1.0 / 255.0);
 	for (int i = 0; i < src.rows; i++) {
 		for (int j = 0; j < src.cols; j++) {
 			Vec3d v0 = src_tmp.at<Vec3d>(i, j);
-			cout << v0 << endl;
-			v = vecTColor3d(v0);
+			//cout <<"v0 "<< v0 << endl;
+			v = vecTMat(v0);
+			//cout << "v "<<v << endl;
 			v=mRGB2LMS*v;
-			cout << mRGB2LMS << endl;
+			//cout << v << endl;
 			for (int c = 0; c < 3; c++) {
-				v(c) = v(c) > eps ? log10(v(c)) : log10(eps);
+				v.at<double>(c,0) = v.at<double>(c, 0) > eps ? log10(v.at<double>(c, 0)) : log10(eps);
 			}
-			dst.at<Vec3d>(i, j) = color3dTVec(mLMS2lab*v);
+			dst.at<Vec3d>(i, j) = MatTVec(mLMS2lab*v);
 			//cout << dst.at<Vec3d>(i, j) << endl;
-			mt = mt + vecTColor3d(src_tmp.at<Vec3d>(i, j));
-			st = st + vecTColor3d(src_tmp.at<Vec3d>(i, j))*vecTColor3d(src_tmp.at<Vec3d>(i, j));
+			mt = mt + vecTMat(src_tmp.at<Vec3d>(i, j));
+			st = st + vecTMat(src_tmp.at<Vec3d>(i, j)).mul(vecTMat(src_tmp.at<Vec3d>(i, j)));
 		}
 	}
 	m = mt;
@@ -117,27 +120,29 @@ void labtbgr(Mat& src, Mat& dst) {
 	for (int i = 0; i < src.rows; i++) {
 		for (int j = 0; j < src.cols; j++) {
 			Vec3d v0 = src.at<Vec3d>(i, j);
-			Color3d v = vecTColor3d(v0);
+			Mat v = vecTMat(v0);
 			v = mlab2LMS*v;
-			for (int c = 0; c<3; c++) v(c) = v(c) > -5.0 ? pow(10.0, v(c)) : eps;
-			dst.at <Vec3d>(i,j)= color3dTVec(mLMS2RGB*v);
+			for (int c = 0; c<3; c++) v.at<double>(c, 0) = v.at<double>(c, 0) > -5.0 ? pow(10.0, v.at<double>(c, 0)) : eps;
+			dst.at <Vec3d>(i,j)= MatTVec(mLMS2RGB*v);
 		}
 	}
 	dst.convertTo(dst, CV_8UC3, 255.0);
 	cvtColor(dst, dst, CV_RGB2BGR);
 }
 
-void colorTransfer(Mat& src, Mat& ref, Color3d& m_src, Color3d& s_src, Color3d& m_ref, Color3d& s_ref) {
+void colorTransfer(Mat& src, Mat& ref, Mat& m_src, Mat& s_src, Mat& m_ref, Mat& s_ref) {
 	int Nt = src.rows*src.cols;
 	int Nr = ref.rows*ref.cols;
-	m_src = m_src.divide(Nt);
-	m_ref = m_ref.divide(Nr);
-	s_src = s_src.divide(Nt) - m_src*m_src;
-	s_ref = s_ref.divide(Nr) - m_ref*m_ref;
+	cout << m_src << endl;
+	m_src = m_src/Nt;
+	cout << m_src << endl;
+	m_ref = m_ref/Nr;
+	s_src = s_src/Nt - m_src.mul(m_src);
+	s_ref = s_ref/Nr - m_ref.mul(m_ref);
 
 	for (int i = 0; i < 3; i++) {
-		s_src(i) = sqrt(s_src(i));
-		s_ref(i) = sqrt(s_ref(i));
+		s_src.at<double>(i,0) = sqrt(s_src.at<double>(i, 0));
+		s_ref.at<double>(i, 0) = sqrt(s_ref.at<double>(i, 0));
 	}
 
 	for (int i = 0; i < src.rows; i++) {
@@ -145,7 +150,7 @@ void colorTransfer(Mat& src, Mat& ref, Color3d& m_src, Color3d& s_src, Color3d& 
 			for (int c = 0; c < 3; c++) {
 				double val = src.at<Vec3d>(i, j)[c];
 				//cout << val << endl;
-				src.at<Vec3d>(i, j)[c] = (val - m_src(c)) / s_src(c)*s_ref(c) + m_ref(c);
+				src.at<Vec3d>(i, j)[c] = (val - m_src.at<double>(c, 0)) / s_src.at<double>(c, 0)*s_ref.at<double>(c, 0) + m_ref.at<double>(c, 0);
 			}
 		}
 	}
