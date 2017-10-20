@@ -4,16 +4,7 @@
 #include <iostream>
 using namespace std;
 
-Color3d operator *(const cv::Mat& M, Color3d& v) {
-	Color3d u = Color3d();
-	for (int i = 0; i<3; i++) {
-		u(i) = 0.0;
-		for (int j = 0; j<3; j++) {
-			//u(i) += M.at(i, j) * v(j);
-		}
-	}
-	return u;
-}
+
 // Transformation from RGB to LMS
 const double RGB2LMS[3][3] = {
 	{ 0.3811, 0.5783, 0.0402 },
