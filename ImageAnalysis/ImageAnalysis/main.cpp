@@ -2,14 +2,34 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/videoio/videoio.hpp>
+#include <opencv2/saliency.hpp>
 #include <iostream>
 #include <fstream>
 using namespace std;
 using namespace cv;
+using namespace saliency;
 static void rgbStdDev(Mat& image, Mat& labels, Mat& stats, Mat& normalize_std, int size);
 static void calcDarkChannel(Mat& darkchannel, Mat& brightchannel, Mat& input, int radius);
 int main(int argc, char** argv) {
-#define DARKRED
+//#define SALIENCY
+#ifdef SALIENCY
+	string file_name = "C:\\Research\\OpenCVProject\\image\\img_170724_02j\\img_170724_02j_1.jpg";
+	Ptr<Saliency> saliencyAlgorithm;
+	saliencyAlgorithm = StaticSaliencySpectralResidual::create();
+	Mat saliencyMap,binaryMap,image;
+	image = imread(file_name);
+	if (saliencyAlgorithm->computeSaliency(image, saliencyMap)) {
+		StaticSaliencySpectralResidual spec;
+		spec.computeBinaryMap(saliencyMap, binaryMap);
+
+		imshow("Saliency Map", saliencyMap);
+		imshow("Original Image", image);
+		imshow("Binary Map", binaryMap);
+		waitKey(0);
+	}
+
+#endif //SALENCY
+//#define DARKRED
 #ifdef DARKRED
 	ifstream image_file;
 	image_file.open("list//list_underwater.txt", ios::in);
@@ -59,25 +79,50 @@ int main(int argc, char** argv) {
 	}
 	std_excel.close();
 #endif //RGBSTD
-#ifdef VIDEO
+//#define VIDEOOUT
+#ifdef VIDEOOUT
 	VideoWriter outputVideo;
-	outputVideo.open("3D_reconstruction_denoise.avi", VideoWriter::fourcc('M', 'J', 'P', 'G'), 2, Size(1910, 920), true);
+	outputVideo.open("denoise.avi", VideoWriter::fourcc('M', 'J', 'P', 'G'), 3, Size(676, 268), true);
 	if (!outputVideo.isOpened())
 	{
 		cout << "Could not open the output video for write: " << endl;
 		return -1;
 	}
 	int count = 0;
-	ifstream image_file("list//list_sfm1.txt", ios::in); 
-	for (int i = 0; i < 11;i++) {
+	ifstream image_file("list//list_compare.txt", ios::in); 
+	while(!image_file.eof()) {
 		cout << count++ << endl;
 		string image_name;
 		getline(image_file, image_name);
+		if (image_name.length() == 0) break;
 		Mat image = imread(image_name);
-		Mat res = image(Rect(2, 90, 1910, 920));
+		Mat res = image;
 		outputVideo << res;
 	}
 #endif //VIDEO
+#define VIDEOIN
+#ifdef VIDEOIN
+	VideoCapture cap;
+	string video_file = "C:\\Research\\video\\capture.mp4";
+	string save_folder = "C:\\Research\\OpenCVProject\\image\\img_171021\\171021_capture_";
+	cap.open(video_file);
+	if (!cap.isOpened()) {
+		cout << "not opened " << endl;
+		return -1;
+	}
+	Mat frame;
+	Rect rect(40, 3, 640, 480);
+	int count = 0;
+	for (;;) {
+		cap >> frame;
+		Mat image = frame(rect);
+		string save_name = save_folder + to_string(count) + ".jpg";
+		count++;
+		imwrite(save_name, image);
+		/*imshow("image", image);
+		waitKey(0);*/
+	}
+#endif //VIDEOIN
 	return 0;
 }
 

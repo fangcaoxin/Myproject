@@ -1,4 +1,4 @@
-#include "colorSpaceConversion.h"
+﻿#include "colorSpaceConversion.h"
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
@@ -145,4 +145,65 @@ void colorTransfer(Mat& src, Mat& ref, Mat& m_src, Mat& s_src, Mat& m_ref, Mat& 
 			}
 		}
 	}
+}
+static void clip(Mat& img, float minval, float maxval)
+{
+	CV_Assert(maxval > minval);
+	size_t row = img.rows;
+	size_t col = img.cols;
+	for (size_t i = 0; i != row; ++i)
+	{
+		float* temp = img.ptr<float>(i);
+		for (size_t j = 0; j != col; ++j)
+		{
+			if (temp[j] < minval)
+			{
+				temp[j] = minval;
+			}
+			if (temp[j] > maxval)
+			{
+				temp[j] = maxval;
+			}
+		}
+	}
+}
+void matColorTransfer(Mat& src, Mat& dst) {
+
+	Mat labsrc, labdst;
+	cvtColor(src, labsrc, COLOR_BGR2Lab);
+	cvtColor(dst, labdst, COLOR_BGR2Lab);
+	labsrc.convertTo(labsrc, CV_32FC3);
+	labdst.convertTo(labdst, CV_32FC3);
+	//计算三个通道的均值与方差
+	Scalar meansrc, stdsrc, meandst, stddst;
+	meanStdDev(labsrc, meansrc, stdsrc);
+	meanStdDev(labdst, meandst, stddst);
+	//三通道分离
+	vector<Mat> srcsplit, dstsplit;
+	split(labsrc, srcsplit);
+	split(labdst, dstsplit);
+	//每个通道减去均值
+	dstsplit[0] -= meandst[0];
+	dstsplit[1] -= meandst[1];
+	dstsplit[2] -= meandst[2];
+	//每个通道缩放
+	dstsplit[0] = stddst[0] / stdsrc[0] * dstsplit[0];
+	dstsplit[1] = stddst[1] / stdsrc[0] * dstsplit[1];
+	dstsplit[2] = stddst[2] / stdsrc[0] * dstsplit[2];
+	//加上源图像的均值
+	dstsplit[0] += meansrc[0];
+	dstsplit[1] += meansrc[1];
+	dstsplit[2] += meansrc[2];
+	//控制溢出
+	clip(dstsplit[0], 0.0f, 255.0f);
+	clip(dstsplit[1], 0.0f, 255.0f);
+	clip(dstsplit[2], 0.0f, 255.0f);
+	//转换为单字节单通道
+	dstsplit[0].convertTo(dstsplit[0], CV_8UC1);
+	dstsplit[1].convertTo(dstsplit[1], CV_8UC1);
+	dstsplit[2].convertTo(dstsplit[2], CV_8UC1);
+	//合并每个通道
+	merge(dstsplit, dst);
+	//从lab空间转换到RGB空间
+	cvtColor(dst, dst, COLOR_Lab2BGR);
 }

@@ -1,55 +1,38 @@
-//
-//  transmission.cpp
-//  opencv_test
-//
-//  Created by xiaoruiqiao on 2017/9/3.
-//  Copyright © 2017年 xiaoruiqiao. All rights reserved.
-//
-
 #include <stdio.h>
-#include "dcp_core.h"
+#include "core.h"
+#include <opencv2/highgui/highgui.hpp>
 
-void CalcTransmission(IplImage *transmission, IplImage *input, double A[], int radius)
+void calcTransmission(Mat& transmission, Mat& input, double A[], int radius)
 {
-    int width = input->width;
-    int height = input->height;
-    int widthstep = input->widthStep;
-    int gwidthstep = transmission->widthStep;
-    int nch = input->nChannels;
-    
-    double w = 0.95;
-    
-    IplImage *normalized_input = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
-    
-    for (int k = 0; k < 3; k++)
-    {
-        for (int i = 0; i < height; i++)
-        {
-            for (int j = 0; j < width; j++)
-            {
-                double tmp = *(uchar *)(input->imageData + i * widthstep + j * nch + k);
-                tmp = tmp / A[k] * 255.0;
-                
-                tmp = tmp > 255 ? 255 : tmp;
-                *(uchar *)(normalized_input->imageData + i * widthstep + j * nch + k) = cvRound(tmp);
-            }
-        }
-    }
-//    CalcDarkChannel(transmission, normalized_input, radius);
-    
-    for (int i = 0; i < height; i++)
-    {
-        for (int j = 0; j < width; j++)
-        {
-            double tran = *(uchar *)(transmission->imageData + i * gwidthstep + j);
-            
-            tran = 1 - w * (tran / 255.0);
-            tran *= 255.0;
-            tran = tran > 255 ? 255 : (tran < 0 ? 0 : tran);
-            
-            *(uchar *)(transmission->imageData + i * gwidthstep + j) = cvRound(tran);
-        }
-    }
-    cvReleaseImage(&normalized_input);
-}
+	int width = input.cols;
+	int height = input.rows;
 
+	double w = 0.95;
+
+	Mat normalized_input(height, width, CV_8UC3);
+	for (int k = 0; k < 3; k++) {
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				double tmp = input.at<Vec3b>(i, j)[k];
+				tmp = tmp / A[k] * 255.0;
+
+				tmp = tmp > 255 ? 255 : tmp;
+				normalized_input.at<Vec3b>(i, j)[k] = cvRound(tmp);
+			}
+		}
+	}
+	//imshow("normalized_input", normalized_input);
+	Mat brightChannel(height, width, CV_8UC1);
+	calcDarkChannel(transmission, brightChannel, normalized_input, radius);
+
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			double tran = transmission.at<uchar>(i, j);
+
+			tran = 1 - w*(tran / 255.0);
+			tran *= 255.0;
+			tran = tran > 255 ? 255 : (tran < 0 ? 0 : tran);
+			transmission.at<uchar>(i, j) = cvRound(tran);
+		}
+	}
+}
