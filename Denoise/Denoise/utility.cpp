@@ -609,7 +609,7 @@ void rgbStdDev(Mat& image, Mat& labels,Mat& stats, Mat& normalize_std, int size)
 
 			
 		}
-		cout << "t_std " << normalize_std_tmp.at<float>(m, 0) << endl;
+		//cout << "t_std " << normalize_std_tmp.at<float>(m, 0) << endl;
 	}
 
 	normalize_std = normalize_std_tmp;
@@ -624,7 +624,7 @@ void getMaskFromStd(Mat& mask, Mat& normalize_std) {
 
 			int cur = mask.at<int>(i, j);
 			if (cur == 0) continue;
-			if (normalize_std.at<float>(cur-1,0) > 2) {
+			if (normalize_std.at<float>(cur-1,0) > 5) {
 				mask.at<int>(i, j) = 0;
 			}
 		}
@@ -655,4 +655,9 @@ void imageListGrayCompensation(vector<Mat>& image_list_gray, vector<Mat>& image_
 	image_list_gray_compensation.push_back(image_pre_compensation);
 	image_list_gray_compensation.push_back(image_list_gray[1]);
 	image_list_gray_compensation.push_back(image_next_compensation);
+}
+
+void imageClosing(Mat& src, Mat& output, int kenel_size) {
+	Mat element = getStructuringElement(MORPH_RECT, Size(kenel_size, kenel_size));
+	morphologyEx(src, output, MORPH_CLOSE, element);
 }

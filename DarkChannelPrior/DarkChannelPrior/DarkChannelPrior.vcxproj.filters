@@ -15,16 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="airlight.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="darkchannel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dcp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="guildedfilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="recover.cpp">
@@ -36,30 +27,18 @@
     <ClCompile Include="transmission.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="medianFilter.cpp">
+    <ClCompile Include="dehaze.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CorseFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="removalBaseMask.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="framediff.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="KNN.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="flowOutlierRemoval.cpp">
+    <ClCompile Include="airLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="dcp.hpp">
+    <ClInclude Include="dehaze.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="dcp_core.h">
+    <ClInclude Include="core.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

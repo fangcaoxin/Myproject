@@ -68,3 +68,4 @@ void rgbStdDev(Mat& image, Mat& labels,Mat& stats, Mat& normalize_std, int size)
 void getMaskFromStd(Mat& mask, Mat& normalize_std);
 void imageListCompensation(vector<Mat>& image_list, vector<Mat>& image_list_compensation, vector<Mat>& camera_motion);
 void imageListGrayCompensation(vector<Mat>& image_list_gray, vector<Mat>& image_list_gray_compensation, vector<Mat>& camera_motion);
+void imageClosing(Mat& src, Mat& output, int kenel_size);

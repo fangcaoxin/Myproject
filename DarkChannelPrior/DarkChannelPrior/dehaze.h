@@ -3,5 +3,6 @@
 #include <opencv2/ximgproc.hpp>
 
 using namespace cv::ximgproc;
-void dehaze(Mat& recover, Mat& input);
+void dehaze(Mat& input, Mat& recover);
 void dehazeDC(Mat image, Mat &dehaze);
+void dehazeMY(Mat image, Mat &mydehaze);

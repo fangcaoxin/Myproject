@@ -20,7 +20,7 @@ Ptr<BackgroundSubtractor> pMOG;
 //string folderName = "img_170721_01j";
 string folderName = "img_170724_02j";
 string saveFolder = "..//..//..//image//" + folderName + "//" + folderName + "_";
-string saveImage = "..//..//..//result//20171016//" + folderName + "_";
+string saveImage = "..//..//..//result//20171018//" + folderName + "_";
 int width = 1358; //1358 without black range
 int height = 1080; //1080
 Rect rect(6, 4, width - 6, height - 8);
@@ -30,13 +30,13 @@ int main(int argc, char* argv[]) {
 	int width_input = rect.width /4;
 	int height_input = rect.height/4;
 
-	int beg_num = 0;
-	int frame_num = 100;
+	int beg_num = 185;
+	int frame_num = 30;
 	Mat backgroud;
 	int frame_count = 0;
-	Mat fgMaskMOG(height_input, width_input, CV_8UC1, Scalar(0));
-	pMOG = createBackgroundSubtractorMOG2(5, 10, false);
-	Ptr<FastFeatureDetector> fast = FastFeatureDetector::create();
+	//Mat fgMaskMOG(height_input, width_input, CV_8UC1, Scalar(0));
+	//pMOG = createBackgroundSubtractorMOG2(5, 10, false);
+	//Ptr<FastFeatureDetector> fast = FastFeatureDetector::create();
 	vector<Mat> image_list;
 	vector<Mat> image_list_gray;
 
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 	int count = 0;
 	for (int i = beg_num; i < beg_num + frame_num; i = i + 1) {
 		string file_name = saveFolder + to_string(i) + ".jpg";
-		string save_name = saveImage + to_string(i - 1) + "_1016out.jpg";
+		string save_name = saveImage + to_string(i - 1) + "_1018out.jpg";
 		cout << "file name :" << file_name << endl;
 		Mat cur = imread(file_name);
 		Mat input_resize, cur_gray;
@@ -125,6 +125,7 @@ int main(int argc, char* argv[]) {
 			getMaskFromStd(labels, normalize_std);
 			getMaskFromStd(labels1, normalize_std1);
 			int num = sumAreaByRadius(labels, labels1, centroids, centroids1, diff_output_c, 5);
+			imageClosing(diff_output_c, diff_output_c, 3);
 			int size_final = connectedComponentsWithStats(diff_output_c, labels_final, stats_final, centroids_final);
 			floatingAreaRestoration(image_list_compensation, image_list_gray_compensation, stats_final, labels_final, output);
 			showMaskImg(labels, labels_show);
@@ -196,16 +197,23 @@ int main(int argc, char* argv[]) {
 			//imshow("diff_by_sum", diff_output);
 			//imshow("area label", show_img);
 			//imshow("original diff", diff_output);
-			imshow("cdfd", diff_output_c);
-			imwrite("cdfd.jpg", diff_output_c);
-			imshow("output", output);
+		Mat res;
+		cvtColor(diff_output_c, diff_output_c, CV_GRAY2BGR);
+		vector<Mat> res_save;
+		res_save.push_back(image_list[1]);
+		res_save.push_back(diff_output_c);
+		res_save.push_back(output);
+		hconcat(res_save, res);
+			//imshow("cdfd", diff_output_c);
+			//imwrite("cdfd.jpg", diff_output_c);
+			imshow("output", res);
 			//imshow("trans", trans);
-			//imwrite(save_name, output);
+			imwrite(save_name, res);
 			//imshow("diff_cur_pre_camera", diff_wb_c[0]);
 			//imshow("diff_cur_next_camera", diff_wb_c[1]);
 			//imwrite(save_name, diff_wb_c[0]);
-			imshow("diff_cur_pre_std", labels_show);
-			imshow("diff_cur_next_std", labels1_show);
+			//imshow("diff_cur_pre_std", labels_show);
+			//imshow("diff_cur_next_std", labels1_show);
 			//imwrite(save_name, labels_show);
 			image_list.erase(image_list.begin());
 			image_list_gray.erase(image_list_gray.begin());
