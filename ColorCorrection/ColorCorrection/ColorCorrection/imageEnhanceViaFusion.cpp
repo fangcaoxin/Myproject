@@ -167,6 +167,7 @@ void SimplestColorBalance(Mat src, Mat& dst, int percent) {
 		normalize(channel1, channel1, 0, 255, NORM_MINMAX);
 		results.push_back(channel1);
 	}
+	//results.push_back(channel[2]);
 	Mat outval;
 	merge(results, outval);
 	dst = outval;

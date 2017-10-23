@@ -116,7 +116,7 @@ void dehazeMY(Mat image, Mat &mydehaze)
 
 	//CalcBrightChannel(bright, image, 0);
 	//CalcDarkChannel(dark, image, 0);
-	calcDarkChannel(dark, bright, image, 0);
+	calcDarkChannel(dark, bright, image, 5);
 
 
 
@@ -131,9 +131,9 @@ void dehazeMY(Mat image, Mat &mydehaze)
 	//reddark.convertTo(reddark, CV_32FC1);
 	//normalize(reddark, reddark, 0, 1, NORM_MINMAX, -1, Mat() );
 	//transmission=1-transmission;
-	Mat gray;
-	cvtColor(image, gray, CV_BGR2GRAY);
-	guidedFilter(gray, transmission, transmission, 10, 1e-1);
+	//Mat gray;
+	//cvtColor(image, gray, CV_BGR2GRAY);
+	guidedFilter(image, transmission, transmission, 60, 1e-6);
 
 
 	imshow("trans", transmission);
@@ -164,6 +164,13 @@ void dehazeMY(Mat image, Mat &mydehaze)
 	bgr[0] = tb + A;
 	bgr[1] = tg + A;
 	bgr[2] = tr + A;
-
+	/*bgr[0] = tb;
+	bgr[1] = tg;
+	bgr[2] = tr;*/
+	normalize(bgr[0], bgr[0], 0, 255, NORM_MINMAX);
+	normalize(bgr[1], bgr[1], 0, 255, NORM_MINMAX);
+	normalize(bgr[2], bgr[2], 0, 255, NORM_MINMAX);
 	merge(bgr, mydehaze);
+
+	mydehaze.convertTo(mydehaze, CV_8UC3);
 }

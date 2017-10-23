@@ -12,7 +12,7 @@ using namespace cv;
 using namespace std;
 #define LIST
 //#define NEW
-//#define WHITEBALANCE
+#define WHITEBALANCE
 int main(int argc, char** argv) {
 	int beg_no = 0;
 #ifdef NEW
@@ -40,14 +40,16 @@ int main(int argc, char** argv) {
 	string filename = image_list[beg_no];
 #endif //LIST
 	//string filename = "..//..//image//2.jpg";
+	//string filename = "city.png";
 	Mat image = imread(filename);
-	Mat res;
+	Mat res,res1;
+	dehazeMY(image, res);
 #ifdef WHITEBALANCE
 	Ptr<xphoto::WhiteBalancer>wb;
 	wb = xphoto::createSimpleWB();
-	wb->balanceWhite(image, res);
+	wb->balanceWhite(res, res1);
 #endif //WHITEBALANCE
-	enhance(image, res);
+	//enhance(image, res);
 	imshow("res", res);
   
 	waitKey(0);
