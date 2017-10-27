@@ -167,10 +167,10 @@ void dehazeMY(Mat image, Mat &mydehaze)
 	/*bgr[0] = tb;
 	bgr[1] = tg;
 	bgr[2] = tr;*/
-	normalize(bgr[0], bgr[0], 0, 255, NORM_MINMAX);
-	normalize(bgr[1], bgr[1], 0, 255, NORM_MINMAX);
-	normalize(bgr[2], bgr[2], 0, 255, NORM_MINMAX);
+	normalize(bgr[0], bgr[0], 0, 1, NORM_MINMAX);
+	normalize(bgr[1], bgr[1], 0, 1, NORM_MINMAX);
+	normalize(bgr[2], bgr[2], 0, 1, NORM_MINMAX);
 	merge(bgr, mydehaze);
 
-	mydehaze.convertTo(mydehaze, CV_8UC3);
+	//mydehaze.convertTo(mydehaze, CV_8UC3);
 }

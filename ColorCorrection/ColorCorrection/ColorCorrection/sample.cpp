@@ -7,12 +7,14 @@
 #include <opencv2/xphoto.hpp>
 #include "dehaze.h"
 #include "enhance.h"
+#include "localColorCorrection.h"
 
 using namespace cv;
 using namespace std;
+//#define OLD
 #define LIST
 //#define NEW
-#define WHITEBALANCE
+//#define WHITEBALANCE
 int main(int argc, char** argv) {
 	int beg_no = 0;
 #ifdef NEW
@@ -22,7 +24,7 @@ int main(int argc, char** argv) {
 #ifdef OLD
 	//string folderName = "img_170721_01j";
 	string folderName = "img_170724_02j";
-	string folder_name = "..//..//..//image//" + folderName + "//" + folderName + "_";
+	string folder_name = "..//..//..//..//image//" + folderName + "//" + folderName + "_";
 	string saveImage = "..//..//..//result//20171018//" + folderName + "_";
 	string filename = folder_name + to_string(beg_no) + ".jpg";
 #endif//OLD
@@ -43,14 +45,16 @@ int main(int argc, char** argv) {
 	//string filename = "city.png";
 	Mat image = imread(filename);
 	Mat res,res1;
-	dehazeMY(image, res);
+	localColorCorrection(image, res);
+	dehaze(res, res1);
+	//dehazeMY(image, res);
 #ifdef WHITEBALANCE
 	Ptr<xphoto::WhiteBalancer>wb;
 	wb = xphoto::createSimpleWB();
 	wb->balanceWhite(res, res1);
 #endif //WHITEBALANCE
 	//enhance(image, res);
-	imshow("res", res);
+	imshow("res", res1);
   
 	waitKey(0);
 
