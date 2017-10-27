@@ -25,17 +25,17 @@ static void calWieght(Mat& img, Mat& L, Mat& dst) {
 }
 
 static void applyCLAHE(Mat& img, Mat& L, vector<Mat>& result) {
-	Ptr<CLAHE> clahe= createCLAHE();
-	clahe->setClipLimit(2.0);
+	Ptr<CLAHE> clahe= createCLAHE(5.0,Size(8,8));
+	//clahe->setClipLimit(5.0);
 	Mat L2, LabIm2,img2;
 	clahe->apply(L, L2);
 	vector<Mat> lab;
 	split(img, lab);
 	vector<Mat> tmp;
-	tmp.push_back(L2);
+	tmp.push_back(L2);//brightnesss histogram equilization
 	tmp.push_back(lab[1]);
 	tmp.push_back(lab[2]);
-	cv::merge(tmp, LabIm2);
+	cv::merge(tmp, LabIm2);//merage histogram equilizied brightness
 	cvtColor(LabIm2, img2, CV_Lab2BGR);
 	result.push_back(img2);
 	result.push_back(L2);
@@ -48,7 +48,9 @@ void enhance(Mat src, Mat& dst) {
 	imshow("colorBalance", img1);
 	Mat LabIm1, L1;
 	vector<Mat> result;
+	//img1 = src;
 	cvtColor(img1, LabIm1, CV_BGR2Lab);
+	
 	extractChannel(LabIm1, L1, 0);
 	applyCLAHE(LabIm1, L1, result);
 	Mat img2 = result[0];

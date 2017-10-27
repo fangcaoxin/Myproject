@@ -10,7 +10,7 @@
 
 using namespace cv;
 using namespace std;
-#define LIST
+//#define LIST
 //#define NEW
 #define WHITEBALANCE
 int main(int argc, char** argv) {
@@ -39,18 +39,26 @@ int main(int argc, char** argv) {
 	image_file.close();
 	string filename = image_list[beg_no];
 #endif //LIST
-	//string filename = "..//..//image//2.jpg";
+	string filename = "..//..//image//11.jpg";
 	//string filename = "city.png";
 	Mat image = imread(filename);
 	Mat res,res1;
-	dehazeMY(image, res);
+	vector<Mat> channels;
+	split(image, channels);
+	Scalar means, stddevs;
+	meanStdDev(image,means,stddevs);
+	cout << "means" << means << endl;
+	cout << "stddev" << stddevs << endl;
+	
 #ifdef WHITEBALANCE
 	Ptr<xphoto::WhiteBalancer>wb;
 	wb = xphoto::createSimpleWB();
-	wb->balanceWhite(res, res1);
+	wb->balanceWhite(image, res);
 #endif //WHITEBALANCE
+	//dehazeMY(res, res1);
 	//enhance(image, res);
 	imshow("res", res);
+	//imshow("res1", res1);
   
 	waitKey(0);
 

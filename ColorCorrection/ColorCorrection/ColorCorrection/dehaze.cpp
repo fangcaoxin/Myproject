@@ -140,7 +140,7 @@ void dehazeMY(Mat image, Mat &mydehaze)
 	double minVal, maxVal;
 	minMaxLoc(transmission, &minVal, &maxVal);
 
-	double A = minVal;
+	double A = maxVal;
 	cout << "myair=" << minVal << endl;
 	Mat tb = Mat::ones(image.rows, image.cols, CV_32FC1);
 	Mat tg = Mat::ones(image.rows, image.cols, CV_32FC1);
@@ -150,11 +150,12 @@ void dehazeMY(Mat image, Mat &mydehaze)
 	for (int i = 0; i<image.cols; i++)
 		for (int j = 0; j<image.rows; j++)
 		{
+			//float t = max((double)transmission.at<float>(j, i)*exp(-1 * A), 0.75);
 			float t = max((double)transmission.at<float>(j, i)*exp(-1 * A), 0.75);
-
+			//cout << "t" << t << " trans"<< transmission.at<float>(j, i)<<endl;
 			tb.at<float>(j, i) = (bgr[0].at<float>(j, i) - A) / t;
 			tg.at<float>(j, i) = (bgr[1].at<float>(j, i) - A) / t;
-			tr.at<float>(j, i) = (bgr[2].at<float>(j, i) - A) / t;
+			tr.at<float>(j, i) = (bgr[2].at<float>(j, i)-A) / t;
 			redtrans.at<Vec3f>(j, i)[0] = 0.0;
 			redtrans.at<Vec3f>(j, i)[1] = 0.0;
 			redtrans.at<Vec3f>(j, i)[2] = transmission.at<float>(j, i);
