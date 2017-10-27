@@ -8,11 +8,12 @@
 #include "dehaze.h"
 #include "enhance.h"
 #include "localColorCorrection.h"
+#include "illumiCorrection.h"
 
 using namespace cv;
 using namespace std;
 //#define OLD
-#define LIST
+//#define LIST
 //#define NEW
 //#define WHITEBALANCE
 int main(int argc, char** argv) {
@@ -42,20 +43,22 @@ int main(int argc, char** argv) {
 	string filename = image_list[beg_no];
 #endif //LIST
 	//string filename = "..//..//image//2.jpg";
-	//string filename = "city.png";
+	string filename = "..//..//image//01.png";
 	Mat image = imread(filename);
 	Mat res,res1;
-	localColorCorrection(image, res);
-	dehaze(res, res1);
+	Mat L, R;
+	//localColorCorrection(image, res);
+	//dehaze(res, res1);
 	//dehazeMY(image, res);
+	illumiCorrection(image, L, R);
 #ifdef WHITEBALANCE
 	Ptr<xphoto::WhiteBalancer>wb;
 	wb = xphoto::createSimpleWB();
 	wb->balanceWhite(res, res1);
 #endif //WHITEBALANCE
 	//enhance(image, res);
-	imshow("res", res1);
-  
+	imshow("res", L);
+	imshow("rr", R);
 	waitKey(0);
 
 }
