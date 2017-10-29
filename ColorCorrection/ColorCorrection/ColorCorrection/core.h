@@ -14,3 +14,4 @@ void calcDarkChannel(Mat& darkChannel,Mat& brightChannel, Mat& input, int radius
 void calcAirLight(Mat& darkChannel, Mat& input, double A[]);
 void calcTransmission(Mat& transmission, Mat& input, double A[], int radius);
 void calcRecover(Mat& result, Mat& input, Mat& transmission, double A[]);
+void calcDarkChannelByIllumi(Mat& darkchannel, Mat& input, int radius);

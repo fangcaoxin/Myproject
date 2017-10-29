@@ -5,16 +5,18 @@ void dehaze(Mat& input, Mat& recover) {
 	int height = input.rows;
 	int width = input.cols;
 
-	Mat darkchannel(height, width, CV_8UC1);
-	Mat brightchannel(height, width, CV_8UC1);
-	Mat transmission(height, width, CV_8UC1);
-	Mat refine_transmission(height, width, CV_8UC1);
+	Mat darkchannel;
+	Mat brightchannel;
+	Mat transmission;
+	Mat refine_transmission;
     recover=Mat(height, width, CV_8UC3);
 	int darkchannelradius = cvRound(MIN(width, height)*0.015);
+	//int darkchannelradius = 10;
 	double Airlight[3] = { 0,0,0 };
 	
 	printf("CalcDarkChannel...");
 	calcDarkChannel(darkchannel, brightchannel, input, darkchannelradius);
+	//calcDarkChannelByIllumi(darkchannel, input, darkchannelradius);
 
 	printf("CalcAirLight...");
 	calcAirLight(darkchannel, input, Airlight);
@@ -23,7 +25,7 @@ void dehaze(Mat& input, Mat& recover) {
 	calcTransmission(transmission, input, Airlight, darkchannelradius);
 
 	printf("GuidedFilterColor...");
-	guidedFilter(input, transmission, refine_transmission, 60, 1e-6);
+	guidedFilter(input, transmission, refine_transmission, 32, 1e-2);
 
 	printf("CalcRecover...");
 	calcRecover(recover, input, refine_transmission, Airlight);
@@ -168,10 +170,10 @@ void dehazeMY(Mat image, Mat &mydehaze)
 	/*bgr[0] = tb;
 	bgr[1] = tg;
 	bgr[2] = tr;*/
-	normalize(bgr[0], bgr[0], 0, 255, NORM_MINMAX);
-	normalize(bgr[1], bgr[1], 0, 255, NORM_MINMAX);
-	normalize(bgr[2], bgr[2], 0, 255, NORM_MINMAX);
+	normalize(bgr[0], bgr[0], 0, 1, NORM_MINMAX);
+	normalize(bgr[1], bgr[1], 0, 1, NORM_MINMAX);
+	normalize(bgr[2], bgr[2], 0, 1, NORM_MINMAX);
 	merge(bgr, mydehaze);
 
-	mydehaze.convertTo(mydehaze, CV_8UC3);
+	//mydehaze.convertTo(mydehaze, CV_8UC3);
 }

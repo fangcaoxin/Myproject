@@ -31,9 +31,9 @@ void calcDarkChannel(Mat& darkchannel,Mat& brightchannel, Mat& input, int radius
 			{
 				for (int n = st_col; n <= ed_col; n++)
 				{
-					for (int k = 0; k < 3; k++)
+					for (int k = 0; k < 2; k++)
 					{
-						
+					
 					 int cur = input.at<Vec3b>(m, n)[k];
 						if (cur < min)
 							min = cur;
@@ -47,6 +47,7 @@ void calcDarkChannel(Mat& darkchannel,Mat& brightchannel, Mat& input, int radius
 			brightchannel.at<uchar>(i, j) = max;
 		}
 	}
+	//imshow("darkchannel", darkchannel);
 
 }
 
@@ -161,4 +162,67 @@ void linerConstraint(Mat& gray_pre, Mat& gray, Mat& output) {
 	}
 	output = tmp;
 	imshow("ratio_show", tmp_show);
+}
+
+void calcDarkChannelByIllumi(Mat& darkchannel, Mat& input, int radius) {
+
+
+	int height = input.rows;
+	int width = input.cols;
+	darkchannel.create(height, width, CV_8UC1);
+	
+	Mat gray;
+	cvtColor(input, gray, CV_BGR2GRAY);
+	Scalar mean_gray = mean(gray);
+	Mat gray_diff = gray - mean_gray[0];
+	threshold(gray_diff, gray_diff, 5,255,THRESH_BINARY_INV);
+	imshow("gray_diff", gray_diff);
+	int st_row, ed_row;
+	int st_col, ed_col;
+
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			st_row = i - radius, ed_row = i + radius;
+			st_col = j - radius, ed_col = j + radius;
+
+			st_row = st_row < 0 ? 0 : st_row;
+			ed_row = ed_row >= height ? (height - 1) : ed_row;
+			st_col = st_col < 0 ? 0 : st_col;
+			ed_col = ed_col >= width ? (width - 1) : ed_col;
+
+
+			int min = 300;
+			int max = 0;
+			if (gray_diff.at<uchar>(i, j) == 255) {
+				for (int m = st_row; m <= ed_row; m++)
+				{
+					for (int n = st_col; n <= ed_col; n++)
+					{
+						
+							for (int k = 0; k < 3; k++)
+							{
+
+								int cur = input.at<Vec3b>(m, n)[k];
+								if (cur < min)
+									min = cur;
+							}
+						
+
+
+					}
+				}
+			}
+			else {
+				min = 0;
+			}
+			darkchannel.at<uchar>(i, j) = min;
+			
+		}
+	}
+	//Mat tmp;
+	//darkchannel.copyTo(tmp);
+	//imshow("darkchannel", tmp);
+
 }
