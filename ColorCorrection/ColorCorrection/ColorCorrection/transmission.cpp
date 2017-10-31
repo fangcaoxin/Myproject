@@ -7,7 +7,7 @@ void calcTransmission(Mat& transmission, Mat& input, double A[], int radius)
 	int width = input.cols;
 	int height = input.rows;
 
-	double w = 0.95;
+	double w =0.5;
 
 	Mat normalized_input(height, width, CV_8UC3);
 	for (int k = 0; k < 3; k++) {
@@ -24,7 +24,7 @@ void calcTransmission(Mat& transmission, Mat& input, double A[], int radius)
 	//imshow("normalized_input", normalized_input);
 	Mat brightChannel(height, width, CV_8UC1);
 	calcDarkChannel(transmission, brightChannel, normalized_input, radius);
-
+	//calcDarkChannelByIllumi(transmission, normalized_input, radius);
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 			double tran = transmission.at<uchar>(i, j);

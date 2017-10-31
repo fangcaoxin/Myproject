@@ -5,4 +5,3 @@
 using namespace std;
 using namespace cv;
 
-void illumiCorrection(Mat& src, Mat& dst);

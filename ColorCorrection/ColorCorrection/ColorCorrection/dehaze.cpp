@@ -5,16 +5,18 @@ void dehaze(Mat& input, Mat& recover) {
 	int height = input.rows;
 	int width = input.cols;
 
-	Mat darkchannel(height, width, CV_8UC1);
-	Mat brightchannel(height, width, CV_8UC1);
-	Mat transmission(height, width, CV_8UC1);
-	Mat refine_transmission(height, width, CV_8UC1);
+	Mat darkchannel;
+	Mat brightchannel;
+	Mat transmission;
+	Mat refine_transmission;
     recover=Mat(height, width, CV_8UC3);
 	int darkchannelradius = cvRound(MIN(width, height)*0.015);
+	//int darkchannelradius = 10;
 	double Airlight[3] = { 0,0,0 };
 	
 	printf("CalcDarkChannel...");
 	calcDarkChannel(darkchannel, brightchannel, input, darkchannelradius);
+	//calcDarkChannelByIllumi(darkchannel, input, darkchannelradius);
 
 	printf("CalcAirLight...");
 	calcAirLight(darkchannel, input, Airlight);
@@ -23,7 +25,7 @@ void dehaze(Mat& input, Mat& recover) {
 	calcTransmission(transmission, input, Airlight, darkchannelradius);
 
 	printf("GuidedFilterColor...");
-	guidedFilter(input, transmission, refine_transmission, 60, 1e-6);
+	guidedFilter(input, transmission, refine_transmission, 32, 1e-2);
 
 	printf("CalcRecover...");
 	calcRecover(recover, input, refine_transmission, Airlight);
@@ -140,7 +142,7 @@ void dehazeMY(Mat image, Mat &mydehaze)
 	double minVal, maxVal;
 	minMaxLoc(transmission, &minVal, &maxVal);
 
-	double A = minVal;
+	double A = maxVal;
 	cout << "myair=" << minVal << endl;
 	Mat tb = Mat::ones(image.rows, image.cols, CV_32FC1);
 	Mat tg = Mat::ones(image.rows, image.cols, CV_32FC1);
@@ -150,11 +152,12 @@ void dehazeMY(Mat image, Mat &mydehaze)
 	for (int i = 0; i<image.cols; i++)
 		for (int j = 0; j<image.rows; j++)
 		{
+			//float t = max((double)transmission.at<float>(j, i)*exp(-1 * A), 0.75);
 			float t = max((double)transmission.at<float>(j, i)*exp(-1 * A), 0.75);
-
+			//cout << "t" << t << " trans"<< transmission.at<float>(j, i)<<endl;
 			tb.at<float>(j, i) = (bgr[0].at<float>(j, i) - A) / t;
 			tg.at<float>(j, i) = (bgr[1].at<float>(j, i) - A) / t;
-			tr.at<float>(j, i) = (bgr[2].at<float>(j, i) - A) / t;
+			tr.at<float>(j, i) = (bgr[2].at<float>(j, i)-A) / t;
 			redtrans.at<Vec3f>(j, i)[0] = 0.0;
 			redtrans.at<Vec3f>(j, i)[1] = 0.0;
 			redtrans.at<Vec3f>(j, i)[2] = transmission.at<float>(j, i);
