@@ -45,6 +45,7 @@ int main(int argc, char** argv) {
 	//string filename = "..//..//image//2.jpg";
 	string filename = "..//..//image//01.png";
 	Mat image = imread(filename);
+	
 	Mat res,res1;
 	Mat L, R;
 	//localColorCorrection(image, res);
