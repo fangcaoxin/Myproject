@@ -5,10 +5,13 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/imgcodecs/imgcodecs.hpp>
 #include <opencv2/xphoto.hpp>
+#include <opencv2/calib3d.hpp>
+
 #include "dehaze.h"
 #include "enhance.h"
 #include "localColorCorrection.h"
 #include "illumiCorrection.h"
+#include "opticalModel.h"
 
 using namespace cv;
 using namespace std;
@@ -46,9 +49,8 @@ int main(int argc, char** argv) {
 #endif //LIST
 
 	
-	//string filename = "..//..//image//light_30_p-2017-06-14.png";
-	string filename = "..//..//image//10.jpg";
-	//string filename = "city.png";
+	string filename = "..//..//image//color_chart.png";
+
 	Mat image = imread(filename);
 	
 	Mat res,res1;
@@ -59,10 +61,7 @@ int main(int argc, char** argv) {
 	/*Scalar mean_gray = mean(gray);
 	Mat gray_diff = gray - mean_gray[0];
 	threshold(gray_diff, gray_diff, 5,255,THRESH_BINARY);*/
-	Scalar means, stddevs;
-	meanStdDev(image,means,stddevs);
-	cout << "means" << means << endl;
-	cout << "stddev" << stddevs << endl;
+
 	//medianBlur(image, image, 5);
 	//localColorCorrection(image, res);
 	
@@ -76,13 +75,18 @@ int main(int argc, char** argv) {
 #endif //WHITEBALANCE
 	//dehaze(image, res1);
 	//dehazeMY(res, res1);
-	enhance(image, res1);
+	//enhance(image, res1);
 	//dehazeDC(image, res);
 	//res= L.mul(R);
 	//normalize(res, res, 0, 1, NORM_MINMAX, -1, Mat());
-	imwrite("dehaze10ehance.jpg", res1);
+	//imwrite("dehaze10ehance.jpg", res1);
 	//imshow("whitebalance", res);
+	opticalModelCorrect(image, res1);
+	//imwrite("res.jpg", res1);
 	imshow("res", res1);
+	cout << "blue " << res1.at<Vec3b>(319, 126) << endl;
+	cout << "green " << res1.at<Vec3b>(311, 191) << endl;
+	cout << "red " << res1.at<Vec3b>(314, 238) << endl;
 	waitKey(0);
 
 }

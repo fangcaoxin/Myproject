@@ -40,11 +40,11 @@ void localColorCorrection(Mat& src, Mat& dst) {
 	merge(composited_list, composite_image);
 	normalize(composite_image, composite_image, 0, 255, NORM_MINMAX, -1, Mat());
 	composite_image.convertTo(composite_image, CV_8UC3);
-	Mat refer_img = imread("..//..//image//13.jpg");
+	//Mat refer_img = imread("..//..//image//13.jpg");
 	//refer_img.convertTo(refer_img, CV_32FC3);
 	//normalize(refer_img, refer_img, 0, 1, NORM_MINMAX, -1, Mat());
-	matColorTransfer(refer_img, composite_image);
-	imshow("tranfered image", composite_image);
+	//matColorTransfer(refer_img, composite_image);
+	//imshow("tranfered image", composite_image);
 	composite_image.convertTo(composite_image, CV_32FC3);
 	normalize(composite_image, composite_image, 0, 1, NORM_MINMAX, -1, Mat());
 	split(composite_image, composited_split);

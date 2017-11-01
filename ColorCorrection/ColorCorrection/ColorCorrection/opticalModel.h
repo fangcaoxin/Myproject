@@ -6,3 +6,5 @@
 
 using namespace std;
 using namespace cv;
+
+void opticalModelCorrect(Mat& src, Mat& dst);
