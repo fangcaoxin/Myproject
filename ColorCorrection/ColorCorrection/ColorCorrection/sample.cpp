@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
 
 	Mat image = imread(filename);
 	
-	Mat res,res1;
+	Mat res,res1,res2;
 	Mat L, R;
 	Mat V,image_hsv;
 	//Mat gray;
@@ -81,12 +81,15 @@ int main(int argc, char** argv) {
 	//normalize(res, res, 0, 1, NORM_MINMAX, -1, Mat());
 	//imwrite("dehaze10ehance.jpg", res1);
 	//imshow("whitebalance", res);
-	opticalModelCorrect(image, res1);
+	//opticalModelCorrect(image, res1);
 	//imwrite("res.jpg", res1);
-	imshow("res", res1);
-	cout << "blue " << res1.at<Vec3b>(319, 126) << endl;
+	dehazeByBright(image, res2);
+	//imwrite("res_1102.jpg", res2);
+	imshow("res", res2);
+
+	/*cout << "blue " << res1.at<Vec3b>(319, 126) << endl;
 	cout << "green " << res1.at<Vec3b>(311, 191) << endl;
-	cout << "red " << res1.at<Vec3b>(314, 238) << endl;
+	cout << "red " << res1.at<Vec3b>(314, 238) << endl;*/
 	waitKey(0);
 
 }

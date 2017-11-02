@@ -177,3 +177,54 @@ void dehazeMY(Mat image, Mat &mydehaze)
 
 	//mydehaze.convertTo(mydehaze, CV_8UC3);
 }
+
+void dehazeByBright(Mat& src, Mat& dst) {
+	Mat bbchannel;
+	vector<Mat> channels;
+	//dst.create(src.size(), CV_8UC3);
+	Mat dst_tmp(src.size(), CV_32FC3);
+	vector<Mat> bgr;
+	calcBrightBrightChannel(src, bbchannel, 5);
+	
+	guidedFilter(src, bbchannel, bbchannel, 32, 1e-2);
+	bbchannel.convertTo(bbchannel, CV_32FC1);
+	normalize(bbchannel, bbchannel, 0, 1, NORM_MINMAX, -1, Mat());
+	double minVal, maxVal;
+	imshow("bbchannel", bbchannel);
+	minMaxIdx(bbchannel, &minVal, &maxVal);
+	cout << "min " << minVal << " max " << maxVal << endl;
+	src.convertTo(src, CV_32FC3);
+	//normalize(src, src, 0, 1, NORM_MINMAX, -1, Mat());
+	Mat trans_mat = bbchannel;
+	split(src, channels);
+	Mat tb = Mat::ones(src.rows, src.cols, CV_32FC1);
+	Mat tg = Mat::ones(src.rows, src.cols, CV_32FC1);
+	Mat tr = Mat::ones(src.rows, src.cols, CV_32FC1);
+	for (int i = 0; i < src.rows; i++) {
+		for (int j = 0; j < src.cols; j++) {
+			float trans = trans_mat.at<float>(i, j);
+			trans = max(trans, (float)0.5);
+			trans = min(trans, (float)1);
+			float trans_r = trans*exp(0.2);
+			/*dst_tmp.at<Vec3f>(i, j)[0] = (src.at<Vec3f>(i, j)[0]-means[0]) / trans+means[0];
+			dst_tmp.at<Vec3f>(i, j)[1] = (src.at<Vec3f>(i, j)[1]-means[1]) / trans + means[1];
+			dst_tmp.at<Vec3f>(i, j)[2] = (src.at<Vec3f>(i, j)[2]-means[2]) / trans + means[2];*/
+			tb.at<float>(i, j) = channels[0].at<float>(i,j)*exp(-1.147);
+			tg.at<float>(i, j) = channels[1].at<float>(i, j) * exp(-0.87);
+			tr.at<float>(i, j) = channels[2].at<float>(i, j) * exp(-0.5);
+			
+		}
+	}
+	/*imshow("tb", tb);
+	imshow("tg", tg);
+	imshow("tr", tr);*/
+	bgr.push_back(tb);
+	bgr.push_back(tg);
+	bgr.push_back(tr);
+	
+	merge(bgr, dst);
+	//normalize(dst, dst, 0, 255, NORM_MINMAX);
+	dst.convertTo(dst, CV_8UC3);
+	
+
+}

@@ -226,3 +226,45 @@ void calcDarkChannelByIllumi(Mat& darkchannel, Mat& input, int radius) {
 	//imshow("darkchannel", tmp);
 
 }
+
+void calcBrightBrightChannel(Mat& src, Mat& bbchannel,int radius) {
+	int height = src.rows;
+	int width = src.cols;
+	bbchannel.create(height, width, CV_8UC1);
+	Mat src_hsv;
+	cvtColor(src, src_hsv, CV_BGR2HSV);
+
+	int st_row, ed_row;
+	int st_col, ed_col;
+
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			st_row = i - radius, ed_row = i + radius;
+			st_col = j - radius, ed_col = j + radius;
+
+			st_row = st_row < 0 ? 0 : st_row;
+			ed_row = ed_row >= height ? (height - 1) : ed_row;
+			st_col = st_col < 0 ? 0 : st_col;
+			ed_col = ed_col >= width ? (width - 1) : ed_col;
+
+
+			int min = 300;
+			int max = 0;
+			for (int m = st_row; m <= ed_row; m++)
+			{
+				for (int n = st_col; n <= ed_col; n++)
+				{
+						int cur = src_hsv.at<Vec3b>(m, n)[2];
+
+						if (cur > max)
+							max = cur;
+					
+				}
+			}
+			
+			bbchannel.at<uchar>(i, j) = max;
+		}
+	}
+}

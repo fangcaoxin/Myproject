@@ -8,3 +8,4 @@ using namespace cv::ximgproc;
 void dehaze(Mat& input, Mat& recover);
 void dehazeDC(Mat image, Mat &dehaze);
 void dehazeMY(Mat image, Mat &mydehaze);
+void dehazeByBright(Mat& src, Mat& dst);
