@@ -16,4 +16,4 @@ void calcTransmission(Mat& transmission, Mat& input, double A[], int radius);
 void calcRecover(Mat& result, Mat& input, Mat& transmission, double A[]);
 void calcDarkChannelByIllumi(Mat& darkchannel, Mat& input, int radius);
 void calcBrightBrightChannel(Mat& src, Mat& bbchannel, int radius);
-
+double evaluationScore(Mat& src);

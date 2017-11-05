@@ -49,13 +49,15 @@ int main(int argc, char** argv) {
 #endif //LIST
 
 	
-	string filename = "..//..//image//color_chart.png";
+	string filename = "..//..//image//out_4.jpg";
 
 	Mat image = imread(filename);
 	
 	Mat res,res1,res2;
 	Mat L, R;
 	Mat V,image_hsv;
+	double s1 = evaluationScore(image);
+	cout << "s1 " << s1 << endl;
 	//Mat gray;
 	//cvtColor(image, gray, CV_BGR2GRAY);
 	/*Scalar mean_gray = mean(gray);
@@ -67,15 +69,16 @@ int main(int argc, char** argv) {
 	
 	//dehazeMY(image, res);
 	//illumiCorrection(image, res);
-
+	//dehazeByBright(image, res2);
 #ifdef WHITEBALANCE
 	Ptr<xphoto::WhiteBalancer>wb;
 	wb = xphoto::createSimpleWB();
-	wb->balanceWhite(image, res);
+	wb->balanceWhite(res2, res2);
+	//medianBlur(res2, res2, 3);
 #endif //WHITEBALANCE
-	//dehaze(image, res1);
+	//dehaze(image, res2);
 	//dehazeMY(res, res1);
-	//enhance(image, res1);
+	enhance(image, res2);
 	//dehazeDC(image, res);
 	//res= L.mul(R);
 	//normalize(res, res, 0, 1, NORM_MINMAX, -1, Mat());
@@ -83,8 +86,11 @@ int main(int argc, char** argv) {
 	//imshow("whitebalance", res);
 	//opticalModelCorrect(image, res1);
 	//imwrite("res.jpg", res1);
-	dehazeByBright(image, res2);
+	
 	//imwrite("res_1102.jpg", res2);
+	
+	double s2 = evaluationScore(res2);
+	cout << "s2 " << s2 << endl;
 	imshow("res", res2);
 
 	/*cout << "blue " << res1.at<Vec3b>(319, 126) << endl;
