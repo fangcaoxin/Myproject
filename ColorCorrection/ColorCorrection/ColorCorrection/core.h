@@ -17,3 +17,6 @@ void calcRecover(Mat& result, Mat& input, Mat& transmission, double A[]);
 void calcDarkChannelByIllumi(Mat& darkchannel, Mat& input, int radius);
 void calcBrightBrightChannel(Mat& src, Mat& bbchannel, int radius);
 double evaluationScore(Mat& src);
+/** paper: Fast Haze Removal for Nighttime Image UsingMaximumReflectance Prior
+* cvpr 2017*/
+void calcMaxReflectChannelColorMap(Mat& src, Mat& dst, int radius);

@@ -8,7 +8,7 @@ void calcDarkChannel(Mat& darkchannel,Mat& brightchannel, Mat& input, int radius
 	int width = input.cols;
 	darkchannel.create(height, width, CV_8UC1);
 	brightchannel.create(height, width, CV_8UC1);
-
+	int channels = input.channels();
 	int st_row, ed_row;
 	int st_col, ed_col;
 
@@ -31,17 +31,28 @@ void calcDarkChannel(Mat& darkchannel,Mat& brightchannel, Mat& input, int radius
 			{
 				for (int n = st_col; n <= ed_col; n++)
 				{
-					for (int k = 0; k < 2; k++)
-					{
-					
-					 int cur = input.at<Vec3b>(m, n)[k];
+					if (channels == 3) {
+						for (int k = 0; k < channels; k++)
+						{
+
+							int cur = input.at<Vec3b>(m, n)[k];
+							if (cur < min)
+								min = cur;
+
+							if (cur > max)
+								max = cur;
+						}
+					}
+					else if (channels == 1) {
+						int cur = input.at<uchar>(m, n);
 						if (cur < min)
 							min = cur;
-					        
-					     if (cur > max) 
-						  max = cur;
+
+						if (cur > max)
+							max = cur;
+					
 					}
-				}
+				} 
 			}
 			darkchannel.at<uchar>(i, j) = min;
 			brightchannel.at<uchar>(i, j) = max;
@@ -267,4 +278,46 @@ void calcBrightBrightChannel(Mat& src, Mat& bbchannel,int radius) {
 			bbchannel.at<uchar>(i, j) = max;
 		}
 	}
+}
+
+void calcMaxReflectChannelColorMap(Mat& src, Mat& dst, int radius) {
+	int height = src.rows;
+	int width = src.cols;
+	dst.create(height, width, CV_8UC3);
+	
+
+	int st_row, ed_row;
+	int st_col, ed_col;
+
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			st_row = i - radius, ed_row = i + radius;
+			st_col = j - radius, ed_col = j + radius;
+
+			st_row = st_row < 0 ? 0 : st_row;
+			ed_row = ed_row >= height ? (height - 1) : ed_row;
+			st_col = st_col < 0 ? 0 : st_col;
+			ed_col = ed_col >= width ? (width - 1) : ed_col;
+
+			int max[3] = { 0 };
+			for (int m = st_row; m <= ed_row; m++)
+			{
+				for (int n = st_col; n <= ed_col; n++)
+				{
+					for (int k = 0; k < 3; k++) {
+						if (src.at<Vec3b>(i, j)[k] > max[k]) {
+							max[k] = src.at<Vec3b>(i, j)[k];
+						}
+					}
+				}
+			}
+			dst.at<Vec3b>(i, j)[0] = max[0];
+			dst.at<Vec3b>(i, j)[1] = max[1];
+			dst.at<Vec3b>(i, j)[2] = max[2];
+		}
+	}
+	
+
 }
