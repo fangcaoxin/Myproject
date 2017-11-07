@@ -26,9 +26,9 @@ SHARP GW5BTJ65K03
 #define SENOR_WIDTH (double)4.48;
 #define SENSOR_HEIGHT (double) 3.36
 
-#define NRER_RED 0.85 /*clear water 0.8~0.85*/
-#define NRER_GREEN 0.93 /*clear water 0.93~0.97*/
-#define NRER_BLUE 0.95 /*clear water 0.95~0.99 */
+#define NRER_RED 0.7 /*clear water 0.8~0.85*/
+#define NRER_GREEN 0.8 /*clear water 0.93~0.97*/
+#define NRER_BLUE 0.7 /*clear water 0.95~0.99 */
 
 
 double h_angle = atan(4.48 / (2 * 3.7)) * 2;

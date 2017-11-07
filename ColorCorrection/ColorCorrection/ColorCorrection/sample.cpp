@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 #endif //LIST
 
 	
-	string filename = "..//..//image//out_4.jpg";
+	string filename = "..//..//image//4_o.jpg";
 
 	Mat image = imread(filename);
 	
@@ -70,6 +70,7 @@ int main(int argc, char** argv) {
 	//dehazeMY(image, res);
 	//illumiCorrection(image, res);
 	//dehazeByBright(image, res2);
+	//opticalModelCorrect(image, res2);
 #ifdef WHITEBALANCE
 	Ptr<xphoto::WhiteBalancer>wb;
 	wb = xphoto::createSimpleWB();
@@ -78,13 +79,13 @@ int main(int argc, char** argv) {
 #endif //WHITEBALANCE
 	//dehaze(image, res2);
 	//dehazeMY(res, res1);
-	//enhance(image, res2);
+	enhance(image, res2);
 	//dehazeDC(image, res);
 	//res= L.mul(R);
 	//normalize(res, res, 0, 1, NORM_MINMAX, -1, Mat());
 	//imwrite("dehaze10ehance.jpg", res1);
 	//imshow("whitebalance", res);
-	opticalModelCorrect(image, res2);
+	
 	//imwrite("res.jpg", res1);
 	
 	//imwrite("res_1102.jpg", res2);
