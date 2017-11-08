@@ -70,16 +70,21 @@ int main(int argc, char** argv) {
 	//dehazeMY(image, res);
 	//illumiCorrection(image, res);
 	//dehazeByBright(image, res2);
-	//opticalModelCorrect(image, res2);
+	 opticalModelCorrect(image, res2);
 #ifdef WHITEBALANCE
 	Ptr<xphoto::WhiteBalancer>wb;
 	wb = xphoto::createSimpleWB();
 	wb->balanceWhite(res2, res2);
 	//medianBlur(res2, res2, 3);
 #endif //WHITEBALANCE
+//#define HISTOGRAM
+#ifdef HISTOGRAM
+	Ptr<CLAHE> clahe = createCLAHE(5.0, Size(8, 8));
+	clahe->apply(res2, res2);
+#endif //HISTOGRAM
 	//dehaze(image, res2);
 	//dehazeMY(res, res1);
-	enhance(image, res2);
+	//enhance(image, res2);
 	//dehazeDC(image, res);
 	//res= L.mul(R);
 	//normalize(res, res, 0, 1, NORM_MINMAX, -1, Mat());
