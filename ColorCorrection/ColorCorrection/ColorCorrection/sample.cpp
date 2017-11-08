@@ -20,6 +20,19 @@ using namespace std;
 //#define LIST
 //#define NEW
 //#define WHITEBALANCE
+static void applyCLAHE(Mat& img) {
+	vector<Mat> lab_channels;
+	cvtColor(img, img, CV_BGR2Lab);
+	split(img, lab_channels);
+	Ptr<CLAHE> clahe = createCLAHE(2.0, Size(8, 8));
+	Mat L1;
+	clahe->apply(lab_channels[0], lab_channels[0]);
+	
+
+	cv::merge(lab_channels, img);//merage histogram equilizied brightness
+	cvtColor(img,img, CV_Lab2BGR);
+
+}
 
 int main(int argc, char** argv) {
 	int beg_no = 0;
@@ -49,7 +62,7 @@ int main(int argc, char** argv) {
 #endif //LIST
 
 	
-	string filename = "..//..//image//out_4.jpg";
+	string filename = "..//..//image//color_chart.png";
 
 	Mat image = imread(filename);
 	
@@ -70,6 +83,9 @@ int main(int argc, char** argv) {
 	//dehazeMY(image, res);
 	//illumiCorrection(image, res);
 	//dehazeByBright(image, res2);
+	//applyCLAHE(image);
+	//opticalModelCorrect(image, res2);
+	imshow("histo", image);
 #ifdef WHITEBALANCE
 	Ptr<xphoto::WhiteBalancer>wb;
 	wb = xphoto::createSimpleWB();
@@ -77,14 +93,14 @@ int main(int argc, char** argv) {
 	//medianBlur(res2, res2, 3);
 #endif //WHITEBALANCE
 	//dehaze(image, res2);
-	//dehazeMY(res, res1);
+	dehazeMY(image, res2);
 	//enhance(image, res2);
 	//dehazeDC(image, res);
 	//res= L.mul(R);
 	//normalize(res, res, 0, 1, NORM_MINMAX, -1, Mat());
 	//imwrite("dehaze10ehance.jpg", res1);
 	//imshow("whitebalance", res);
-	opticalModelCorrect(image, res2);
+	
 	//imwrite("res.jpg", res1);
 	
 	//imwrite("res_1102.jpg", res2);
@@ -96,6 +112,7 @@ int main(int argc, char** argv) {
 	/*cout << "blue " << res1.at<Vec3b>(319, 126) << endl;
 	cout << "green " << res1.at<Vec3b>(311, 191) << endl;
 	cout << "red " << res1.at<Vec3b>(314, 238) << endl;*/
+	//imshow("histogram", image);
 	waitKey(0);
 
 }

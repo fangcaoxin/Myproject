@@ -126,7 +126,8 @@ void dehazeMY(Mat image, Mat &mydehaze)
 	dark.convertTo(dark, CV_32FC1);
 	normalize(bright, bright, 0, 1, NORM_MINMAX, -1, Mat());
 	normalize(dark, dark, 0, 1, NORM_MINMAX, -1, Mat());
-	Mat transmission = 1 - bright + dark; //key
+	//Mat transmission = 1 - bright + dark; //key
+	Mat transmission = 1-dark;
 
 	//Mat reddark=Mat::zeros(image.rows, image.cols, CV_8U);
 	//CalcRedDarkChannel(reddark, image, 3);
@@ -142,7 +143,7 @@ void dehazeMY(Mat image, Mat &mydehaze)
 	double minVal, maxVal;
 	minMaxLoc(transmission, &minVal, &maxVal);
 
-	double A = maxVal;
+	double A = minVal;
 	cout << "myair=" << minVal << endl;
 	Mat tb = Mat::ones(image.rows, image.cols, CV_32FC1);
 	Mat tg = Mat::ones(image.rows, image.cols, CV_32FC1);
@@ -152,21 +153,19 @@ void dehazeMY(Mat image, Mat &mydehaze)
 	for (int i = 0; i<image.cols; i++)
 		for (int j = 0; j<image.rows; j++)
 		{
+			float t = max((double)transmission.at<float>(j, i), 0.001);
 			//float t = max((double)transmission.at<float>(j, i)*exp(-1 * A), 0.75);
-			float t = max((double)transmission.at<float>(j, i)*exp(-1 * A), 0.75);
 			//cout << "t" << t << " trans"<< transmission.at<float>(j, i)<<endl;
-			tb.at<float>(j, i) = (bgr[0].at<float>(j, i) - A) / t;
-			tg.at<float>(j, i) = (bgr[1].at<float>(j, i) - A) / t;
-			tr.at<float>(j, i) = (bgr[2].at<float>(j, i)-A) / t;
+			tb.at<float>(j, i) = (bgr[0].at<float>(j, i) - t) / t+t;
+			tg.at<float>(j, i) = (bgr[1].at<float>(j, i) - t) / t+t;
+			tr.at<float>(j, i) = (bgr[2].at<float>(j, i)-t) / t+t;
 			redtrans.at<Vec3f>(j, i)[0] = 0.0;
 			redtrans.at<Vec3f>(j, i)[1] = 0.0;
 			redtrans.at<Vec3f>(j, i)[2] = transmission.at<float>(j, i);
 		}
 
 	//imshow("redt",redtrans);
-	bgr[0] = tb + A;
-	bgr[1] = tg + A;
-	bgr[2] = tr + A;
+	
 	/*bgr[0] = tb;
 	bgr[1] = tg;
 	bgr[2] = tr;*/

@@ -7,6 +7,8 @@
 * con_l is the contrast of luminance, the difference between the bottom 1% and the top 1% of all pixel value in luminance channel
 * u_s is the average of saturation
 * c1,c2,c3 are weighted coefficients
+* lab color space chroma C_ab=sqrt(a*a+b*b)
+* lab color space saturation S_ab=
 */
 double evaluationScore(Mat& src_original) {
 	double c1 = 0.4680;
@@ -16,10 +18,11 @@ double evaluationScore(Mat& src_original) {
 	src_original.copyTo(src);
 	Mat src_lab,src_float;
 	vector<Mat> lab_channels;
-	Scalar b_mean, b_stddev,a_mean,a_stddev;
+	Scalar c_mean, c_stddev,h_mean,h_stddev;
 	if (src.type() == CV_8UC3) {
 		src.convertTo(src_float, CV_32FC3);
 		normalize(src_float, src_float, 0, 1, NORM_MINMAX, -1, Mat());
+		//src_float = src;
 	}
 	else if(src.type()==CV_32FC3){
 		src_float = src;
@@ -32,33 +35,47 @@ double evaluationScore(Mat& src_original) {
 	
 	
 	cvtColor(src_float, src_float,CV_BGR2Lab);
-	normalize(src_float, src_float, 0, 1, NORM_MINMAX, -1, Mat());
+	//normalize(src_float, src_float, 0, 1, NORM_MINMAX, -1, Mat());
+	cout << "value" << src_float.at<Vec3f>(10, 10) << endl;
 	split(src_float, lab_channels);
-	meanStdDev(lab_channels[0], a_mean, a_stddev);
-	meanStdDev(lab_channels[1], b_mean, b_stddev);
+
+	Mat l = lab_channels[0];
+	Mat a = lab_channels[1];
+	Mat b = lab_channels[2];
+	Mat C_ab;
+	cv::sqrt(a.mul(a) + b.mul(b),C_ab);
+	normalize(C_ab, C_ab, 0, 1, NORM_MINMAX);
+	meanStdDev(C_ab, c_mean, c_stddev);
+	Mat H_ab(src.size(),CV_32FC1);
+	for (int i = 0; i < src.rows; i++) {
+		for (int j = 0; j < src.cols; j++) {
+			H_ab.at<float>(i, j) = cvFastArctan(b.at<float>(i, j), a.at<float>(i, j));
+			//cout << "H_ab value " << H_ab.at<float>(i, j)<<endl;
+		}
+	}
+	normalize(H_ab, H_ab, 0, 1, NORM_MINMAX);
+	meanStdDev(H_ab, h_mean, h_stddev);
+
 	Mat flat;
 	vector<float> low_value, high_value;
-	lab_channels[2].reshape(1, 1).copyTo(flat);
+	lab_channels[0].reshape(1, 1).copyTo(flat);
 	cv::sort(flat, flat, SORT_ASCENDING);
 	int area = flat.cols*0.01;
+	double low_value_average = 0.;
+	double high_value_average = 0.;
+
 	for (int i = 0; i < area; i++) {
 		low_value.push_back(flat.at<float>(0, i));
+		low_value_average += flat.at<float>(0, i) / area;
 	}
 	for (int j = flat.cols - 1; j >= flat.cols - area; j--) {
 		high_value.push_back(flat.at<float>(0, j));
+		high_value_average += flat.at<float>(0, j) / area;
 	}
-	double low_high_dot = 0.,high_dot=0.,low_dot=0.;
-	for (int k = 0; k < area; k++) {
-		low_high_dot += low_value[k] * high_value[k];
-		high_dot += high_value[k] * high_value[k];
-		low_dot += low_value[k] * low_value[k];
-	}
-	double low_norm = norm(low_value);
-	double high_norm = norm(high_value);
-	double low_high_norm = norm(low_value, high_value);
-	//double con_l=low_high_norm/(low_norm*high_norm);
-//double con_l = 1-low_high_dot / sqrt(low_dot*high_dot);
-	double con_l = low_high_norm*low_high_norm / area;
-	double score = c1*a_stddev[0] + c2*con_l + c3*b_mean[0];
+
+	double con_l = (high_value_average - low_value_average)/100;
+	//double con_l=norm(low_value, high_value)/(100*area);
+	double score = c1*c_stddev[0] + c2*con_l + c3*h_mean[0];
+
 	return score;
 }
