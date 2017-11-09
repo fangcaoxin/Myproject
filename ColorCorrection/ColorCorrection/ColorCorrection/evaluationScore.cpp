@@ -18,7 +18,7 @@ double evaluationScore(Mat& src_original) {
 	src_original.copyTo(src);
 	Mat src_lab,src_float;
 	vector<Mat> lab_channels;
-	Scalar c_mean, c_stddev,h_mean,h_stddev;
+	Scalar c_mean, c_stddev,s_mean,s_stddev;
 	if (src.type() == CV_8UC3) {
 		src.convertTo(src_float, CV_32FC3);
 		normalize(src_float, src_float, 0, 1, NORM_MINMAX, -1, Mat());
@@ -41,19 +41,23 @@ double evaluationScore(Mat& src_original) {
 	Mat l = lab_channels[0];
 	Mat a = lab_channels[1];
 	Mat b = lab_channels[2];
-	Mat C_ab;
+	Mat C_ab, S_ab;
+	Mat S_ab_bottom;
 	cv::sqrt(a.mul(a) + b.mul(b),C_ab);
+	sqrt(a.mul(a) + b.mul(b) + l.mul(l), S_ab_bottom);
+	S_ab = C_ab.mul(1 / S_ab_bottom);
 	normalize(C_ab, C_ab, 0, 1, NORM_MINMAX);
 	meanStdDev(C_ab, c_mean, c_stddev);
-	Mat H_ab(src.size(),CV_32FC1);
-	for (int i = 0; i < src.rows; i++) {
-		for (int j = 0; j < src.cols; j++) {
-			H_ab.at<float>(i, j) = cvFastArctan(b.at<float>(i, j), a.at<float>(i, j));
-			//cout << "H_ab value " << H_ab.at<float>(i, j)<<endl;
-		}
-	}
-	normalize(H_ab, H_ab, 0, 1, NORM_MINMAX);
-	meanStdDev(H_ab, h_mean, h_stddev);
+	meanStdDev(S_ab, s_mean, s_stddev);
+	//Mat H_ab(src.size(),CV_32FC1);
+	//for (int i = 0; i < src.rows; i++) {
+	//	for (int j = 0; j < src.cols; j++) {
+	//		H_ab.at<float>(i, j) = cvFastArctan(b.at<float>(i, j), a.at<float>(i, j));
+	//		//cout << "H_ab value " << H_ab.at<float>(i, j)<<endl;
+	//	}
+	//}
+	//normalize(H_ab, H_ab, 0, 1, NORM_MINMAX);
+	//meanStdDev(H_ab, h_mean, h_stddev);
 	Mat flat;
 	vector<float> low_value, high_value;
 	lab_channels[0].reshape(1, 1).copyTo(flat);
@@ -72,6 +76,6 @@ double evaluationScore(Mat& src_original) {
 	}
 	double con_l = (high_value_average - low_value_average)/100;
 	//double con_l=norm(low_value, high_value)/(100*area);
-	double score = c1*c_stddev[0] + c2*con_l + c3*h_mean[0];
+	double score = c1*c_stddev[0] + c2*con_l + c3*s_mean[0];
 	return score;
 }

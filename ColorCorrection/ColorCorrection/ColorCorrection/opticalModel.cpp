@@ -57,7 +57,7 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 	
 	
 	/*to get the color ambient illumination free src image */
-	vector<Mat> bgr_channels;
+	
 	//Mat src_colorRefelectFree = src.mul(1 / ita_merge);
 	Mat src_colorRefelectFree = src;
 	normalize(src_colorRefelectFree, src_colorRefelectFree, 0, 255, NORM_MINMAX);
@@ -72,17 +72,22 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 #endif //COLORREFLECTFREE
 	
 	
-#ifdef TRANSESTIMATION
+#ifdef TRANSESTIMATION_ESTI
 	Mat transmission;
 	Mat darkchannel_light_brightchannel, brightchannel_light_brightchannel;
 	calcDarkChannel(darkchannel_light_brightchannel, brightchannel_light_brightchannel, light_brightchannel, radius);
 	light_darkchannel.convertTo(light_darkchannel, CV_32FC1);
 	darkchannel_light_brightchannel.convertTo(darkchannel_light_brightchannel, CV_32FC1);
-	transmission = 1- light_darkchannel.mul(1 / darkchannel_light_brightchannel);
+	transmission = light_darkchannel.mul(1 / darkchannel_light_brightchannel);
 	guidedFilter(src, transmission,transmission, 32, 1e-2);
 	imshow("transmission", transmission);
-	
-#endif //TRANSESTIMATION
+#else
+	vector<Mat> bgr_channels;
+	split(src, bgr_channels);
+	Mat transmission = bgr_channels[2];
+	normalize(transmission, transmission, 0.5, 1, NORM_MINMAX);
+	imshow("transmission", transmission);
+#endif //TRANSESTIMATION_ESTI
 #ifdef POSITIONPARAM
 	double dis_camera_constant = 1.5;//m
 	double dis_b = pow(NRER_BLUE,  dis_camera_constant);
@@ -101,7 +106,7 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 			
 			Vec3b src_colorFree = src_colorRefelectFree.at<Vec3b>(i, j);
 			int air_light = light_brightchannel.at<uchar>(i, j);
-			float trans = MAX(transmission.at<float>(i, j),(float)0.8);
+			float trans = MAX(transmission.at<float>(i, j),(float)0.5);
 			float dst_0 = ((float)(src_colorFree[0] / 255.) - (float)(air_light / 255.)) / trans + (float)(air_light / 255.);
 			float dst_1 = ((float)(src_colorFree[1] / 255.) - (float)(air_light / 255.)) / trans + (float)(air_light / 255.);
 			float dst_2 = ((float)(src_colorFree[2] / 255.) - (float)(air_light / 255.)) / trans + (float)(air_light / 255.);

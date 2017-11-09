@@ -19,7 +19,7 @@ using namespace std;
 //#define OLD
 //#define LIST
 //#define NEW
-//#define WHITEBALANCE
+#define WHITEBALANCE
 
 int main(int argc, char** argv) {
 	int beg_no = 0;
