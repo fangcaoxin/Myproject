@@ -107,8 +107,8 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 			Vec3b src_colorFree = src_colorRefelectFree.at<Vec3b>(i, j);
 			int air_light = light_brightchannel.at<uchar>(i, j);
 			float trans = MAX(transmission.at<float>(i, j),(float)0.5);
-			float dst_0 = ((float)(src_colorFree[0] / 255.) - (float)(air_light / 255.)) / trans + (float)(air_light / 255.);
-			float dst_1 = ((float)(src_colorFree[1] / 255.) - (float)(air_light / 255.)) / trans + (float)(air_light / 255.);
+			float dst_0 = ((float)(src_colorFree[0] / 255.) - (float)(air_light / 255.)) / (trans/0.8) + (float)(air_light / 255.);
+			float dst_1 = ((float)(src_colorFree[1] / 255.) - (float)(air_light / 255.)) / (trans/0.8) + (float)(air_light / 255.);
 			float dst_2 = ((float)(src_colorFree[2] / 255.) - (float)(air_light / 255.)) / trans + (float)(air_light / 255.);
 			dst_0 = dst_0*255.;
 			dst_1 = dst_1*255.;

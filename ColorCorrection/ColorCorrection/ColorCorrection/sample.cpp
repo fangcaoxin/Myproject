@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 #endif //LIST
 
 	
-	string filename = "..//..//image//4_o.jpg";
+	string filename = "..//..//image//gray.jpg";
 
 	Mat image = imread(filename);
 	

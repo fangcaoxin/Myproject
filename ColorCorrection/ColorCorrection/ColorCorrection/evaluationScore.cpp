@@ -10,7 +10,7 @@
 * lab color space chroma C_ab=sqrt(a*a+b*b)
 * lab color space saturation S_ab=
 */
-double evaluationScore(Mat& src_original) {
+double evaluationScore_UCIQUE(Mat& src_original) {
 	double c1 = 0.4680;
 	double c2 = 0.2745;
 	double c3 = 0.2575;
