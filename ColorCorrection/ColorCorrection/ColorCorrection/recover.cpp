@@ -27,7 +27,7 @@ void calcRecover(Mat& result, Mat& input, Mat& transmission, double A[])
 				tmp_res *= 255.0;
 				tmp_res = tmp_res > 255 ? 255 : (tmp_res < 0 ? 0 : tmp_res);
 				//result.at<Vec3b>(i, j)[k] = cvRound(tmp_res);
-				result.at<Vec3b>(i, j)[k] = cvRound(tmp_res*t);
+				result.at<Vec3b>(i, j)[k] = cvRound(tmp_res);
 			}
 		}
 	}

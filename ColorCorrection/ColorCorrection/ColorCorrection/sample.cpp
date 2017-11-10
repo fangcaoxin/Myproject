@@ -22,6 +22,7 @@ using namespace std;
 //#define WHITEBALANCE
 static void applyCLAHE(Mat& img) {
 	vector<Mat> lab_channels;
+	
 	cvtColor(img, img, CV_BGR2Lab);
 	split(img, lab_channels);
 	Ptr<CLAHE> clahe = createCLAHE(2.0, Size(8, 8));
@@ -62,7 +63,7 @@ int main(int argc, char** argv) {
 #endif //LIST
 
 	
-	string filename = "..//..//image//color_chart.png";
+	string filename = "..//..//image//4_o.jpg";
 
 	Mat image = imread(filename);
 	
@@ -83,26 +84,28 @@ int main(int argc, char** argv) {
 	//dehazeMY(image, res);
 	//illumiCorrection(image, res);
 	//dehazeByBright(image, res2);
-	//applyCLAHE(image);
-	//opticalModelCorrect(image, res2);
-	imshow("histo", image);
+
+	 opticalModelCorrect(image, res2);
+
 #ifdef WHITEBALANCE
 	Ptr<xphoto::WhiteBalancer>wb;
 	wb = xphoto::createSimpleWB();
 	wb->balanceWhite(res2, res2);
 	//medianBlur(res2, res2, 3);
 #endif //WHITEBALANCE
+#define HISTOGRAM
+#ifdef HISTOGRAM
+	applyCLAHE(res2);
+#endif //HISTOGRAM
 	//dehaze(image, res2);
-	dehazeMY(image, res2);
+	//dehazeMY(res, res1);
 	//enhance(image, res2);
 	//dehazeDC(image, res);
 	//res= L.mul(R);
 	//normalize(res, res, 0, 1, NORM_MINMAX, -1, Mat());
 	//imwrite("dehaze10ehance.jpg", res1);
 	//imshow("whitebalance", res);
-	
 	//imwrite("res.jpg", res1);
-	
 	//imwrite("res_1102.jpg", res2);
 	
 	double s2 = evaluationScore(res2);
