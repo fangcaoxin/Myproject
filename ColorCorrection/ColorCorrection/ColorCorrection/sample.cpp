@@ -20,7 +20,7 @@ using namespace std;
 //#define LIST
 //#define NEW
 
-//#define WHITEBALANCE
+
 static void applyCLAHE(Mat& img) {
 	vector<Mat> lab_channels;
 	
@@ -66,10 +66,10 @@ int main(int argc, char** argv) {
 #endif //LIST
 
 	
-	//string filename = "..//..//image//4_o.jpg";
-	string filename1 = "..//..//image//5_o.jpg";
+	string filename = "..//..//image//color_chart.png";
+	//string filename1 = "..//..//image//img_170724_02j_5.jpg";
 	//Mat image = imread(filename);
-	Mat image = imread(filename1);
+	Mat image = imread(filename);
 	/*Ptr<StereoBM> s_BM= StereoBM::create(16, 21);
 	Mat disparity;
 	s_BM->compute(image, image1, disparity);
@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
 	//illumiCorrection(image, res);
 	//dehazeByBright(image, res2);
 	//calcMaxReflectChannelColorMap(image, res2, 7);
-	opticalModelCorrect(image, res2);
+	//opticalModelCorrect(image, res2);
 	//vector<Mat> bgr_channels;
 	//vector<Mat> hsv_channels;
 	//split(image, bgr_channels);
@@ -109,17 +109,19 @@ int main(int argc, char** argv) {
 	//imshow("diff", diff);
 	//imshow("R_r", R_r);
 
+//#define WHITEBALANCE
 #ifdef WHITEBALANCE
 	Ptr<xphoto::WhiteBalancer>wb;
 	wb = xphoto::createSimpleWB();
-	wb->balanceWhite(res2, res2);
+	wb->balanceWhite(image, image);
 	//medianBlur(res2, res2, 3);
 #endif //WHITEBALANCE
 //#define HISTOGRAM
 #ifdef HISTOGRAM
-	applyCLAHE(res2);
+	applyCLAHE(image);
 #endif //HISTOGRAM
-	//dehaze(image, res2);
+	//opticalModelCorrect(image, res2);
+	dehaze(image, res2);
 	//dehazeMY(res, res1);
 	//enhance(image, res2);
 	//dehazeDC(image, res);
@@ -133,11 +135,11 @@ int main(int argc, char** argv) {
 	double s2 = evaluationScore_UCIQUE(res2);
 	cout << "s2 " << s2 << endl;
 	imshow("res", res2);
-	imwrite("res_2.jpg", res2);
+	imwrite("res_udcp_color.jpg", res2);
 	/*cout << "blue " << res1.at<Vec3b>(319, 126) << endl;
 	cout << "green " << res1.at<Vec3b>(311, 191) << endl;
 	cout << "red " << res1.at<Vec3b>(314, 238) << endl;*/
-	//imshow("histogram", image);
+	imshow("histogram", image);
 	waitKey(0);
 
 }

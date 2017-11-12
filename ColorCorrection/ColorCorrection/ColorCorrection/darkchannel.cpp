@@ -32,7 +32,7 @@ void calcDarkChannel(Mat& darkchannel,Mat& brightchannel, Mat& input, int radius
 				for (int n = st_col; n <= ed_col; n++)
 				{
 					if (channels == 3) {
-						for (int k = 0; k < channels; k++)
+						for (int k = 0; k < channels-1; k++)
 						{
 
 							int cur = input.at<Vec3b>(m, n)[k];

@@ -58,8 +58,8 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 	/*to get the color ambient illumination free src image */
 
 	
-	Mat src_colorRefelectFree = src.mul(1 / ita_merge);
-	//Mat src_colorRefelectFree = src;
+	//Mat src_colorRefelectFree = src.mul(1 / ita_merge);
+	Mat src_colorRefelectFree = src;
 
 	normalize(src_colorRefelectFree, src_colorRefelectFree, 0, 255, NORM_MINMAX);
 	src_colorRefelectFree.convertTo(src_colorRefelectFree, CV_8UC3);
@@ -81,7 +81,7 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 	//light_brightchannel.convertTo(light_brightchannel, CV_32FC1);
 
 	darkchannel_light_brightchannel.convertTo(darkchannel_light_brightchannel, CV_32FC1);
-	transmission =light_darkchannel.mul(1 / darkchannel_light_brightchannel);
+	transmission =1-light_darkchannel.mul(1 / darkchannel_light_brightchannel);
 
 	guidedFilter(src, transmission,transmission, 32, 1e-2);
 	/*normalize(transmission, transmission, 0, 255, NORM_MINMAX);
@@ -115,7 +115,7 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 			Vec3b src_colorFree = src_colorRefelectFree.at<Vec3b>(i, j);
 
 			int air_light = light_brightchannel.at<uchar>(i, j);
-			float trans = MAX(transmission.at<float>(i, j),(float)0.5);
+			float trans = MAX(transmission.at<float>(i, j),(float)0.3);
 			float dst_0 = ((float)(src_colorFree[0] / 255.) - (float)(air_light / 255.)) / (trans) + (float)(air_light / 255.);
 			float dst_1 = ((float)(src_colorFree[1] / 255.) - (float)(air_light / 255.)) / (trans) + (float)(air_light / 255.);
 			float dst_2 = ((float)(src_colorFree[2] / 255.) - (float)(air_light / 255.)) / trans + (float)(air_light / 255.);
