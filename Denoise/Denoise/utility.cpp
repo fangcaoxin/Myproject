@@ -661,3 +661,384 @@ void imageClosing(Mat& src, Mat& output, int kenel_size) {
 	Mat element = getStructuringElement(MORPH_RECT, Size(kenel_size, kenel_size));
 	morphologyEx(src, output, MORPH_CLOSE, element);
 }
+
+void calcDepth(Mat& camera_motion, Mat& dst, int width, int height) {
+	Mat_<double> H = camera_motion;
+	dst.create(height, width, CV_32FC1);
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			float x1 = (H(0, 0)*j + H(0, 1)*i + H(0, 2)) / (H(2, 0)*j + H(2, 1)*i + H(2, 2));
+			float y1= (H(1, 0)*j + H(1, 1)*i + H(1, 2)) / (H(2, 0)*j + H(2, 1)*i + H(2, 2));
+			dst.at<float>(i, j) = abs(x1 - j) + abs(y1 - i);
+		}
+	}
+	normalize(dst, dst, 0, 1, NORM_MINMAX);
+}
+
+bool FindCameraMatrices(const Mat& K,
+	const Mat& Kinv,
+	const Mat& F,
+	Matx34d& P,
+	Matx34d& P1,
+	const Mat& discoeff,
+	const vector<KeyPoint>& imgpts1,
+	const vector<KeyPoint>& imgpts2,
+	vector<KeyPoint>& imgpts1_good,
+	vector<KeyPoint>& imgpts2_good,
+	vector<DMatch>& matches,
+	vector<CloudPoint>& outCloud) {
+	Mat_<double> E = K.t() * F * K; // Essential Matrix
+	if (fabsf(determinant(E)) > 1e-05) {
+		cout << "det(E) != 0 : " << determinant(E) << "\n";
+		return false;
+	}
+	Mat_<double> R1(3, 3);
+	Mat_<double> R2(3, 3);
+	Mat_<double> t1(1, 3);
+	Mat_<double> t2(1, 3);
+	SVD svd(E);
+	Matx33d W(0, -1, 0,
+		1, 0, 0,
+		0, 0, 1);
+	Matx33d Wt(0, 1, 0,
+		-1, 0, 0,
+		0, 0, 1);
+	R1 = svd.u * Mat(W) * svd.vt; //Rotation solution 1
+	R2 = svd.u * Mat(Wt) * svd.vt; //Rotation solution 2
+	t1 = svd.u.col(2); //Translatiion solution 1
+	t2 = -svd.u.col(2); //Translation solution 2
+
+	P1 = Matx34d(R1(0, 0), R1(0, 1), R1(0, 2), t1(0),
+		R1(1, 0), R1(1, 1), R1(1, 2), t1(1),
+		R1(2, 0), R1(2, 1), R1(2, 2), t1(2)); // Camara Matrix
+	P = Matx34d(1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0);
+
+	cout << "Testing P1 " << endl << Mat(P1) << endl;
+
+	vector<CloudPoint> pcloud, pcloud1;
+	vector<KeyPoint> corresp;
+
+	double reproj_error1 = TriangulatePoints(imgpts1_good, imgpts2_good, K, Kinv, P, P1, pcloud, corresp, discoeff);
+	double reproj_error2 = TriangulatePoints(imgpts2_good, imgpts1_good, K, Kinv, P1, P, pcloud1, corresp, discoeff);
+	vector<uchar> tmp_status;
+	if (!TestTriangulation(pcloud, P1, tmp_status) || !TestTriangulation(pcloud1, P, tmp_status) || reproj_error1 > 100.0 || reproj_error2 > 100.0)
+	{
+		P1 = Matx34d(R1(0, 0), R1(0, 1), R1(0, 2), t2(0),
+			R1(1, 0), R1(1, 1), R1(1, 2), t2(1),
+			R1(2, 0), R1(2, 1), R1(2, 2), t2(2));
+		cout << "Testing P1 " << endl << Mat(P1) << endl;
+
+		pcloud.clear(); pcloud1.clear(); corresp.clear();
+		reproj_error1 = TriangulatePoints(imgpts1_good, imgpts2_good, K, Kinv, P, P1, pcloud, corresp, discoeff);
+		reproj_error2 = TriangulatePoints(imgpts2_good, imgpts1_good, K, Kinv, P1, P, pcloud1, corresp, discoeff);
+
+		if (!TestTriangulation(pcloud, P1, tmp_status) || !TestTriangulation(pcloud1, P, tmp_status) || reproj_error1 > 100.0 || reproj_error2 > 100.0) {
+
+
+			P1 = Matx34d(R2(0, 0), R2(0, 1), R2(0, 2), t1(0),
+				R2(1, 0), R2(1, 1), R2(1, 2), t1(1),
+				R2(2, 0), R2(2, 1), R2(2, 2), t1(2));
+			//cout << "Testing P1 "<< endl << Mat(P1) << endl;
+
+			pcloud.clear(); pcloud1.clear(); corresp.clear();
+			reproj_error1 = TriangulatePoints(imgpts1_good, imgpts2_good, K, Kinv, P, P1, pcloud, corresp, discoeff);
+			reproj_error2 = TriangulatePoints(imgpts2_good, imgpts1_good, K, Kinv, P1, P, pcloud1, corresp, discoeff);
+
+			if (!TestTriangulation(pcloud, P1, tmp_status) || !TestTriangulation(pcloud1, P, tmp_status) || reproj_error1 > 100.0 || reproj_error2 > 100.0) {
+				P1 = Matx34d(R2(0, 0), R2(0, 1), R2(0, 2), t2(0),
+					R2(1, 0), R2(1, 1), R2(1, 2), t2(1),
+					R2(2, 0), R2(2, 1), R2(2, 2), t2(2));
+				cout << "Testing P1 " << endl << Mat(P1) << endl;
+
+				pcloud.clear(); pcloud1.clear(); corresp.clear();
+				reproj_error1 = TriangulatePoints(imgpts1_good, imgpts2_good, K, Kinv, P, P1, pcloud, corresp, discoeff);
+				reproj_error2 = TriangulatePoints(imgpts2_good, imgpts1_good, K, Kinv, P1, P, pcloud1, corresp, discoeff);
+
+				if (!TestTriangulation(pcloud, P1, tmp_status) || !TestTriangulation(pcloud1, P, tmp_status) || reproj_error1 > 100.0 || reproj_error2 > 100.0) {
+					cout << "Err is too big." << endl;
+					return false;
+				}
+			}
+		}
+	}
+	for (unsigned int i = 0; i<pcloud.size(); i++) {
+		outCloud.push_back(pcloud[i]);
+	}
+
+}
+
+Mat_<double> LinearLSTriangulation(Point3d u,		//homogenous image point (u,v,1)
+	Matx34d P,		//camera 1 matrix
+	Point3d u1,		//homogenous image point in 2nd camera
+	Matx34d P1		//camera 2 matrix
+)
+{
+
+	//build matrix A for homogenous equation system Ax = 0
+	//assume X = (x,y,z,1), for Linear-LS method
+	//which turns it into a AX = B system, where A is 4x3, X is 3x1 and B is 4x1
+	//	cout << "u " << u <<", u1 " << u1 << endl;
+	//	Matx<double,6,4> A; //this is for the AX=0 case, and with linear dependence..
+	//	A(0) = u.x*P(2)-P(0);
+	//	A(1) = u.y*P(2)-P(1);
+	//	A(2) = u.x*P(1)-u.y*P(0);
+	//	A(3) = u1.x*P1(2)-P1(0);
+	//	A(4) = u1.y*P1(2)-P1(1);
+	//	A(5) = u1.x*P(1)-u1.y*P1(0);
+	//	Matx43d A; //not working for some reason...
+	//	A(0) = u.x*P(2)-P(0);
+	//	A(1) = u.y*P(2)-P(1);
+	//	A(2) = u1.x*P1(2)-P1(0);
+	//	A(3) = u1.y*P1(2)-P1(1);
+	Matx43d A(u.x*P(2, 0) - P(0, 0), u.x*P(2, 1) - P(0, 1), u.x*P(2, 2) - P(0, 2),
+		u.y*P(2, 0) - P(1, 0), u.y*P(2, 1) - P(1, 1), u.y*P(2, 2) - P(1, 2),
+		u1.x*P1(2, 0) - P1(0, 0), u1.x*P1(2, 1) - P1(0, 1), u1.x*P1(2, 2) - P1(0, 2),
+		u1.y*P1(2, 0) - P1(1, 0), u1.y*P1(2, 1) - P1(1, 1), u1.y*P1(2, 2) - P1(1, 2)
+	);
+	Matx41d B(-(u.x*P(2, 3) - P(0, 3)),
+		-(u.y*P(2, 3) - P(1, 3)),
+		-(u1.x*P1(2, 3) - P1(0, 3)),
+		-(u1.y*P1(2, 3) - P1(1, 3)));
+
+	Mat_<double> X;
+	solve(A, B, X, DECOMP_SVD);
+
+	return X;
+}
+
+
+
+
+Mat_<double> IterativeLinearLSTriangulation(Point3d u,	//homogenous image point (u,v,1)
+	Matx34d P,			//camera 1 matrix
+	Point3d u1,			//homogenous image point in 2nd camera
+	Matx34d P1			//camera 2 matrix
+)
+{
+	double wi = 1, wi1 = 1;
+	Mat_<double> X(4, 1);
+	for (int i = 0; i<10; i++)
+	{
+		Mat_<double> X_ = LinearLSTriangulation(u, P, u1, P1);
+		X(0) = X_(0); X(1) = X_(1); X(2) = X_(2); X(3) = 1.0;
+
+		//recalculate weights
+		double p2x = Mat_<double>(Mat_<double>(P).row(2)*X)(0);
+		double p2x1 = Mat_<double>(Mat_<double>(P1).row(2)*X)(0);
+
+		//breaking point
+		if (fabsf(wi - p2x) <= EPSILON && fabsf(wi1 - p2x1) <= EPSILON) break;
+
+		wi = p2x;
+		wi1 = p2x1;
+
+		//reweight equations and solve
+		Matx43d A((u.x*P(2, 0) - P(0, 0)) / wi, (u.x*P(2, 1) - P(0, 1)) / wi, (u.x*P(2, 2) - P(0, 2)) / wi,
+			(u.y*P(2, 0) - P(1, 0)) / wi, (u.y*P(2, 1) - P(1, 1)) / wi, (u.y*P(2, 2) - P(1, 2)) / wi,
+			(u1.x*P1(2, 0) - P1(0, 0)) / wi1, (u1.x*P1(2, 1) - P1(0, 1)) / wi1, (u1.x*P1(2, 2) - P1(0, 2)) / wi1,
+			(u1.y*P1(2, 0) - P1(1, 0)) / wi1, (u1.y*P1(2, 1) - P1(1, 1)) / wi1, (u1.y*P1(2, 2) - P1(1, 2)) / wi1
+		);
+		Mat_<double> B = (Mat_<double>(4, 1) << -(u.x*P(2, 3) - P(0, 3)) / wi,
+			-(u.y*P(2, 3) - P(1, 3)) / wi,
+			-(u1.x*P1(2, 3) - P1(0, 3)) / wi1,
+			-(u1.y*P1(2, 3) - P1(1, 3)) / wi1
+			);
+
+		solve(A, B, X_, DECOMP_SVD);
+		X(0) = X_(0); X(1) = X_(1); X(2) = X_(2); X(3) = 1.0;
+	}
+	return X;
+}
+
+//Triagulate points
+double TriangulatePoints(const vector<KeyPoint>& pt_set1,
+	const vector<KeyPoint>& pt_set2,
+	const Mat& K,
+	const Mat& Kinv,
+	const Matx34d& P,
+	const Matx34d& P1,
+	vector<CloudPoint>& pointcloud,
+	vector<KeyPoint>& correspImg1Pt,
+	const Mat& distcoeff)
+{
+
+	vector<double> depths;
+
+
+	//	pointcloud.clear();
+	correspImg1Pt.clear();
+
+	Matx44d P1_(P1(0, 0), P1(0, 1), P1(0, 2), P1(0, 3),
+		P1(1, 0), P1(1, 1), P1(1, 2), P1(1, 3),
+		P1(2, 0), P1(2, 1), P1(2, 2), P1(2, 3),
+		0, 0, 0, 1);
+	Matx44d P1inv(P1_.inv());
+
+	cout << "Triangulating Now . . .";
+	double t = getTickCount();
+	vector<double> reproj_error;
+	unsigned int pts_size = pt_set1.size();
+
+#if 0
+	//Using OpenCV's triangulation
+	//convert to Point2f
+	vector<Point2f> _pt_set1_pt, _pt_set2_pt;
+	KeyPointsToPoints(pt_set1, _pt_set1_pt);
+	KeyPointsToPoints(pt_set2, _pt_set2_pt);
+
+	//undistort
+	Mat pt_set1_pt, pt_set2_pt;
+	undistortPoints(_pt_set1_pt, pt_set1_pt, K, distcoeff);
+	undistortPoints(_pt_set2_pt, pt_set2_pt, K, distcoeff);
+
+	//triangulate
+	Mat pt_set1_pt_2r = pt_set1_pt.reshape(1, 2);
+	Mat pt_set2_pt_2r = pt_set2_pt.reshape(1, 2);
+	Mat pt_3d_h(1, pts_size, CV_32FC4);
+	cv::triangulatePoints(P, P1, pt_set1_pt_2r, pt_set2_pt_2r, pt_3d_h);
+	//calculate reprojection
+	vector<Point3f> pt_3d;
+	convertPointsHomogeneous(pt_3d_h.reshape(4, 1), pt_3d);
+	cv::Mat_<double> R = (cv::Mat_<double>(3, 3) << P(0, 0), P(0, 1), P(0, 2), P(1, 0), P(1, 1), P(1, 2), P(2, 0), P(2, 1), P(2, 2));
+	Vec3d rvec; Rodrigues(R, rvec);
+	Vec3d tvec(P(0, 3), P(1, 3), P(2, 3));
+	vector<Point2f> reprojected_pt_set1;
+	projectPoints(pt_3d, rvec, tvec, K, distcoeff, reprojected_pt_set1);
+	for (unsigned int i = 0; i<pts_size; i++) {
+		CloudPoint cp;
+		cp.pt = pt_3d[i];
+		pointcloud.push_back(cp);
+		reproj_error.push_back(norm(_pt_set1_pt[i] - reprojected_pt_set1[i]));
+	}
+#else
+	Mat_<double> KP1 = K * Mat(P1);
+#pragma omp parallel for num_threads(1)
+	for (int i = 0; i<pts_size; i++)
+	{
+		Point2f kp = pt_set1[i].pt;
+		Point3d u(kp.x, kp.y, 1.0);
+		Mat_<double> um = Kinv * Mat_<double>(u);
+		u.x = um(0); u.y = um(1); u.z = um(2);
+
+		Point2f kp1 = pt_set2[i].pt;
+		Point3d u1(kp1.x, kp1.y, 1.0);
+		Mat_<double> um1 = Kinv * Mat_<double>(u1);
+		u1.x = um1(0); u1.y = um1(1); u1.z = um1(2);
+
+		Mat_<double> X = IterativeLinearLSTriangulation(u, P, u1, P1);
+
+		//		cout << "3D Point: " << X << endl;
+		//		Mat_<double> x = Mat(P1) * X;
+		//		cout <<	"P1 * Point: " << x << endl;
+		//		Mat_<double> xPt = (Mat_<double>(3,1) << x(0),x(1),x(2));
+		//		cout <<	"Point: " << xPt << endl;
+		Mat_<double> xPt_img = KP1 * X;				//reproject
+													//		cout <<	"Point * K: " << xPt_img << endl;
+		Point2f xPt_img_(xPt_img(0) / xPt_img(2), xPt_img(1) / xPt_img(2));
+
+#pragma omp critical
+		{
+			double reprj_err = norm(xPt_img_ - kp1);
+			reproj_error.push_back(reprj_err);
+
+			CloudPoint cp;
+			cp.pt = Point3d(X(0), X(1), X(2));
+			cp.reprojection_error = reprj_err;
+
+			pointcloud.push_back(cp);
+			correspImg1Pt.push_back(pt_set1[i]);
+
+			depths.push_back(X(2));
+
+		}
+	}
+#endif
+
+	Scalar mse = mean(reproj_error);
+	t = ((double)getTickCount() - t) / getTickFrequency();
+	cout << "Done. \n\r" << pointcloud.size() << "points, " << "mean square reprojetion err = " << mse[0] << endl;
+
+	//show "range image"
+
+	{
+		double minVal, maxVal;
+		minMaxLoc(depths, &minVal, &maxVal);
+		Mat tmp(1224, 1632, CV_8UC3, Scalar(0, 0, 0)); //cvtColor(img_1_orig, tmp, CV_BGR2HSV);
+		for (unsigned int i = 0; i<pointcloud.size(); i++) {
+			double _d = MAX(MIN((pointcloud[i].pt.z - minVal) / (maxVal - minVal), 1.0), 0.0);
+			circle(tmp, correspImg1Pt[i].pt, 1, Scalar(255 * (1.0 - (_d)), 255, 255), CV_FILLED);
+		}
+		cvtColor(tmp, tmp, CV_HSV2BGR);
+		imshow("Depth Map", tmp);
+		waitKey(0);
+		destroyWindow("Depth Map");
+	}
+
+
+	return mse[0];
+}
+
+
+
+bool TestTriangulation(const vector<CloudPoint>& pcloud, const Matx34d& P, vector<uchar>& status) {
+	vector<Point3d> pcloud_pt3d = CloudPointsToPoints(pcloud);
+	vector<Point3d> pcloud_pt3d_projected(pcloud_pt3d.size());
+
+	Matx44d P4x4 = Matx44d::eye();
+	for (int i = 0; i<12; i++) P4x4.val[i] = P.val[i];
+
+	perspectiveTransform(pcloud_pt3d, pcloud_pt3d_projected, P4x4);
+
+	status.resize(pcloud.size(), 0);
+	for (int i = 0; i<pcloud.size(); i++) {
+		status[i] = (pcloud_pt3d_projected[i].z > 0) ? 1 : 0;
+	}
+	int count = countNonZero(status);
+
+	double percentage = ((double)count / (double)pcloud.size());
+	cout << count << "/" << pcloud.size() << " = " << percentage*100.0 << "% are in front of camera" << endl;
+	if (percentage < 0.8)
+		return false; //less than 80% of the points are in front of the camera
+
+					  //check for coplanarity of points
+	if (false) //not
+	{
+		cv::Mat_<double> cldm(pcloud.size(), 3);
+		for (unsigned int i = 0; i<pcloud.size(); i++) {
+			cldm.row(i)(0) = pcloud[i].pt.x;
+			cldm.row(i)(1) = pcloud[i].pt.y;
+			cldm.row(i)(2) = pcloud[i].pt.z;
+		}
+		cv::Mat_<double> mean;
+		cv::PCA pca(cldm, mean, CV_PCA_DATA_AS_ROW);
+
+		int num_inliers = 0;
+		cv::Vec3d nrm = pca.eigenvectors.row(2); nrm = nrm / norm(nrm);
+		cv::Vec3d x0 = pca.mean;
+		double p_to_plane_thresh = sqrt(pca.eigenvalues.at<double>(2));
+
+		for (int i = 0; i<pcloud.size(); i++) {
+			Vec3d w = Vec3d(pcloud[i].pt) - x0;
+			double D = fabs(nrm.dot(w));
+			if (D < p_to_plane_thresh) num_inliers++;
+		}
+
+		cout << num_inliers << "/" << pcloud.size() << " are coplanar" << endl;
+		if ((double)num_inliers / (double)(pcloud.size()) > 0.85)
+			return false;
+	}
+
+	return true;
+}
+
+std::vector<cv::Point3d> CloudPointsToPoints(const std::vector<CloudPoint> cpts)
+{
+	std::vector<cv::Point3d> out;
+	for (unsigned int i = 0; i<cpts.size(); i++)
+	{
+		out.push_back(cpts[i].pt);
+	}
+	return out;
+}

@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
 	int width_input = rect.width /4;
 	int height_input = rect.height/4;
 
-	int beg_num = 185;
+	int beg_num = 0;
 	int frame_num = 30;
 	Mat backgroud;
 	int frame_count = 0;
@@ -103,6 +103,9 @@ int main(int argc, char* argv[]) {
 			threshold(trans, trans, 20, 255, CV_THRESH_BINARY);
 			vector<Mat> camera_motion;
 			calcPyrLKflow(image_list_gray, trans,camera_motion);
+			Mat depth_map;
+			calcDepth(camera_motion[0], depth_map, width_input, height_input);
+			imshow("depth", depth_map);
 			imageListCompensation(image_list, image_list_compensation, camera_motion);
 			imageListGrayCompensation(image_list_gray, image_list_gray_compensation, camera_motion);
 			

@@ -52,13 +52,15 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 	normalize(src, src, 0, 1, NORM_MINMAX, -1, Mat());
 
 	guidedFilter(src, ita_merge, ita_merge, 32, 1e-2);
-	//imshow("color_ita", ita_merge);
+	imshow("color_ita", ita_merge);
 	
 	
 	/*to get the color ambient illumination free src image */
-	vector<Mat> bgr_channels;
+
+	
 	Mat src_colorRefelectFree = src.mul(1 / ita_merge);
 	//Mat src_colorRefelectFree = src;
+
 	normalize(src_colorRefelectFree, src_colorRefelectFree, 0, 255, NORM_MINMAX);
 	src_colorRefelectFree.convertTo(src_colorRefelectFree, CV_8UC3);
 	imshow("src_colorRefelectFree", src_colorRefelectFree);
@@ -68,25 +70,32 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 	calcDarkChannel(light_darkchannel, light_brightchannel, src_colorRefelectFree, radius);
 	guidedFilter(src, light_brightchannel, light_brightchannel, 32, 1e-2);
 	imshow("airlight", light_brightchannel);
-
+	//imwrite("airlight.jpg", light_brightchannel);
 #endif //COLORREFLECTFREE
-	
-	
-#ifdef TRANSESTIMATION
+#define TRANSESTIMATION_ESTI
+#ifdef TRANSESTIMATION_ESTI
 	Mat transmission;
 	Mat darkchannel_light_brightchannel, brightchannel_light_brightchannel;
 	calcDarkChannel(darkchannel_light_brightchannel, brightchannel_light_brightchannel, light_brightchannel, radius);
 	light_darkchannel.convertTo(light_darkchannel, CV_32FC1);
-	light_brightchannel.convertTo(light_brightchannel, CV_32FC1);
+	//light_brightchannel.convertTo(light_brightchannel, CV_32FC1);
 
 	darkchannel_light_brightchannel.convertTo(darkchannel_light_brightchannel, CV_32FC1);
-	brightchannel_light_brightchannel.convertTo(brightchannel_light_brightchannel, CV_32FC1);
-	transmission = light_darkchannel.mul(1 / darkchannel_light_brightchannel);
-	//normalize(transmission, transmission, 0, 1, NORM_MINMAX);
+	transmission =light_darkchannel.mul(1 / darkchannel_light_brightchannel);
+
 	guidedFilter(src, transmission,transmission, 32, 1e-2);
+	/*normalize(transmission, transmission, 0, 255, NORM_MINMAX);
+	transmission.convertTo(transmission, CV_8UC3);
 	imshow("transmission", transmission);
-	
-#endif //TRANSESTIMATION
+	imwrite("transmission.jpg", transmission);*/
+#else
+	vector<Mat> bgr_channels;
+	split(src_colorRefelectFree, bgr_channels);
+	Mat transmission = bgr_channels[2];
+	transmission.convertTo(transmission, CV_32FC1);
+	normalize(transmission, transmission, 0.3, 0.7, NORM_MINMAX);
+	imshow("transmission", transmission);
+#endif //TRANSESTIMATION_ESTI
 #ifdef POSITIONPARAM
 	double dis_camera_constant = 1.5;//m
 	double dis_b = pow(NRER_BLUE,  dis_camera_constant);
@@ -104,11 +113,11 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 		for (int j = 0; j < width; j++) {
 			
 			Vec3b src_colorFree = src_colorRefelectFree.at<Vec3b>(i, j);
-			int air_light = light_brightchannel.at<float>(i, j);
-			//Vec3f air_light = ita_merge.at<Vec3f>(i, j);
-			float trans = MAX(transmission.at<float>(i, j),(float)0.05);
-			float dst_0 = ((float)(src_colorFree[0] / 255.) - (float)(air_light / 255.)) / trans + (float)(air_light / 255.);
-			float dst_1 = ((float)(src_colorFree[1] / 255.) - (float)(air_light / 255.)) / trans + (float)(air_light / 255.);
+
+			int air_light = light_brightchannel.at<uchar>(i, j);
+			float trans = MAX(transmission.at<float>(i, j),(float)0.5);
+			float dst_0 = ((float)(src_colorFree[0] / 255.) - (float)(air_light / 255.)) / (trans) + (float)(air_light / 255.);
+			float dst_1 = ((float)(src_colorFree[1] / 255.) - (float)(air_light / 255.)) / (trans) + (float)(air_light / 255.);
 			float dst_2 = ((float)(src_colorFree[2] / 255.) - (float)(air_light / 255.)) / trans + (float)(air_light / 255.);
 			/*float dst_0 = ((float)(src_colorFree[0] / 255.) - air_light[0]) / trans + air_light[0];
 			float dst_1 = ((float)(src_colorFree[1] / 255.) - air_light[1])/ trans + air_light[1];

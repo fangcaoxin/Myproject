@@ -3,6 +3,7 @@
 static Point2f getAverage(const std::vector<Point2f>& values);
 static void checkValidArea(Mat& valid_area, vector<Point2f>& points, vector<bool>& filter_status);
 static void drawCorrespondance(Mat& img, Mat& img1, vector<Point2f>& points, vector<Point2f>& points1, Mat& output);
+#define DEPTHMAP
 void calcPyrLKflow(vector<Mat>& imageList_gray,Mat& object_area, vector<Mat>& camera_motion) {
 	vector<Point2f> points[3];
 	
@@ -41,6 +42,38 @@ void calcPyrLKflow(vector<Mat>& imageList_gray,Mat& object_area, vector<Mat>& ca
 
 	/*Point2f cur_pre_vector = getAverage(points[0])-getAverage(points[1]);
 	Point2f cur_next_vector = getAverage(points[2]) - getAverage(points1);*/
+#ifdef DEPTHMAP
+	Mat F = findFundamentalMat(points[0], points[1], FM_RANSAC);
+	double f = 1057.14;
+	double cx = 640;
+	double cy = 480;
+	const double K_array[3][3] = {
+		{f,0,cx},
+		{0,f,cy},
+		{0,0,1}
+	};
+	const size_t bufsize = sizeof(double) * 3 * 3;
+	Mat K(3,3,CV_32FC1,Scalar(0));
+	memcpy(K.data, &K_array[0][0], bufsize);
+	
+	/*Matx33d K = Matx33d(f, 0, cx,
+		0, f, cy,
+		0, 0, 1);*/
+	Mat E = K.t()*F*K;
+	SVD svd(E);
+	Matx33d W(0, -1, 0,
+		1, 0, 0,
+		0, 1, 1);
+	Matx33d Winv(0, 1, 0,
+		-1, 0, 0,
+		0, 0, 1);
+	Mat_<double> R = svd.u*Mat(W)*svd.vt;
+	Mat_<double> t = svd.u.col(2);
+	Matx34d P1 = Matx34d(R(0, 0), R(0, 1), R(0, 2), t(0),
+		R(1, 0), R(1, 1), R(1, 2), t(1),
+		R(2, 0), R(2, 1), R(2, 2), t(2));
+
+#else 
 
 	Mat homo_10 = findHomography(points[0], points[1], CV_RANSAC, 3.0);
 	Mat homo_12 = findHomography(points[2], points1, CV_RANSAC, 3.0);
@@ -49,6 +82,7 @@ void calcPyrLKflow(vector<Mat>& imageList_gray,Mat& object_area, vector<Mat>& ca
 	//camera_motion.push_back(cur_pre_vector);
 	//camera_motion.push_back(cur_next_vector);
 	cout << "camera motion " << homo_10 << " " << homo_12 << endl;
+#endif //DEPTHMAP
 	//homo_list.push_back(homoMat);
 	//homo_list.push_back(homoMat1);
 	

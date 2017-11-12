@@ -11,6 +11,11 @@
 #include <iostream>
 using namespace cv;
 using namespace std;
+struct CloudPoint {
+	Point3d pt;
+	vector<int> imgpt_for_img;
+	double reprojection_error;
+};
 
 /**draw the dense flow on the color image
   *step to set output flow step*/
@@ -69,3 +74,41 @@ void getMaskFromStd(Mat& mask, Mat& normalize_std);
 void imageListCompensation(vector<Mat>& image_list, vector<Mat>& image_list_compensation, vector<Mat>& camera_motion);
 void imageListGrayCompensation(vector<Mat>& image_list_gray, vector<Mat>& image_list_gray_compensation, vector<Mat>& camera_motion);
 void imageClosing(Mat& src, Mat& output, int kenel_size);
+bool FindCameraMatrices(const Mat& K,
+	const Mat& Kinv,
+	const Mat& F,
+	Matx34d& P,
+	Matx34d& P1,
+	const Mat& discoeff,
+	const vector<KeyPoint>& imgpts1,
+	const vector<KeyPoint>& imgpts2,
+	vector<KeyPoint>& imgpts1_good,
+	vector<KeyPoint>& imgpts2_good,
+	vector<DMatch>& matches,
+	vector<CloudPoint>& outCloud);
+cv::Mat_<double> LinearLSTriangulation(cv::Point3d u,		//homogenous image point (u,v,1)
+	cv::Matx34d P,		//camera 1 matrix
+	cv::Point3d u1,		//homogenous image point in 2nd camera
+	cv::Matx34d P1		//camera 2 matrix
+);
+
+#define EPSILON 0.00001
+/**
+From "Triangulation", Hartley, R.I. and Sturm, P., Computer vision and image understanding, 1997
+*/
+cv::Mat_<double> IterativeLinearLSTriangulation(cv::Point3d u,	//homogenous image point (u,v,1)
+	cv::Matx34d P,			//camera 1 matrix
+	cv::Point3d u1,			//homogenous image point in 2nd camera
+	cv::Matx34d P1			//camera 2 matrix
+);
+double TriangulatePoints(const vector<KeyPoint>& pt_set1,
+	const vector<KeyPoint>& pt_set2,
+	const Mat& K,
+	const Mat& Kinv,
+	const Matx34d& P,
+	const Matx34d& P1,
+	vector<CloudPoint>& pointcloud,
+	vector<KeyPoint>& correspImg1Pt,
+	const Mat& distcoeff);
+bool TestTriangulation(const vector<CloudPoint>& pcloud, const Matx34d& P, vector<uchar>& status);
+std::vector<cv::Point3d> CloudPointsToPoints(const std::vector<CloudPoint> cpts);

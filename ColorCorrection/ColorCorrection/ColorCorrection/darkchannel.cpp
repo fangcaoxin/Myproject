@@ -307,8 +307,8 @@ void calcMaxReflectChannelColorMap(Mat& src, Mat& dst, int radius) {
 				for (int n = st_col; n <= ed_col; n++)
 				{
 					for (int k = 0; k < 3; k++) {
-						if (src.at<Vec3b>(i, j)[k] > max[k]) {
-							max[k] = src.at<Vec3b>(i, j)[k];
+						if (src.at<Vec3b>(m,n)[k] > max[k]) {
+							max[k] = src.at<Vec3b>(m,n)[k];
 						}
 					}
 				}

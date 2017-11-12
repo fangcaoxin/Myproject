@@ -38,3 +38,4 @@ int sumAreaByRadius(Mat& label_pre, Mat& label_next, Mat& centroids_pre, Mat& ce
 void labelInitByDiff(vector<Mat>& diff_wb, Mat& label_init);
 void labelInitByRedDarkChannel(Mat& red_dark, Mat& label_init);
 void restorationBaseMationBrightEM(vector<Mat>& image_list, vector<Mat>& image_list_gray, Mat& label,vector<Ptr<EM>>& models, Mat& output);
+void calcDepth(Mat& camera_motion, Mat& dst, int width,int height);
