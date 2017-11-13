@@ -27,8 +27,8 @@ Rect rect(6, 4, width - 6, height - 8);
 int main(int argc, char* argv[]) {
 
 
-	int width_input = rect.width /4;
-	int height_input = rect.height/4;
+	int width_input = rect.width /1;
+	int height_input = rect.height/1;
 
 	int beg_num = 0;
 	int frame_num = 30;
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 	int count = 0;
 	for (int i = beg_num; i < beg_num + frame_num; i = i + 1) {
 		string file_name = saveFolder + to_string(i) + ".jpg";
-		string save_name = saveImage + to_string(i - 1) + "_1018out.jpg";
+		string save_name = saveImage + to_string(i - 1) + "_1113out.jpg";
 		cout << "file name :" << file_name << endl;
 		Mat cur = imread(file_name);
 		Mat input_resize, cur_gray;
@@ -103,9 +103,9 @@ int main(int argc, char* argv[]) {
 			threshold(trans, trans, 20, 255, CV_THRESH_BINARY);
 			vector<Mat> camera_motion;
 			calcPyrLKflow(image_list_gray, trans,camera_motion);
-			Mat depth_map;
+			/*Mat depth_map;
 			calcDepth(camera_motion[0], depth_map, width_input, height_input);
-			imshow("depth", depth_map);
+			imshow("depth", depth_map);*/
 			imageListCompensation(image_list, image_list_compensation, camera_motion);
 			imageListGrayCompensation(image_list_gray, image_list_gray_compensation, camera_motion);
 			
@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
 			EMSegmetationSamples(image_list[1], samples, valid_labels,probs_color,2);
 		
 			getMaskFromValidLabels(labels, valid_labels);
-			imwrite("valid_label.jpg", labels);
+			//imwrite("valid_label.jpg", labels);
 			showAreaLabel(img_label, labels, centroids, size);
 			showMaskImg(labels);
 		EMSegmetation(image_list[1], diff_output_c, num, 3);
@@ -209,9 +209,9 @@ int main(int argc, char* argv[]) {
 		hconcat(res_save, res);
 			//imshow("cdfd", diff_output_c);
 			//imwrite("cdfd.jpg", diff_output_c);
-			imshow("output", res);
+			imshow("output", output);
 			//imshow("trans", trans);
-			imwrite(save_name, res);
+			//imwrite(save_name, res);
 			//imshow("diff_cur_pre_camera", diff_wb_c[0]);
 			//imshow("diff_cur_next_camera", diff_wb_c[1]);
 			//imwrite(save_name, diff_wb_c[0]);
