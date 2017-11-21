@@ -48,12 +48,13 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 	color_ita.push_back(ita_r);
 	merge(color_ita, ita_merge);
 	//normalize(ita_merge, ita_merge, 0, 1, NORM_MINMAX);
-	src.convertTo(src, CV_32FC3);
+	/*src.convertTo(src, CV_32FC3);
 	normalize(src, src, 0, 1, NORM_MINMAX, -1, Mat());
-
-	guidedFilter(src, ita_merge, ita_merge, 32, 1e-2);
-	imshow("color_ita", ita_merge);
 	
+	guidedFilter(src, ita_merge, ita_merge, 32, 1e-2);*/
+	guidedFilter(src, colorRelfectMapChannels[2], colorRelfectMapChannels[2], 32, 1e-2);
+	//imshow("color_ita", ita_merge);
+	//imwrite("color_red.jpg", colorRelfectMapChannels[2]);
 	
 	/*to get the color ambient illumination free src image */
 
@@ -72,7 +73,7 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 	imshow("airlight", light_brightchannel);
 	//imwrite("airlight.jpg", light_brightchannel);
 #endif //COLORREFLECTFREE
-#define TRANSESTIMATION_ESTI
+//#define TRANSESTIMATION_ESTI
 #ifdef TRANSESTIMATION_ESTI
 	Mat transmission;
 	Mat darkchannel_light_brightchannel, brightchannel_light_brightchannel;
@@ -89,11 +90,11 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 	imshow("transmission", transmission);
 	imwrite("transmission.jpg", transmission);*/
 #else
-	vector<Mat> bgr_channels;
-	split(src_colorRefelectFree, bgr_channels);
-	Mat transmission = bgr_channels[2];
+	/*vector<Mat> bgr_channels;
+	split(src_colorRefelectFree, bgr_channels);*/
+	Mat transmission = colorRelfectMapChannels[2];
 	transmission.convertTo(transmission, CV_32FC1);
-	normalize(transmission, transmission, 0.3, 0.7, NORM_MINMAX);
+	normalize(transmission, transmission, 0.1, 0.6, NORM_MINMAX);
 	imshow("transmission", transmission);
 #endif //TRANSESTIMATION_ESTI
 #ifdef POSITIONPARAM

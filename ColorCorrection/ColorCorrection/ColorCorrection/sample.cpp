@@ -97,9 +97,15 @@ int main(int argc, char** argv) {
 	//dehazeByBright(image, res2);
 	//calcMaxReflectChannelColorMap(image, res2, 7);
 	//opticalModelCorrect(image, res2);
-	//vector<Mat> bgr_channels;
+    vector<Mat> bgr_channels;
 	//vector<Mat> hsv_channels;
-	//split(image, bgr_channels);
+	split(image, bgr_channels);
+	Mat darkchannel, brightchannel;
+	calcDarkChannel(darkchannel, brightchannel, image,7);
+	/*Mat trans = bgr_channels[2] - darkchannel;
+	normalize(trans, trans, 30, 128, NORM_MINMAX);*/
+	//imshow("trans", brightchannel);
+	//imwrite("red.jpg", bgr_channels[2]);
 	//cvtColor(image, image_hsv, CV_BGR2HSV);
 	//split(image_hsv, hsv_channels);
 	////Mat R_r= bgr_channels[2].mul(1/hsv_channels[2]);
@@ -120,8 +126,8 @@ int main(int argc, char** argv) {
 #ifdef HISTOGRAM
 	applyCLAHE(image);
 #endif //HISTOGRAM
-	//opticalModelCorrect(image, res2);
-	dehaze(image, res2);
+	opticalModelCorrect(image, res2);
+	//dehaze(image, res2);
 	//dehazeMY(res, res1);
 	//enhance(image, res2);
 	//dehazeDC(image, res);
@@ -135,11 +141,11 @@ int main(int argc, char** argv) {
 	double s2 = evaluationScore_UCIQUE(res2);
 	cout << "s2 " << s2 << endl;
 	imshow("res", res2);
-	imwrite("res_udcp_color.jpg", res2);
+	imwrite("color_chart_out.jpg", res2);
 	/*cout << "blue " << res1.at<Vec3b>(319, 126) << endl;
 	cout << "green " << res1.at<Vec3b>(311, 191) << endl;
 	cout << "red " << res1.at<Vec3b>(314, 238) << endl;*/
-	imshow("histogram", image);
+	//imshow("histogram", image);
 	waitKey(0);
 
 }
