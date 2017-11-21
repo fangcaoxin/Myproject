@@ -19,9 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{88625A44-A2B6-4FFB-85F0-4A289D01A860}</ProjectGuid>
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{A1438FDA-ABEF-4F86-A75C-C9B73894E509}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>BM</RootNamespace>
+    <RootNamespace>SfM</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -74,7 +75,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\opencv\opencv\build\install\include\opencv;C:\opencv\opencv\build\\install\include;C:\opencv\opencv\build\\include\opencv2;$(IncludePath)</IncludePath>
+    <IncludePath>C:\opencv\opencv\build\install\include;C:\opencv\opencv\build\install\include\opencv;C:\opencv\opencv\build\install\include\opencv2;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -89,11 +90,9 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -102,14 +101,12 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\opencv\opencv\build\install\x64\vc15\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_core330d.lib;opencv_imgproc330d.lib;opencv_imgcodecs330d.lib;opencv_xphoto330d.lib;opencv_calib3d330d.lib;opencv_highgui330d.lib;opencv_ximgproc330d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opencv_core330d.lib;opencv_imgproc330d.lib;opencv_imgcodecs330d.lib;opencv_ml330d.lib;opencv_video330d.lib;opencv_features2d330d.lib;opencv_highgui330d.lib;opencv_tracking330d.lib;opencv_ximgproc330d.lib;opencv_calib3d330d.lib;opencv_xfeatures2d330d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -121,13 +118,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -139,17 +134,34 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Source.cpp" />
+    <ClInclude Include="..\StructureFromMotion_OpenCV\CalculateCameraMatrix.h" />
+    <ClInclude Include="..\StructureFromMotion_OpenCV\Common.h" />
+    <ClInclude Include="..\StructureFromMotion_OpenCV\config.h" />
+    <ClInclude Include="..\StructureFromMotion_OpenCV\FeatureMatching.h" />
+    <ClInclude Include="..\StructureFromMotion_OpenCV\fed.h" />
+    <ClInclude Include="..\StructureFromMotion_OpenCV\nldiffusion_functions.h" />
+    <ClInclude Include="..\StructureFromMotion_OpenCV\SaveXYZimages.h" />
+    <ClInclude Include="..\StructureFromMotion_OpenCV\Triangulation.h" />
+    <ClInclude Include="..\StructureFromMotion_OpenCV\utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\StructureFromMotion_OpenCV\CalculateCameraMatrix.cpp" />
+    <ClCompile Include="..\StructureFromMotion_OpenCV\Common.cpp" />
+    <ClCompile Include="..\StructureFromMotion_OpenCV\FeatureMatching.cpp" />
+    <ClCompile Include="..\StructureFromMotion_OpenCV\fed.cpp" />
+    <ClCompile Include="..\StructureFromMotion_OpenCV\main.cpp" />
+    <ClCompile Include="..\StructureFromMotion_OpenCV\nldiffusion_functions.cpp" />
+    <ClCompile Include="..\StructureFromMotion_OpenCV\SaveXYZimages.cpp" />
+    <ClCompile Include="..\StructureFromMotion_OpenCV\Triangulation.cpp" />
+    <ClCompile Include="..\StructureFromMotion_OpenCV\utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

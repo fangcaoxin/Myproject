@@ -27,8 +27,8 @@ Rect rect(6, 4, width - 6, height - 8);
 int main(int argc, char* argv[]) {
 
 
-	int width_input = rect.width /1;
-	int height_input = rect.height/1;
+	int width_input = rect.width /4;
+	int height_input = rect.height/4;
 
 	int beg_num = 0;
 	int frame_num = 30;
@@ -133,6 +133,8 @@ int main(int argc, char* argv[]) {
 			floatingAreaRestoration(image_list_compensation, image_list_gray_compensation, stats_final, labels_final, output);
 			showMaskImg(labels, labels_show);
 			showMaskImg(labels1, labels1_show);
+			imwrite("label.jpg", labels_show);
+			imwrite("label1.jpg", labels1_show);
 			/*diff_output_c.copyTo(cdfd);*/
 			showLabelImg(diff_output_c);
 			//vector<float> probs_similar;
@@ -200,15 +202,15 @@ int main(int argc, char* argv[]) {
 			//imshow("diff_by_sum", diff_output);
 			//imshow("area label", show_img);
 			//imshow("original diff", diff_output);
-		Mat res;
+	/*	Mat res;
 		cvtColor(diff_output_c, diff_output_c, CV_GRAY2BGR);
 		vector<Mat> res_save;
 		res_save.push_back(image_list[1]);
 		res_save.push_back(diff_output_c);
 		res_save.push_back(output);
-		hconcat(res_save, res);
-			//imshow("cdfd", diff_output_c);
-			//imwrite("cdfd.jpg", diff_output_c);
+		hconcat(res_save, res);*/
+			imshow("cdfd", diff_output_c);
+			imwrite("cdfd.jpg", diff_output_c);
 			imshow("output", output);
 			//imshow("trans", trans);
 			//imwrite(save_name, res);

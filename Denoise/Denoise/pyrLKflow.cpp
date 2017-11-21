@@ -3,7 +3,7 @@
 static Point2f getAverage(const std::vector<Point2f>& values);
 static void checkValidArea(Mat& valid_area, vector<Point2f>& points, vector<bool>& filter_status);
 static void drawCorrespondance(Mat& img, Mat& img1, vector<Point2f>& points, vector<Point2f>& points1, Mat& output);
-#define DEPTHMAP
+//#define DEPTHMAP
 void calcPyrLKflow(vector<Mat>& imageList_gray,Mat& object_area, vector<Mat>& camera_motion) {
 	vector<Point2f> points[3];
 	

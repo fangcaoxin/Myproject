@@ -331,6 +331,7 @@ int main(int argc, char** argv)
 		//getDisparityVis(filtered_disp, filtered_disp_vis, vis_mult);
 		namedWindow("filtered disparity", WINDOW_AUTOSIZE);
 		imshow("filtered disparity", filtered_disp_vis);
+		imwrite("filtered.jpg", filtered_disp_vis);
 		waitKey();
 		//! [visualization]
 	}
