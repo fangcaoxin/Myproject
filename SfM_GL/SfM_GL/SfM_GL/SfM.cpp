@@ -21,7 +21,7 @@ int sfm_optical_flow(sfm_program * const sfm) {
 		cvtColor(img_1, pregray, CV_BGR2GRAY);
 		cvtColor(img_2, gray, CV_BGR2GRAY);
 
-		calcOpticalFlowFarneback(pregray, gray, sfm->u_flow, 0.5, 3, 15, 3, 5, 1.2, 0);
+		calcOpticalFlowFarneback(pregray, gray, sfm->u_flow, 0.5, 1, 15, 3, 5, 1.2, 0);
 	}
 	return OK;
 }
