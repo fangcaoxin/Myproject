@@ -22,7 +22,7 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 	guidedFilter(src, brightchannel, brightchannel, 32, 1e-2);
 	
 	//normalize(brightchannel, brightchannel, 0, 1, NORM_MINMAX, -1, Mat());
-	imshow("brightchannel", brightchannel);
+	//imshow("brightchannel", brightchannel);
 
 #ifdef COLORREFLECTFREE
 	/*caculate bright R,G,B channel*/
@@ -64,13 +64,13 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 
 	normalize(src_colorRefelectFree, src_colorRefelectFree, 0, 255, NORM_MINMAX);
 	src_colorRefelectFree.convertTo(src_colorRefelectFree, CV_8UC3);
-	imshow("src_colorRefelectFree", src_colorRefelectFree);
+	//imshow("src_colorRefelectFree", src_colorRefelectFree);
 	
 	/* caluculate src_colorRefelctFree for bbchannel */
 	Mat light_brightchannel, light_darkchannel;
 	calcDarkChannel(light_darkchannel, light_brightchannel, src_colorRefelectFree, radius);
 	guidedFilter(src, light_brightchannel, light_brightchannel, 32, 1e-2);
-	imshow("airlight", light_brightchannel);
+	//imshow("airlight", light_brightchannel);
 	//imwrite("airlight.jpg", light_brightchannel);
 #endif //COLORREFLECTFREE
 //#define TRANSESTIMATION_ESTI
@@ -95,7 +95,7 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 	Mat transmission = colorRelfectMapChannels[2];
 	transmission.convertTo(transmission, CV_32FC1);
 	normalize(transmission, transmission, 0.1, 0.6, NORM_MINMAX);
-	imshow("transmission", transmission);
+	//imshow("transmission", transmission);
 #endif //TRANSESTIMATION_ESTI
 #ifdef POSITIONPARAM
 	double dis_camera_constant = 1.5;//m
@@ -117,8 +117,8 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 
 			int air_light = light_brightchannel.at<uchar>(i, j);
 			float trans = MAX(transmission.at<float>(i, j),(float)0.3);
-			float dst_0 = ((float)(src_colorFree[0] / 255.) - (float)(air_light / 255.)) / (trans) + (float)(air_light / 255.);
-			float dst_1 = ((float)(src_colorFree[1] / 255.) - (float)(air_light / 255.)) / (trans) + (float)(air_light / 255.);
+			float dst_0 = ((float)(src_colorFree[0] / 255.) - (float)(air_light / 255.)) / (trans*1.1) + (float)(air_light / 255.);
+			float dst_1 = ((float)(src_colorFree[1] / 255.) - (float)(air_light / 255.)) / (trans*1.1) + (float)(air_light / 255.);
 			float dst_2 = ((float)(src_colorFree[2] / 255.) - (float)(air_light / 255.)) / trans + (float)(air_light / 255.);
 			/*float dst_0 = ((float)(src_colorFree[0] / 255.) - air_light[0]) / trans + air_light[0];
 			float dst_1 = ((float)(src_colorFree[1] / 255.) - air_light[1])/ trans + air_light[1];

@@ -20,23 +20,20 @@ Ptr<BackgroundSubtractor> pMOG;
 //string folderName = "img_170721_01j";
 string folderName = "img_170724_02j";
 string saveFolder = "..//..//..//image//" + folderName + "//" + folderName + "_";
-string saveImage = "..//..//..//result//20171018//" + folderName + "_";
+string saveImage = "..//..//..//result//20171210//" + folderName + "_";
 int width = 1358; //1358 without black range
 int height = 1080; //1080
 Rect rect(6, 4, width - 6, height - 8);
 int main(int argc, char* argv[]) {
 
 
-	int width_input = rect.width /4;
-	int height_input = rect.height/4;
+	int width_input = rect.width;
+	int height_input = rect.height;
 
-	int beg_num = 0;
-	int frame_num = 30;
+	int beg_num = 39;
+	int frame_num = 150;
 	Mat backgroud;
 	int frame_count = 0;
-	//Mat fgMaskMOG(height_input, width_input, CV_8UC1, Scalar(0));
-	//pMOG = createBackgroundSubtractorMOG2(5, 10, false);
-	//Ptr<FastFeatureDetector> fast = FastFeatureDetector::create();
 	vector<Mat> image_list;
 	vector<Mat> image_list_gray;
 
@@ -44,19 +41,15 @@ int main(int argc, char* argv[]) {
 	int count = 0;
 	for (int i = beg_num; i < beg_num + frame_num; i = i + 1) {
 		string file_name = saveFolder + to_string(i) + ".jpg";
-		string save_name = saveImage + to_string(i - 1) + "_1113out.jpg";
+		string save_name = saveImage + to_string(i - 1) + "_1210out.jpg";
 		cout << "file name :" << file_name << endl;
 		Mat cur = imread(file_name);
 		Mat input_resize, cur_gray;
-		//Mat dehaze_out(height_input, width_input, CV_8UC3);
 		resize(cur(rect), input_resize, Size(width_input, height_input));
-		//dehazeDC(input_resize, dehaze);
-		//dehaze(dehaze_out,input_resize);
 		image_list.push_back(input_resize);
 		cvtColor(input_resize, cur_gray, CV_BGR2GRAY);
 		image_list_gray.push_back(cur_gray);
 		count++;
-		//#define TEST
 
 #ifdef TEST
 		string file_1 = "..//..//..//result//1-1.jpg";
@@ -92,9 +85,6 @@ int main(int argc, char* argv[]) {
 
 			
 			Mat diff_output_c, darkChannel, brightChannel;
-#ifdef RGBSTDANALYSIS
-		
-#endif //RGBSTDANALYSIS
 			
 #ifdef CAMERAMOTION
 			calcDarkChannel(darkChannel, brightChannel, image_list[1], 0);
@@ -103,9 +93,6 @@ int main(int argc, char* argv[]) {
 			threshold(trans, trans, 20, 255, CV_THRESH_BINARY);
 			vector<Mat> camera_motion;
 			calcPyrLKflow(image_list_gray, trans,camera_motion);
-			/*Mat depth_map;
-			calcDepth(camera_motion[0], depth_map, width_input, height_input);
-			imshow("depth", depth_map);*/
 			imageListCompensation(image_list, image_list_compensation, camera_motion);
 			imageListGrayCompensation(image_list_gray, image_list_gray_compensation, camera_motion);
 			
@@ -127,16 +114,16 @@ int main(int argc, char* argv[]) {
 			rgbStdDev(image_list[1], labels1, stats1, normalize_std1, size1 - 1);
 			getMaskFromStd(labels, normalize_std);
 			getMaskFromStd(labels1, normalize_std1);
-			int num = sumAreaByRadius(labels, labels1, centroids, centroids1, diff_output_c, 5);
-			imageClosing(diff_output_c, diff_output_c, 3);
+			int num = sumAreaByRadius(labels, labels1, centroids, centroids1, diff_output_c, 20);
+			imageClosing(diff_output_c, diff_output_c, 12);
 			int size_final = connectedComponentsWithStats(diff_output_c, labels_final, stats_final, centroids_final);
 			floatingAreaRestoration(image_list_compensation, image_list_gray_compensation, stats_final, labels_final, output);
-			showMaskImg(labels, labels_show);
-			showMaskImg(labels1, labels1_show);
-			imwrite("label.jpg", labels_show);
-			imwrite("label1.jpg", labels1_show);
+			//showMaskImg(labels, labels_show);
+			//showMaskImg(labels1, labels1_show);
+			//imwrite("label.jpg", labels_show);
+			//imwrite("label1.jpg", labels1_show);
 			/*diff_output_c.copyTo(cdfd);*/
-			showLabelImg(diff_output_c);
+			//showLabelImg(diff_output_c);
 			//vector<float> probs_similar;
 			//nearNeighourSimilarity(image_list[1], stats, probs_similar);
 #endif //CONNECTED
@@ -209,14 +196,14 @@ int main(int argc, char* argv[]) {
 		res_save.push_back(diff_output_c);
 		res_save.push_back(output);
 		hconcat(res_save, res);*/
-			imshow("cdfd", diff_output_c);
-			imwrite("cdfd.jpg", diff_output_c);
-			imshow("output", output);
+			//imshow("cdfd", diff_output_c);
+			//imwrite("cdfd.jpg", diff_output_c);
+			//imshow("output", output);
 			//imshow("trans", trans);
-			//imwrite(save_name, res);
+			imwrite(save_name, output);
 			//imshow("diff_cur_pre_camera", diff_wb_c[0]);
 			//imshow("diff_cur_next_camera", diff_wb_c[1]);
-			//imwrite(save_name, diff_wb_c[0]);
+			//imwrite(save_name, output);
 			//imshow("diff_cur_pre_std", labels_show);
 			//imshow("diff_cur_next_std", labels1_show);
 			//imwrite(save_name, labels_show);
