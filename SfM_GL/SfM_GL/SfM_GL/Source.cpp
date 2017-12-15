@@ -20,15 +20,21 @@ void disp(void) {
 
 int main(int argc, char ** argv) {
 	sfm_program p_sfm;
-	string img_file1 = "image//0.jpg";
-	string img_file2 = "image//1.jpg";
+	Scalar color(0, 0, 255);
+	string img_file1 = "eval-data//Urban//frame10.png";
+	string img_file2 = "eval-data//Urban//frame11.png";
 	Mat img_1 = imread(img_file1);
 	Mat img_2 = imread(img_file2);
 
 	sfm_add_image(&p_sfm, img_1);
 	sfm_add_image(&p_sfm, img_2);
+	sfm_super_pixel(&p_sfm);
+	sfm_superpixel_image(&p_sfm, color);
 	sfm_optical_flow(&p_sfm);
-	sfm_drawOptFlowMap(&p_sfm);
-	imshow("optical flow", p_sfm.c_flow_map);
+	//sfm_drawOptFlowMap(&p_sfm,color);
+	sfm_motion_to_color(&p_sfm);
+	imshow("optical flow", p_sfm.color_flow); 
+	imshow("superpixel", p_sfm.super_pixel_image);
 	waitKey(0);
+	
 }

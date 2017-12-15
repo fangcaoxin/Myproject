@@ -19,25 +19,27 @@ struct sfm_program {
 	vector<Mat> input_images;
 	Matx33d internal_matrix;
 	Mat u_flow;
-	Mat super_pixel_label_out;
+	Mat super_pixel_label;
 	Mat c_flow_map;
-	int a;
-	
+	Mat color_flow;
+	Mat contour_mask;
+	Mat super_pixel_image;
+	int num_superpixel;
+	vector<KeyPoint> keypts1;
+	vector<KeyPoint> keypts2;
+	vector<DMatch>* matches;
 };
 
 int sfm_add_image(sfm_program * const sfm, Mat &p_input_image);
 
-int sfm_feature_matching(sfm_program * const sfm, 
-	const Mat& img_1,
-	const Mat& img_2,
-	vector<KeyPoint>& keypts1,
-	vector<KeyPoint>& keypts2,
-	vector<DMatch>* mathes,
-	int method);
-
 int sfm_optical_flow(sfm_program * const sfm);
 
-int sfm_super_pixel(sfm_program * const sfm, 
-	const Mat& img_1);
+int sfm_super_pixel(sfm_program * const sfm);
 
-int sfm_drawOptFlowMap(sfm_program * const sfm);
+int sfm_drawOptFlowMap(sfm_program * const sfm, Scalar color);
+
+int sfm_motion_to_color(sfm_program *const sfm);
+
+int sfm_superpixel_image(sfm_program *const sfm, Scalar color);
+
+int sfm_get_keyPoints(sfm_program *const sfm, int method);
