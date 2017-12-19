@@ -31,8 +31,8 @@ int main(int argc, char ** argv) {
 
 	sfm_add_image(&p_sfm, img_1);
 	sfm_add_image(&p_sfm, img_2);
-	sfm_super_pixel(&p_sfm);
-	sfm_superpixel_image(&p_sfm, color);
+	//sfm_super_pixel(&p_sfm);
+	//sfm_superpixel_image(&p_sfm, color);
 	sfm_get_keyPoints(&p_sfm, method);
 	sfm_set_internal_matrix(&p_sfm, 1057.14, 640/2,480/2);
 	sfm_get_external_matrix(&p_sfm);

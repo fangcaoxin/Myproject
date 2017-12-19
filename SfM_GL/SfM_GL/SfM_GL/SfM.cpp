@@ -154,13 +154,13 @@ int sfm_get_keyPoints(sfm_program *const sfm, int method) {
 		matcher.match(d1, d2, matches_all);
 		gms_matcher gms(kp1, img1.size(), kp2, img2.size(), matches_all);
 		num_inliers = gms.GetInlierMask(vbInliers, false, false);
-		for (size_t i = 0; i < vbInliers.size(); ++i)
+		for (size_t i = 0; i < vbInliers.size(); i++)
 		{
 			if (vbInliers[i] == true)
 			{
 				matches_gms.push_back(matches_all[i]);
-				sfm->keypts1_good.push_back(kp1[i]);
-				sfm->keypts2_good.push_back(kp2[i]);
+				sfm->keypts1_good.push_back(kp1[matches_all[i].queryIdx]);
+				sfm->keypts2_good.push_back(kp2[matches_all[i].trainIdx]);
 			}
 		}
 		sfm->keypts1 = kp1;
@@ -243,11 +243,37 @@ int sfm_get_external_matrix(sfm_program *const sfm) {
 	return OK;
 }
 
+static double triangulatePoints(Matx34d K);
+
+
 int sfm_triangulatePoints(sfm_program *const sfm) {
 
 	sfm->pointcloud.clear();
 	sfm->correspImgPt.clear();
 	sfm->depths.clear();
+#define OPENCV_TRIANGULATION
+#ifdef OPENCV_TRIANGULATION
+	Matx34d P = Matx34d(1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0);
+	Matx34d P1 = sfm->external_martix;
+	vector<Point2f> pts;
+	vector<Point2f> pts1;
+	
+	KeyPoint::convert(sfm->keypts1_good, pts);
+	KeyPoint::convert(sfm->keypts2_good, pts1);
+	Mat pts_rec_homo;
+	Mat pts_rec, pts_rec_reshape;
+	triangulatePoints(P, P1, pts, pts1, pts_rec_homo);
+	Mat th = pts_rec_homo.reshape(4,1);
+	convertPointsFromHomogeneous(th, pts_rec);
+	pts_rec_reshape = pts_rec.reshape(1, 3);
+	/*for (int i = 0; i < 20; i++) {
+		cout << pts_rec_reshape.col(i) << endl;
+	}*/
+	sfm->depths = pts_rec_reshape.row(2);
+	
+#else
 	Matx34d P = Matx34d(1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0);
@@ -292,6 +318,7 @@ int sfm_triangulatePoints(sfm_program *const sfm) {
 		}
 	}
 	Scalar mse = mean(reproj_error);
+#endif //OPENCV
 	return OK;
 }
 
