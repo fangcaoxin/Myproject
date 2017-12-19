@@ -26,12 +26,11 @@ struct sfm_program {
 	Mat contour_mask;
 	Mat super_pixel_image;
 	Mat discoeff;
-	Mat depth_map;
 	int num_superpixel;
 	vector<KeyPoint> keypts1;
 	vector<KeyPoint> keypts2;
 	vector<KeyPoint> keypts1_good;
-	vector<KeyPoint> Keypts2_good;
+	vector<KeyPoint> keypts2_good;
 	vector<KeyPoint> correspImgPt;
 	vector<DMatch> matches;
 	vector<double> depths;
@@ -41,7 +40,7 @@ struct sfm_program {
 
 int sfm_add_image(sfm_program * const sfm, Mat &p_input_image);
 
-int sfm_optical_flow(sfm_program * const sfm);
+//int sfm_optical_flow(sfm_program * const sfm);
 
 int sfm_super_pixel(sfm_program * const sfm);
 
@@ -61,4 +60,6 @@ int sfm_get_external_matrix(sfm_program *const sfm);
 
 int sfm_triangulatePoints(sfm_program *const sfm);
 
-int sfm_drawDepths(sfm_program *const sfm);
+Mat sfm_drawDepths(sfm_program *const sfm, int method);
+
+Mat sfm_draw_gms_matches(sfm_program *const sfm, Scalar color, int type);

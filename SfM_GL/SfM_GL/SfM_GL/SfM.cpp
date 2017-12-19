@@ -43,19 +43,19 @@ int sfm_super_pixel(sfm_program * const sfm) {
 	return OK;
 }
 
-int sfm_optical_flow(sfm_program * const sfm) {
-	Mat pregray, gray;
-	Mat img_1, img_2;
-	img_1 = sfm->input_images[0];
-	img_2 = sfm->input_images[1];
-	if (!img_1.empty() && !img_2.empty()) {
-		cvtColor(img_1, pregray, CV_BGR2GRAY);
-		cvtColor(img_2, gray, CV_BGR2GRAY);
-
-		calcOpticalFlowFarneback(pregray, gray, sfm->u_flow, 0.5, 3, 15, 3, 5, 1.2, 0);
-	}
-	return OK;
-}
+//int sfm_optical_flow(sfm_program * const sfm) {
+//	Mat pregray, gray;
+//	Mat img_1, img_2;
+//	img_1 = sfm->input_images[0];
+//	img_2 = sfm->input_images[1];
+//	if (!img_1.empty() && !img_2.empty()) {
+//		cvtColor(img_1, pregray, CV_BGR2GRAY);
+//		cvtColor(img_2, gray, CV_BGR2GRAY);
+//
+//		calcOpticalFlowFarneback(pregray, gray, sfm->u_flow, 0.5, 3, 15, 3, 5, 1.2, 0);
+//	}
+//	return OK;
+//}
 
 
 int sfm_drawOptFlowMap(sfm_program * const sfm, Scalar color) {
@@ -105,6 +105,15 @@ int sfm_get_keyPoints(sfm_program *const sfm, int method) {
 	{
 	case OPTICAL_FLOW:
 	{
+		Mat pregray, gray;
+		Mat img_1, img_2;
+		img_1 = sfm->input_images[0];
+		img_2 = sfm->input_images[1];
+		if (!img_1.empty() && !img_2.empty()) {
+			cvtColor(img_1, pregray, CV_BGR2GRAY);
+			cvtColor(img_2, gray, CV_BGR2GRAY);
+			calcOpticalFlowFarneback(pregray, gray, sfm->u_flow, 0.5, 3, 15, 3, 5, 1.2, 0);
+		}
 		vector<Point2f> pt1s, pt2s;
 		int num = sfm->num_superpixel;
 		vector<super_pixel_vertex> pts(num);
@@ -128,6 +137,9 @@ int sfm_get_keyPoints(sfm_program *const sfm, int method) {
 	case GMS:
 	{
 		int num_inliers = 0;
+		sfm->matches.clear();
+		sfm->keypts1_good.clear();
+		sfm->keypts2_good.clear();
 		vector<bool> vbInliers;
 		Mat d1, d2;
 		vector<KeyPoint> kp1, kp2;
@@ -147,8 +159,12 @@ int sfm_get_keyPoints(sfm_program *const sfm, int method) {
 			if (vbInliers[i] == true)
 			{
 				matches_gms.push_back(matches_all[i]);
+				sfm->keypts1_good.push_back(kp1[i]);
+				sfm->keypts2_good.push_back(kp2[i]);
 			}
 		}
+		sfm->keypts1 = kp1;
+		sfm->keypts2 = kp2;
 		sfm->matches = matches_gms;
 	}
 	break;
@@ -183,6 +199,10 @@ int sfm_get_external_matrix(sfm_program *const sfm) {
 	vector<uchar> status;
 	KeyPoint::convert(sfm->keypts1, keypts1);
 	KeyPoint::convert(sfm->keypts2, keypts2);
+	if (keypts1.size() != keypts2.size()) {
+		KeyPoint::convert(sfm->keypts1_good, keypts1);
+		KeyPoint::convert(sfm->keypts2_good, keypts2);
+	}
 	Matx33d K(3, 3, CV_64F);
 	K= sfm->internal_matrix;
 	cout << "internal" << K << endl;
@@ -203,8 +223,8 @@ int sfm_get_external_matrix(sfm_program *const sfm) {
 	}
 	for (int i = 0; i < status.size(); i++) {
 		if (status[i]) {
-			sfm->keypts1_good.push_back(sfm->keypts1[i]);
-			sfm->Keypts2_good.push_back(sfm->keypts2[i]);
+			sfm->keypts1_good[i]=sfm->keypts1[i];
+			sfm->keypts2_good[i]=sfm->keypts2[i];
 		}
 	}
 
@@ -239,16 +259,16 @@ int sfm_triangulatePoints(sfm_program *const sfm) {
 	Matx44d P1inv(P1_.inv());
 	cout << "Triangluating Now...";
 	vector<double> reproj_error;
-	int pts_size = sfm->keypts1.size();
+	int pts_size = sfm->keypts1_good.size();
 	Mat_<double> KP1 = Mat(sfm->internal_matrix)*Mat(P1);
-//#pragma omp parallel for num_threads(1)
+#pragma omp parallel for num_threads(1)
 	for (int i = 0; i < pts_size; i++) {
-		Point2f kp = sfm->keypts1[i].pt;
+		Point2f kp = sfm->keypts1_good[i].pt;
 		Point3d u(kp.x, kp.y, 1.0);
 		Mat_<double> um = Mat(sfm->internal_matrix).inv()*Mat_<double>(u);
 		u.x = um(0); u.y = um(1); u.z = um(2);
 
-		Point2f kp1 = sfm->keypts2[i].pt;
+		Point2f kp1 = sfm->keypts2_good[i].pt;
 		Point3d u1(kp1.x, kp1.y, 1.0);
 		Mat_<double> um1 = Mat(sfm->internal_matrix).inv()*Mat_<double>(u1);
 		u1.x = um1(0); u1.y = um1(1); u1.z = um1(2);
@@ -256,7 +276,7 @@ int sfm_triangulatePoints(sfm_program *const sfm) {
 		Mat_<double> X = IterativeLinearLSTriangulation(u, P, u1, P1);
 		Mat_<double> xPt_img = KP1 * X;
 		Point2f xPt_img_(xPt_img(0) / xPt_img(2), xPt_img(1) / xPt_img(2));
-//#pragma omp critical
+#pragma omp critical
 		{
 			double reprj_err = norm(xPt_img_ - kp1);
 			reproj_error.push_back(reprj_err);
@@ -266,7 +286,7 @@ int sfm_triangulatePoints(sfm_program *const sfm) {
 			cp.reprojection_error = reprj_err;
 
 			sfm->pointcloud.push_back(cp);
-			sfm->correspImgPt.push_back(sfm->keypts1[i]);
+			sfm->correspImgPt.push_back(sfm->keypts1_good[i]);
 			sfm->depths.push_back(X(2));
 		
 		}
@@ -275,27 +295,90 @@ int sfm_triangulatePoints(sfm_program *const sfm) {
 	return OK;
 }
 
-int sfm_drawDepths(sfm_program *const sfm) {
+Mat sfm_drawDepths(sfm_program *const sfm, int method) {
 	double minVal, maxVal;
 	vector<double> depths = sfm->depths;
 	minMaxLoc(depths, &minVal, &maxVal);
 	int width = sfm->input_images[0].cols;
 	int height = sfm->input_images[0].rows;
-	Mat tmp(height, width, CV_8UC1, Scalar(0, 0, 0));
 	for (int i = 0; i < sfm->depths.size(); i++) {
 		double _d = MAX(MIN((depths[i] - minVal) / (maxVal - minVal), 1.0), 0.0);
 		Scalar color(255 * (1.0 - (_d)), 255, 255);
 
 	}
-	for (int i = 0; i < height; i++) {
-		for (int j = 0; j < width; j++) {
-			int index = sfm->super_pixel_label.at<int>(i, j);
-			double _d = MAX(MIN((depths[index] - minVal) / (maxVal - minVal), 1.0), 0.0);
-			unsigned char color=(255 *(1.0-_d));
-			tmp.at<uchar>(i, j) = color;
+	switch (method)
+	{
+	case OPTICAL_FLOW: {
+		Mat tmp(height, width, CV_8UC1, Scalar(0, 0, 0));
+		
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				int index = sfm->super_pixel_label.at<int>(i, j);
+				double _d = MAX(MIN((depths[index] - minVal) / (maxVal - minVal), 1.0), 0.0);
+				unsigned char color = (255 * (1.0 - _d));
+				tmp.at<uchar>(i, j) = color;
+			}
+		}
+		return tmp;
+	}
+	break;
+	case GMS: {
+		Mat tmp(height, width, CV_8UC3, Scalar(0, 0, 0));
+		vector<Point2f> keypts;
+		KeyPoint::convert(sfm->keypts1_good, keypts);
+		for (int i = 0; i < keypts.size(); i++) {
+			double _d = MAX(MIN((depths[i] - minVal) / (maxVal - minVal), 1.0), 0.0);
+			Vec3b color(255 * (1.0 - (_d)), 255, 255);
+			tmp.at<Vec3b>(keypts[i]) = color;
+		}
+		cvtColor(tmp, tmp, CV_HSV2BGR);
+		return tmp;
+	}
+	break;
+	default:
+		break;
+	}
+	
+}
+
+Mat sfm_draw_gms_matches(sfm_program *const sfm, Scalar color, int type) {
+	Mat src1 = sfm->input_images[0];
+	Mat src2 = sfm->input_images[1];
+	vector<DMatch> inlier = sfm->matches;
+	vector<KeyPoint> kpt1 = sfm->keypts1;
+	vector<KeyPoint> kpt2 = sfm->keypts2;
+	const int height = max(src1.rows, src2.rows);
+	const int width = src1.cols + src2.cols;
+	Mat output(height, width, CV_8UC3, Scalar(0, 0, 0));
+	src1.copyTo(output(Rect(0, 0, src1.cols, src1.rows)));
+	src2.copyTo(output(Rect(src1.cols, 0, src2.cols, src2.rows)));
+
+	if (type == 1)
+	{
+		for (size_t i = 0; i < inlier.size(); i = i + 10)
+		{
+			Point2f left = kpt1[inlier[i].queryIdx].pt;
+			Point2f right = (kpt2[inlier[i].trainIdx].pt + Point2f((float)src1.cols, 0.f));
+			line(output, left, right, color);
 		}
 	}
-	//cvtColor(tmp, tmp, CV_HSV2BGR);
-	sfm->depth_map = tmp;
-	return OK;
+	else if (type == 2)
+	{
+		for (size_t i = 0; i < inlier.size(); i++)
+		{
+			Point2f left = kpt1[inlier[i].queryIdx].pt;
+			Point2f right = (kpt2[inlier[i].trainIdx].pt + Point2f((float)src1.cols, 0.f));
+			line(output, left, right, color);
+		}
+
+		for (size_t i = 0; i < inlier.size(); i++)
+		{
+			Point2f left = kpt1[inlier[i].queryIdx].pt;
+			Point2f right = (kpt2[inlier[i].trainIdx].pt + Point2f((float)src1.cols, 0.f));
+			circle(output, left, 1, Scalar(0, 255, 255), 2);
+			circle(output, right, 1, Scalar(0, 255, 0), 2);
+		}
+	}
+
+	return output;
 }
