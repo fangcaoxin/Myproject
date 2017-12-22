@@ -223,8 +223,8 @@ int sfm_get_external_matrix(sfm_program *const sfm) {
 	}
 	for (int i = 0; i < status.size(); i++) {
 		if (status[i]) {
-			sfm->keypts1_good[i]=sfm->keypts1[i];
-			sfm->keypts2_good[i]=sfm->keypts2[i];
+			sfm->keypts1_good.push_back(sfm->keypts1[i]);
+			sfm->keypts2_good.push_back(sfm->keypts2[i]);
 		}
 	}
 
@@ -235,7 +235,7 @@ int sfm_get_external_matrix(sfm_program *const sfm) {
 		       1, 0, 0,
 		       0, 0, 1);
 	R = svd.u*Mat(W)*svd.vt;
-	t = svd.u.col(2)*5;
+	t = svd.u.col(2)*1;
 	sfm->external_martix = Matx34d(R(0, 0), R(0, 1), R(0, 2), t(0),
 		R(1, 0), R(1, 1), R(1, 2), t(1),
 		R(2, 0), R(2, 1), R(2, 2), t(2));
@@ -262,16 +262,22 @@ int sfm_triangulatePoints(sfm_program *const sfm) {
 	
 	KeyPoint::convert(sfm->keypts1_good, pts);
 	KeyPoint::convert(sfm->keypts2_good, pts1);
-	Mat pts_rec_homo;
-	Mat pts_rec, pts_rec_reshape;
-	triangulatePoints(P, P1, pts, pts1, pts_rec_homo);
-	Mat th = pts_rec_homo.reshape(4,1);
-	convertPointsFromHomogeneous(th, pts_rec);
-	pts_rec_reshape = pts_rec.reshape(1, 3);
+	Mat pts_rec_homo_1,pts_rec_homo_2;
+	Mat pts_rec_1, pts_rec_2,pts_rec_reshape_1;
+	triangulatePoints(P, P1, pts, pts1, pts_rec_homo_1);
+	triangulatePoints(P1, P, pts1, pts, pts_rec_homo_2);
+	Mat th = pts_rec_homo_1.reshape(4,1);
+	Mat th2 = pts_rec_homo_2.reshape(4, 1);
+	convertPointsFromHomogeneous(th, pts_rec_1);
+	convertPointsFromHomogeneous(th2, pts_rec_2);
+	pts_rec_reshape_1 = pts_rec_1.reshape(1, 3);
+
+	sfm->Pt1 = pts_rec_1;
+	sfm->Pt2 = pts_rec_2;
 	/*for (int i = 0; i < 20; i++) {
 		cout << pts_rec_reshape.col(i) << endl;
 	}*/
-	sfm->depths = pts_rec_reshape.row(2);
+	sfm->depths = pts_rec_reshape_1.row(2);
 	
 #else
 	Matx34d P = Matx34d(1, 0, 0, 0,

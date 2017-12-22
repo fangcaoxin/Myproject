@@ -20,10 +20,10 @@ void disp(void) {
 
 int main(int argc, char ** argv) {
 	sfm_program p_sfm;
-	int method = 2;
+	int method = 1;
 	Scalar color(0, 0, 255);
-	string img_file1 = "eval-data//Urban//frame10.png";
-	string img_file2 = "eval-data//Urban//frame11.png";
+	string img_file1 = "eval-data//Wooden//frame10.png";
+	string img_file2 = "eval-data//wooden//frame11.png";
 	//string img_file1 = "eval-data//fuku//img_0.jpg";
 	//string img_file2 = "eval-data//fuku//img_5.jpg";
 	Mat img_1 = imread(img_file1);
@@ -31,14 +31,14 @@ int main(int argc, char ** argv) {
 
 	sfm_add_image(&p_sfm, img_1);
 	sfm_add_image(&p_sfm, img_2);
-	//sfm_super_pixel(&p_sfm);
+	sfm_super_pixel(&p_sfm);
 	//sfm_superpixel_image(&p_sfm, color);
 	sfm_get_keyPoints(&p_sfm, method);
-	sfm_set_internal_matrix(&p_sfm, 1057.14, 640/2,480/2);
+	sfm_set_internal_matrix(&p_sfm, 1057.14, 584/2,388/2);
 	sfm_get_external_matrix(&p_sfm);
 	sfm_triangulatePoints(&p_sfm);
 	Mat depth_map = sfm_drawDepths(&p_sfm,method);
-	Mat gms_match = sfm_draw_gms_matches(&p_sfm, color, 1);
+	//Mat gms_match = sfm_draw_gms_matches(&p_sfm, color, 1);
 	//sfm_drawOptflowKps(&p_sfm);
 	//sfm_drawOptFlowMap(&p_sfm,color);
 	//sfm_motion_to_color(&p_sfm);

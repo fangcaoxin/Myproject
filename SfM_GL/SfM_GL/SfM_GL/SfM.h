@@ -35,6 +35,8 @@ struct sfm_program {
 	vector<DMatch> matches;
 	vector<double> depths;
 	Matx34d external_martix;
+	vector<Point3d> Pt1;
+	vector<Point3d> Pt2;
 	vector<CloudPoint> pointcloud;
 };
 
