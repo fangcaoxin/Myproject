@@ -243,7 +243,7 @@ int sfm_get_external_matrix(sfm_program *const sfm) {
 	return OK;
 }
 
-static double triangulatePoints(Matx34d K);
+
 
 
 int sfm_triangulatePoints(sfm_program *const sfm) {

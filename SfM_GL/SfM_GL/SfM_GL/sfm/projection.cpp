@@ -40,8 +40,8 @@
 
 // OpenCV
 #include <opencv2/core/eigen.hpp>
-#include <opencv2/sfm/numeric.hpp>
-#include <opencv2/sfm/projection.hpp>
+#include "numeric.hpp"
+#include "projection.hpp"
 
 // libmv headers
 #include "libmv/multiview/projection.h"

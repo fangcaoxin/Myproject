@@ -30,6 +30,8 @@
 
 namespace libmv {
 
+typedef unsigned int uint;
+
 template<typename Kernel>
 class MLEScorer {
  public:

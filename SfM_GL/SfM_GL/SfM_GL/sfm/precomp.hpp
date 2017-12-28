@@ -42,6 +42,6 @@
 #ifndef __OPENCV_SFM_PRECOMP__
 #define __OPENCV_SFM_PRECOMP__
 
-#include <opencv2/sfm.hpp>
+#include "sfm.hpp"
 
 #endif

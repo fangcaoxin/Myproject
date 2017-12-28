@@ -40,7 +40,7 @@
 
 // OpenCV
 #include <opencv2/core/eigen.hpp>
-#include <opencv2/sfm/numeric.hpp>
+#include "numeric.hpp"
 
 // libmv headers
 #include "libmv/numeric/numeric.h"

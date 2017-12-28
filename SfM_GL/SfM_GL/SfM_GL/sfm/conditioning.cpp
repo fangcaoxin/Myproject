@@ -40,7 +40,7 @@
 
 // OpenCV
 #include <opencv2/core/eigen.hpp>
-#include <opencv2/sfm/conditioning.hpp>
+#include "conditioning.hpp"
 
 // libmv headers
 #include "libmv/multiview/conditioning.h"

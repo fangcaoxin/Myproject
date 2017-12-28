@@ -40,8 +40,8 @@
 
 // OpenCV
 #include <opencv2/core/eigen.hpp>
-#include <opencv2/sfm/robust.hpp>
-#include <opencv2/sfm/numeric.hpp>
+#include "robust.hpp"
+#include "numeric.hpp"
 
 // libmv headers
 #include "libmv/multiview/robust_fundamental.h"

@@ -39,54 +39,50 @@
  //
  //M*/
 
-#include "io.hpp"
-#include "io/io_bundler.h"
+#ifndef __OPENCV_SFM_IO_HPP__
+#define __OPENCV_SFM_IO_HPP__
+
+#include <opencv2/core.hpp>
 
 namespace cv
 {
 namespace sfm
 {
 
+//! @addtogroup io
+//! @{
+
+/** @brief Different supported file formats.
+ */
+enum {
+  SFM_IO_BUNDLER = 0,
+  SFM_IO_VISUALSFM = 1,
+  SFM_IO_OPENSFM = 2,
+  SFM_IO_OPENMVG = 3,
+  SFM_IO_THEIASFM = 4
+};
+
+/** @brief Import a reconstruction file.
+  @param file The path to the file.
+  @param Rs Output vector of 3x3 rotations of the camera
+  @param Ts Output vector of 3x1 translations of the camera.
+  @param Ks Output vector of 3x3 instrinsics of the camera.
+  @param points3d Output array with 3d points. Is 3 x N.
+  @param file_format The format of the file to import.
+
+  The function supports reconstructions from Bundler.
+*/
+CV_EXPORTS_W
 void
-importReconstruction(const cv::String &file, OutputArrayOfArrays _Rs,
-                     OutputArrayOfArrays _Ts, OutputArrayOfArrays _Ks,
-                     OutputArray _points3d, int file_format) {
+importReconstruction(const cv::String &file, OutputArrayOfArrays Rs,
+                     OutputArrayOfArrays Ts, OutputArrayOfArrays Ks,
+                     OutputArray points3d, int file_format = SFM_IO_BUNDLER);
 
-    std::vector<Matx33d> Rs, Ks;
-    std::vector<Vec3d> Ts, points3d;
-
-    if (file_format == SFM_IO_BUNDLER) {
-        readBundlerFile(file, Rs, Ts, Ks, points3d);
-    } else if (file_format == SFM_IO_VISUALSFM) {
-        CV_Error(Error::StsNotImplemented, "The requested function/feature is not implemented");
-    } else if (file_format == SFM_IO_OPENSFM) {
-        CV_Error(Error::StsNotImplemented, "The requested function/feature is not implemented");
-    } else if (file_format == SFM_IO_OPENMVG) {
-        CV_Error(Error::StsNotImplemented, "The requested function/feature is not implemented");
-    } else if (file_format == SFM_IO_THEIASFM) {
-        CV_Error(Error::StsNotImplemented, "The requested function/feature is not implemented");
-    } else {
-        CV_Error(Error::StsBadArg, "The file format one of SFM_IO_BUNDLER, SFM_IO_VISUALSFM, SFM_IO_OPENSFM, SFM_IO_OPENMVG or SFM_IO_THEIASFM");
-    }
-
-    const size_t num_cameras = Rs.size();
-    const size_t num_points = points3d.size();
-
-    _Rs.create(num_cameras, 1, CV_64F);
-    _Ts.create(num_cameras, 1, CV_64F);
-    _Ks.create(num_cameras, 1, CV_64F);
-    _points3d.create(num_points, 1, CV_64F);
-
-    for (size_t i = 0; i < num_cameras; ++i) {
-        Mat(Rs[i]).copyTo(_Rs.getMatRef(i));
-        Mat(Ts[i]).copyTo(_Ts.getMatRef(i));
-        Mat(Ks[i]).copyTo(_Ks.getMatRef(i));
-    }
-
-    for (size_t i = 0; i < num_points; ++i)
-        Mat(points3d[i]).copyTo(_points3d.getMatRef(i));
-}
-
+//! @} sfm
 
 } /* namespace sfm */
 } /* namespace cv */
+
+#endif
+
+/* End of file. */

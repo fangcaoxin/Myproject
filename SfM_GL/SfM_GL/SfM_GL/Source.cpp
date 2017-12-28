@@ -3,6 +3,7 @@
 #include <GL/glut.h>
 #include "SfM.h"
 
+
 void disp(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glBegin(GL_POLYGON);

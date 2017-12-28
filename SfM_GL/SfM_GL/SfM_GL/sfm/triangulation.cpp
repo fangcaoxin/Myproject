@@ -40,8 +40,8 @@
 
 // OpenCV
 #include <opencv2/core/eigen.hpp>
-#include <opencv2/sfm/triangulation.hpp>
-#include <opencv2/sfm/projection.hpp>
+#include "triangulation.hpp"
+#include "projection.hpp"
 
 // libmv headers
 #include "libmv/multiview/twoviewtriangulation.h"
