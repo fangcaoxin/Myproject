@@ -65,3 +65,5 @@ int sfm_triangulatePoints(sfm_program *const sfm);
 Mat sfm_drawDepths(sfm_program *const sfm, int method);
 
 Mat sfm_draw_gms_matches(sfm_program *const sfm, Scalar color, int type);
+
+double sfm_reproj4Bundler(Point2f point, double depth, Matx33d K, Matx34d external_martix);

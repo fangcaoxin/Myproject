@@ -23,8 +23,8 @@ int main(int argc, char ** argv) {
 	sfm_program p_sfm;
 	int method = 1;
 	Scalar color(0, 0, 255);
-	string img_file1 = "eval-data//Wooden//frame10.png";
-	string img_file2 = "eval-data//wooden//frame11.png";
+	string img_file1 = "eval-data//urban//frame10.png";
+	string img_file2 = "eval-data//urban//frame11.png";
 	//string img_file1 = "eval-data//fuku//img_0.jpg";
 	//string img_file2 = "eval-data//fuku//img_5.jpg";
 	Mat img_1 = imread(img_file1);

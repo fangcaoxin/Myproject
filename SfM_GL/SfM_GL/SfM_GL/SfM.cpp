@@ -205,7 +205,7 @@ int sfm_get_external_matrix(sfm_program *const sfm) {
 	}
 	Matx33d K(3, 3, CV_64F);
 	K= sfm->internal_matrix;
-	cout << "internal" << K << endl;
+	std::cout << "internal" << K << endl;
 #define OPENCV
 #ifdef OPENCV
 	double f = K(0,0);
@@ -213,12 +213,13 @@ int sfm_get_external_matrix(sfm_program *const sfm) {
 	Mat E = findEssentialMat(keypts1, keypts2,f, pp, RANSAC, 0.999, 1.0, status);
 #else
 	Mat F = findFundamentalMat(keypts1, keypts2, FM_RANSAC, 3.0, 0.99, status);
-	cout << "fundamental " <<F << endl;
-	Mat_<double> E = K.t()*F* K;
+	std::cout << "fundamental " <<F << endl;
+	Mat KM(K);
+	Mat_<double> E = KM.t()*F* KM;
 #endif //OPENCV
-	cout << "Essential " << E << endl;
+	std::cout << "Essential " << E << endl;
 	if (fabsf(determinant(E)) > 1e-05) {
-		cout << "det(E) != 0 : " << determinant(E) << "\n";
+		std::cout << "det(E) != 0 : " << determinant(E) << "\n";
 		return false;
 	}
 	for (int i = 0; i < status.size(); i++) {
@@ -239,7 +240,7 @@ int sfm_get_external_matrix(sfm_program *const sfm) {
 	sfm->external_martix = Matx34d(R(0, 0), R(0, 1), R(0, 2), t(0),
 		R(1, 0), R(1, 1), R(1, 2), t(1),
 		R(2, 0), R(2, 1), R(2, 2), t(2));
-	cout << "external " << Mat(sfm->external_martix) << endl;
+	std::cout << "external " << Mat(sfm->external_martix) << endl;
 	return OK;
 }
 
@@ -289,7 +290,7 @@ int sfm_triangulatePoints(sfm_program *const sfm) {
 		P1(2, 0), P1(2, 1), P1(2, 2), P1(2, 3),
 		0, 0, 0, 1);
 	Matx44d P1inv(P1_.inv());
-	cout << "Triangluating Now...";
+	std::cout << "Triangluating Now...";
 	vector<double> reproj_error;
 	int pts_size = sfm->keypts1_good.size();
 	Mat_<double> KP1 = Mat(sfm->internal_matrix)*Mat(P1);
@@ -328,7 +329,8 @@ int sfm_triangulatePoints(sfm_program *const sfm) {
 	return OK;
 }
 
-Mat sfm_drawDepths(sfm_program *const sfm, int method) {
+Mat sfm_drawDepths(sfm_program *const sfm, int method) 
+{
 	double minVal, maxVal;
 	vector<double> depths = sfm->depths;
 	minMaxLoc(depths, &minVal, &maxVal);
@@ -374,7 +376,8 @@ Mat sfm_drawDepths(sfm_program *const sfm, int method) {
 	
 }
 
-Mat sfm_draw_gms_matches(sfm_program *const sfm, Scalar color, int type) {
+Mat sfm_draw_gms_matches(sfm_program *const sfm, Scalar color, int type)
+{
 	Mat src1 = sfm->input_images[0];
 	Mat src2 = sfm->input_images[1];
 	vector<DMatch> inlier = sfm->matches;
@@ -414,4 +417,18 @@ Mat sfm_draw_gms_matches(sfm_program *const sfm, Scalar color, int type) {
 	}
 
 	return output;
+}
+
+double sfm_reproj4Bundler(Point3d point_3d, Matx33d K, Matx34d external_martix)
+{
+	double cx = K(0, 2);
+	double cy = K(1, 2);
+	double f = K(0, 0);
+	Matx31d X(point_3d);
+	Matx33d R(external_martix(0, 0), external_martix(0, 1), external_martix(0, 2),
+		external_martix(1, 0), external_martix(1, 1), external_martix(1, 2),
+		external_martix(2, 0), external_martix(2, 1), external_martix(2, 2));
+	Matx31d t(external_martix(0, 3), external_martix(1, 3), external_martix(2, 3));
+	Matx31d x;
+	x = K*(R*X + t);
 }
