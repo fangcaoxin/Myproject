@@ -14,6 +14,18 @@ enum {
 	OPTICAL_FLOW = 1,
 	GMS = 2,
 };
+#define DSP_MIN 1e-7
+#define DSP_MAX 0.3
+#define DSP_LVL 100
+
+static int set_dsp_table(double *dsp_table) {
+	dsp_table[0] = DSP_MIN;
+	for (int i = 1; i < DSP_LVL; i++) {
+		dsp_table[i] = dsp_table[i - 1] + (DSP_MAX - DSP_MIN) / DSP_LVL;
+	}
+	return OK;
+}
+
 
 struct super_pixel_vertex {
 	Point2f point_accum;
