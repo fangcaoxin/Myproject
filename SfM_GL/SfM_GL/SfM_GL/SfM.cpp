@@ -32,6 +32,13 @@ struct super_pixel_vertex {
 	int num;
 };
 
+bool MotionFromEssentialAndCorrespondence(const Matx33d &E,
+	const Matx33d &K1,
+	const Point2f x1,
+	const Point2f x2,
+	Matx33d *R,
+	Matx31d *t);
+
 int sfm_add_image(sfm_program * const sfm, Mat& p_input_image) {
 	sfm->input_images.push_back(p_input_image);
 	return OK;
@@ -223,6 +230,7 @@ int sfm_get_external_matrix(sfm_program *const sfm) {
 	double f = K(0,0);
 	Point2d pp(K(0,2), K(1,2));
 	Mat E = findEssentialMat(keypts1, keypts2,f, pp, RANSAC, 0.999, 1.0, status);
+	sfm->status = status;
 #else
 	Mat F = findFundamentalMat(keypts1, keypts2, FM_RANSAC, 3.0, 0.99, status);
 	std::cout << "fundamental " <<F << endl;
@@ -234,24 +242,31 @@ int sfm_get_external_matrix(sfm_program *const sfm) {
 		std::cout << "det(E) != 0 : " << determinant(E) << "\n";
 		return false;
 	}
+	sfm->keypts1_good.clear();
+	sfm->keypts2_good.clear();
 	for (int i = 0; i < status.size(); i++) {
 		if (status[i]) {
 			sfm->keypts1_good.push_back(sfm->keypts1[i]);
 			sfm->keypts2_good.push_back(sfm->keypts2[i]);
 		}
 	}
+	Point2f x1(sfm->keypts1[0].pt);
+	Point2f x2(sfm->keypts2[0].pt);
+	Matx33d R;
+	Matx31d t;
+	Matx34d P;
+	if (MotionFromEssentialAndCorrespondence(E, K, x1, x2, &R, &t)) {
 
-	Mat_<double> R(3, 3);
-	Mat_<double> t(1, 3);
-	SVD svd(E);
-	Matx33d W(0, -1, 0,
-		       1, 0, 0,
-		       0, 0, 1);
-	R = svd.u*Mat(W)*svd.vt;
-	t = svd.u.col(2)*1;
-	sfm->external_martix = Matx34d(R(0, 0), R(0, 1), R(0, 2), t(0),
-		R(1, 0), R(1, 1), R(1, 2), t(1),
-		R(2, 0), R(2, 1), R(2, 2), t(2));
+		P= Matx34d(R(0, 0), R(0, 1), R(0, 2), t(0, 0),
+			R(1, 0), R(1, 1), R(1, 2), t(1, 0),
+			R(2, 0), R(2, 1), R(2, 2), t(2, 0));
+		sfm->external_martix = P;
+		cout << "R " << R << "t " << t << endl;
+	}
+	else {
+		cout << "Failed to compute R and t from E and K" << endl;
+	}
+	
 	std::cout << "external " << Mat(sfm->external_martix) << endl;
 	return OK;
 }
@@ -259,12 +274,12 @@ int sfm_get_external_matrix(sfm_program *const sfm) {
 
 
 
-int sfm_triangulatePoints(sfm_program *const sfm) {
+double sfm_triangulatePoints(sfm_program *const sfm) {
 
 	sfm->pointcloud.clear();
 	sfm->correspImgPt.clear();
 	sfm->depths.clear();
-#define OPENCV_TRIANGULATION
+//#define OPENCV_TRIANGULATION
 #ifdef OPENCV_TRIANGULATION
 	Matx34d P = Matx34d(1, 0, 0, 0,
 		0, 1, 0, 0,
@@ -273,8 +288,8 @@ int sfm_triangulatePoints(sfm_program *const sfm) {
 	vector<Point2f> pts;
 	vector<Point2f> pts1;
 	
-	KeyPoint::convert(sfm->keypts1_good, pts);
-	KeyPoint::convert(sfm->keypts2_good, pts1);
+	KeyPoint::convert(sfm->keypts1, pts);
+	KeyPoint::convert(sfm->keypts2, pts1);
 	Mat pts_rec_homo_1,pts_rec_homo_2;
 	Mat pts_rec_1, pts_rec_2,pts_rec_reshape_1;
 	triangulatePoints(P, P1, pts, pts1, pts_rec_homo_1);
@@ -293,6 +308,7 @@ int sfm_triangulatePoints(sfm_program *const sfm) {
 	sfm->depths = pts_rec_reshape_1.row(2);
 	
 #else
+
 	Matx34d P = Matx34d(1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0);
@@ -304,16 +320,16 @@ int sfm_triangulatePoints(sfm_program *const sfm) {
 	Matx44d P1inv(P1_.inv());
 	std::cout << "Triangluating Now...";
 	vector<double> reproj_error;
-	int pts_size = sfm->keypts1_good.size();
+	int pts_size = sfm->keypts1.size();
 	Mat_<double> KP1 = Mat(sfm->internal_matrix)*Mat(P1);
 #pragma omp parallel for num_threads(1)
 	for (int i = 0; i < pts_size; i++) {
-		Point2f kp = sfm->keypts1_good[i].pt;
+		Point2f kp = sfm->keypts1[i].pt;
 		Point3d u(kp.x, kp.y, 1.0);
 		Mat_<double> um = Mat(sfm->internal_matrix).inv()*Mat_<double>(u);
 		u.x = um(0); u.y = um(1); u.z = um(2);
 
-		Point2f kp1 = sfm->keypts2_good[i].pt;
+		Point2f kp1 = sfm->keypts2[i].pt;
 		Point3d u1(kp1.x, kp1.y, 1.0);
 		Mat_<double> um1 = Mat(sfm->internal_matrix).inv()*Mat_<double>(u1);
 		u1.x = um1(0); u1.y = um1(1); u1.z = um1(2);
@@ -331,14 +347,111 @@ int sfm_triangulatePoints(sfm_program *const sfm) {
 			cp.reprojection_error = reprj_err;
 
 			sfm->pointcloud.push_back(cp);
-			sfm->correspImgPt.push_back(sfm->keypts1_good[i]);
+			sfm->correspImgPt.push_back(sfm->keypts1[i]);
 			sfm->depths.push_back(X(2));
 		
 		}
 	}
 	Scalar mse = mean(reproj_error);
 #endif //OPENCV
-	return OK;
+	return mse(0);
+}
+
+static void MotionFromEssential(const Matx33d E, vector<Matx33d> &Rs, vector<Matx31d>& ts) {
+	SVD svd(E);
+	if (determinant(svd.u) < 0) {
+		svd.u.col(2) *= -1;
+	}
+
+	if (determinant(svd.vt) < 0) {
+		svd.vt.row(2) *= -1;
+	}
+
+	Matx33d W(0, -1, 0,
+		1, 0, 0,
+		0, 0, 1);
+	Mat_<double> R1(3, 3);
+	Mat_<double> R2(3, 3);
+	Mat_<double> t1(3, 1);
+	Mat_<double> t2(3, 1);
+	R1 = svd.u*Mat(W)*svd.vt;
+	R2 = svd.u*Mat(W).t()*svd.vt;
+	t1 = svd.u.col(2);
+	t2 = -svd.u.col(2);
+	Rs.push_back(Matx33d(R1));
+	Rs.push_back(Matx33d(R1));
+	Rs.push_back(Matx33d(R2));
+	Rs.push_back(Matx33d(R2));
+
+	ts.push_back(Matx31d(t1));
+	ts.push_back(Matx31d(t2));
+	ts.push_back(Matx31d(t1));
+	ts.push_back(Matx31d(t2));
+
+}
+static Matx34d P_from_KRt(Matx33d K, Matx33d R, Matx31d t) {
+	Matx34d P(R(0, 0), R(0, 1), R(0, 2), t(0, 0),
+		R(1, 0), R(1, 1), R(1, 2), t(1, 0),
+		R(2, 0), R(2, 1), R(2, 2), t(2, 0));
+	return P;
+}
+
+static int MotionFromEssentialChooseSolution(const vector<Matx33d> &Rs,
+	const vector<Matx31d> &ts,
+	const Matx33d K,
+	const Point2f x1,
+	const Point2f x2
+) 
+{
+	Matx33d R1(1, 0, 0,
+		0, 1, 0,
+		0, 0, 1);
+	Matx31d t1(0, 0,0);
+	Matx34d P1(1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0);
+	Matx34d P2;
+	Point3d u(x1.x, x1.y, 1.0);
+	Mat_<double> um = Mat(K).inv()*Mat_<double>(u);
+	u.x = um(0); u.y = um(1); u.z = um(2);
+
+	Point3d u1(x2.x, x2.y, 1.0);
+	Mat_<double> um1 = Mat(K).inv()*Mat_<double>(u1);
+	u1.x = um1(0); u1.y = um1(1); u1.z = um1(2);
+	for (int i = 0; i < 4; i++) {
+		P2 = P_from_KRt(K, Rs[i], ts[i]);
+		Mat_ <double> X = IterativeLinearLSTriangulation(u, P1, u1, P2);
+		Point3d Xe(X(0), X(1), X(2));
+		Mat_<double> d_r = Mat(R1)*Mat_<double>(Xe);
+		Mat_<double> d1_r = Mat(Rs[i])*Mat_<double>(Xe);
+		double d1 = d_r(2) + t1(2, 0);
+		double d2 = d1_r(2) + ts[i](2, 0);
+		if (d1 > 0 && d2 > 0) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+bool MotionFromEssentialAndCorrespondence(const Matx33d &E,
+	const Matx33d &K1,
+	const Point2f x1,
+	const Point2f x2,
+	Matx33d *R,
+	Matx31d *t) 
+{
+	std::vector<Matx33d> Rs;
+	std::vector<Matx31d> ts;
+	MotionFromEssential(E, Rs, ts);
+	int solution = MotionFromEssentialChooseSolution(Rs, ts, K1, x1, x2);
+	if (solution >= 0) {
+		*R = Rs[solution];
+		*t = ts[solution];
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 Mat sfm_drawDepths(sfm_program *const sfm, int method) 
@@ -361,9 +474,16 @@ Mat sfm_drawDepths(sfm_program *const sfm, int method)
 		for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
 				int index = sfm->super_pixel_label.at<int>(i, j);
-				double _d = MAX(MIN((depths[index] - minVal) / (maxVal - minVal), 1.0), 0.0);
-				unsigned char color = (255 * (1.0 - _d));
-				tmp.at<uchar>(i, j) = color;
+				//if (!sfm->status[index]) {
+				//	continue;
+				//}
+				//else
+				{
+					double _d = MAX(MIN((depths[index] - minVal) / (maxVal - minVal), 1.0), 0.0);
+					unsigned char color = (255 * (1.0 - _d));
+					tmp.at<uchar>(i, j) = color;
+				}
+				
 			}
 		}
 		return tmp;
@@ -443,4 +563,12 @@ double sfm_reproj4Bundler(Point3d point_3d, Matx33d K, Matx34d external_martix)
 	Matx31d t(external_martix(0, 3), external_martix(1, 3), external_martix(2, 3));
 	Matx31d x;
 	x = K*(R*X + t);
+}
+
+int sfm_set_base_image(sfm_program *const sfm) {
+	
+	CV_Assert(sfm->input_images.size() > 0, "NO input images");
+	
+	sfm->input_images[0].copyTo(sfm->base_image);
+	return OK;
 }

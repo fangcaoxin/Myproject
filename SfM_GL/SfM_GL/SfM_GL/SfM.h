@@ -26,6 +26,8 @@ struct sfm_program {
 	Mat contour_mask;
 	Mat super_pixel_image;
 	Mat discoeff;
+	Mat base_image;
+	Mat key_image;
 	int num_superpixel;
 	vector<KeyPoint> keypts1;
 	vector<KeyPoint> keypts2;
@@ -38,6 +40,7 @@ struct sfm_program {
 	vector<Point3d> Pt1;
 	vector<Point3d> Pt2;
 	vector<CloudPoint> pointcloud;
+	vector<uchar> status;
 };
 
 int sfm_add_image(sfm_program * const sfm, Mat &p_input_image);
@@ -60,10 +63,12 @@ int sfm_set_internal_matrix(sfm_program *const sfm, double f, double cx, double 
 
 int sfm_get_external_matrix(sfm_program *const sfm);
 
-int sfm_triangulatePoints(sfm_program *const sfm);
+double sfm_triangulatePoints(sfm_program *const sfm);
 
 Mat sfm_drawDepths(sfm_program *const sfm, int method);
 
 Mat sfm_draw_gms_matches(sfm_program *const sfm, Scalar color, int type);
 
 double sfm_reproj4Bundler(Point2f point, double depth, Matx33d K, Matx34d external_martix);
+
+int sfm_set_base_image(sfm_program *const sfm);

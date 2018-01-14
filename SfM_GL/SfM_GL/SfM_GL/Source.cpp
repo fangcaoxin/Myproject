@@ -3,6 +3,7 @@
 #include <GL/glut.h>
 #include "SfM.h"
 
+#define SET_NUM 10
 
 void disp(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -23,21 +24,20 @@ int main(int argc, char ** argv) {
 	sfm_program p_sfm;
 	int method = 1;
 	Scalar color(0, 0, 255);
-	string img_file1 = "eval-data//urban//frame10.png";
-	string img_file2 = "eval-data//urban//frame11.png";
-	//string img_file1 = "eval-data//fuku//img_0.jpg";
-	//string img_file2 = "eval-data//fuku//img_5.jpg";
-	Mat img_1 = imread(img_file1);
-	Mat img_2 = imread(img_file2);
-
-	sfm_add_image(&p_sfm, img_1);
-	sfm_add_image(&p_sfm, img_2);
+	//string img_file1 = "eval-data//urban//frame10.png";
+	//string img_file2 = "eval-data//urban//frame11.png";
+	for (int k = 0; k < SET_NUM; k++) {
+		string image_name = to_string(k) + ".jpg";
+		Mat img = imread(image_name);
+		sfm_add_image(&p_sfm, img);
+	}
+	sfm_set_base_image(&p_sfm);
 	sfm_super_pixel(&p_sfm);
 	//sfm_superpixel_image(&p_sfm, color);
 	sfm_get_keyPoints(&p_sfm, method);
-	sfm_set_internal_matrix(&p_sfm, 1057.14, 584/2,388/2);
+	sfm_set_internal_matrix(&p_sfm, 1057.14, p_sfm.base_image.cols/2,p_sfm.base_image.rows/2);
 	sfm_get_external_matrix(&p_sfm);
-	sfm_triangulatePoints(&p_sfm);
+	double pro_error = sfm_triangulatePoints(&p_sfm);
 	Mat depth_map = sfm_drawDepths(&p_sfm,method);
 	//Mat gms_match = sfm_draw_gms_matches(&p_sfm, color, 1);
 	//sfm_drawOptflowKps(&p_sfm);
