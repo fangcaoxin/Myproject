@@ -15,7 +15,7 @@ enum {
 	GMS = 2,
 };
 #define DSP_MIN 1e-7
-#define DSP_MAX 0.3
+#define DSP_MAX 5
 #define DSP_LVL 100
 
 static int set_dsp_table(double *dsp_table) {
@@ -119,15 +119,15 @@ static int get_superpixel_vertex(sfm_program * const sfm, vector<Point2f>& pt1s)
 	}
 
 }
-int sfm_get_keyPoints(sfm_program *const sfm, int method) {
+int sfm_get_keyPoints(sfm_program *const sfm, int frame_num, int method) {
 	switch (method)
 	{
 	case OPTICAL_FLOW:
 	{
 		Mat pregray, gray;
 		Mat img_1, img_2;
-		img_1 = sfm->input_images[0];
-		img_2 = sfm->input_images[1];
+		img_1 = sfm->base_image;
+		img_2 = sfm->input_images[frame_num];
 		if (!img_1.empty() && !img_2.empty()) {
 			cvtColor(img_1, pregray, CV_BGR2GRAY);
 			cvtColor(img_2, gray, CV_BGR2GRAY);
@@ -163,8 +163,8 @@ int sfm_get_keyPoints(sfm_program *const sfm, int method) {
 		Mat d1, d2;
 		vector<KeyPoint> kp1, kp2;
 		vector<DMatch> matches_all, matches_gms;
-		Mat img1 = sfm->input_images[0];
-		Mat img2 = sfm->input_images[1];
+		Mat img1 = sfm->base_image;
+		Mat img2 = sfm->input_images[frame_num];
 		Ptr<ORB> orb = ORB::create(10000);
 		orb->setFastThreshold(0);
 		orb->detectAndCompute(img1, Mat(), kp1, d1);
@@ -213,6 +213,15 @@ int sfm_set_internal_matrix(sfm_program *const sfm, double f, double cx, double 
 	return OK;
 }
 
+int sfm_set_base_external_matrix(sfm_program *const sfm)
+{
+	Matx34d P = Matx34d(1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0);
+	sfm->external_martix.push_back(P);
+	return OK;
+}
+/*determined by the keypoints of the frame num */
 int sfm_get_external_matrix(sfm_program *const sfm) {
 	vector<Point2f> keypts1, keypts2;
 	vector<uchar> status;
@@ -260,7 +269,7 @@ int sfm_get_external_matrix(sfm_program *const sfm) {
 		P= Matx34d(R(0, 0), R(0, 1), R(0, 2), t(0, 0),
 			R(1, 0), R(1, 1), R(1, 2), t(1, 0),
 			R(2, 0), R(2, 1), R(2, 2), t(2, 0));
-		sfm->external_martix = P;
+		sfm->external_martix.push_back(P);
 		cout << "R " << R << "t " << t << endl;
 	}
 	else {
@@ -274,7 +283,7 @@ int sfm_get_external_matrix(sfm_program *const sfm) {
 
 
 
-double sfm_triangulatePoints(sfm_program *const sfm) {
+double sfm_triangulatePoints(sfm_program *const sfm , int frame_num) {
 
 	sfm->pointcloud.clear();
 	sfm->correspImgPt.clear();
@@ -309,10 +318,8 @@ double sfm_triangulatePoints(sfm_program *const sfm) {
 	
 #else
 
-	Matx34d P = Matx34d(1, 0, 0, 0,
-		0, 1, 0, 0,
-		0, 0, 1, 0);
-	Matx34d P1 = sfm->external_martix;
+	Matx34d P = sfm->external_martix[0];
+	Matx34d P1 = sfm->external_martix[frame_num];
 	Matx44d P1_(P1(0, 0), P1(0, 1), P1(0, 2), P1(0, 3),
 		P1(1, 0), P1(1, 1), P1(1, 2), P1(1, 3),
 		P1(2, 0), P1(2, 1), P1(2, 2), P1(2, 3),
@@ -550,19 +557,30 @@ Mat sfm_draw_gms_matches(sfm_program *const sfm, Scalar color, int type)
 
 	return output;
 }
-
-double sfm_reproj4Bundler(Point3d point_3d, Matx33d K, Matx34d external_martix)
+/* ith camera pixel -> 3D points at different depth */
+static Point3d sfm_reproj4Bundler(Point2f point_2d, Matx33d K, Matx34d external_martix, double d)
 {
 	double cx = K(0, 2);
 	double cy = K(1, 2);
 	double f = K(0, 0);
-	Matx31d X(point_3d);
+	Point3d u((point_2d.x - cx)/f*d, (point_2d.y -cy)/f*d, d);
+    	
+	Mat_<double> um = Mat(K).inv()*Mat_<double>(u);
 	Matx33d R(external_martix(0, 0), external_martix(0, 1), external_martix(0, 2),
 		external_martix(1, 0), external_martix(1, 1), external_martix(1, 2),
 		external_martix(2, 0), external_martix(2, 1), external_martix(2, 2));
-	Matx31d t(external_martix(0, 3), external_martix(1, 3), external_martix(2, 3));
-	Matx31d x;
-	x = K*(R*X + t);
+	Mat_<double> t(external_martix(0, 3), external_martix(1, 3), external_martix(2, 3));
+	Mat_<double> um = Mat(R)*(um - t);
+	return Point3d(um(0), um(1), um(2));
+}
+
+static Point2f sfm_proj4Bundler(Point3d X, Matx33d K, Matx34d external_martix) {
+	Matx33d R(external_martix(0, 0), external_martix(0, 1), external_martix(0, 2),
+		external_martix(1, 0), external_martix(1, 1), external_martix(1, 2),
+		external_martix(2, 0), external_martix(2, 1), external_martix(2, 2));
+	Mat_<double> t(external_martix(0, 3), external_martix(1, 3), external_martix(2, 3));
+	Mat_<double> u = Mat(K)*Mat(R)*Mat_<double>(X) + Mat(K)*t;
+	return Point2f(u(0)/u(2), u(1)/u(2));
 }
 
 int sfm_set_base_image(sfm_program *const sfm) {
@@ -571,4 +589,17 @@ int sfm_set_base_image(sfm_program *const sfm) {
 	
 	sfm->input_images[0].copyTo(sfm->base_image);
 	return OK;
+}
+
+double sfm_photoconsistency_error(sfm_program *const sfm, int frame_num) 
+{
+	Mat img_1 = sfm->base_image;
+	Mat img_2 = sfm->input_images[frame_num];
+	int width = img_1.cols;
+	int height = img_1.rows;
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+
+		}
+	}
 }

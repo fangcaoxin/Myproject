@@ -7,6 +7,8 @@
 #include <opencv2/video/tracking.hpp>
 #include "sfm_triangulation.h"
 
+//#pragma comment(lib,"ceres.lib")
+
 using namespace cv;
 using namespace std;
 
@@ -36,7 +38,7 @@ struct sfm_program {
 	vector<KeyPoint> correspImgPt;
 	vector<DMatch> matches;
 	vector<double> depths;
-	Matx34d external_martix;
+	vector<Matx34d> external_martix;
 	vector<Point3d> Pt1;
 	vector<Point3d> Pt2;
 	vector<CloudPoint> pointcloud;
@@ -69,6 +71,8 @@ Mat sfm_drawDepths(sfm_program *const sfm, int method);
 
 Mat sfm_draw_gms_matches(sfm_program *const sfm, Scalar color, int type);
 
-double sfm_reproj4Bundler(Point2f point, double depth, Matx33d K, Matx34d external_martix);
+Point3d sfm_reproj4Bundler(Point2f point_2d, Matx33d K, Matx34d external_martix, double d);
+
+Point2f sfm_proj4Bundler(Point3d X, Matx33d K, Matx34d external_matrix);
 
 int sfm_set_base_image(sfm_program *const sfm);

@@ -40,14 +40,14 @@
 
 // OpenCV
 #include <opencv2/core/eigen.hpp>
-#include "projection.hpp"
-#include "triangulation.hpp"
-#include "fundamental.hpp"
-#include "numeric.hpp"
-#include "conditioning.hpp"
+#include "../sfm/projection.hpp"
+#include "../sfm/triangulation.hpp"
+#include "../sfm/fundamental.hpp"
+#include "../sfm/numeric.hpp"
+#include "../sfm/conditioning.hpp"
 
 // libmv headers
-#include "libmv/multiview/fundamental.h"
+#include "../sfm/libmv_light/libmv/multiview/fundamental.h"
 
 #include <iostream>
 using namespace std;

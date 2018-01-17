@@ -3,7 +3,7 @@
 #include <GL/glut.h>
 #include "SfM.h"
 
-#define SET_NUM 10
+#define SET_NUM 2
 
 void disp(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -26,8 +26,10 @@ int main(int argc, char ** argv) {
 	Scalar color(0, 0, 255);
 	//string img_file1 = "eval-data//urban//frame10.png";
 	//string img_file2 = "eval-data//urban//frame11.png";
-	for (int k = 0; k < SET_NUM; k++) {
-		string image_name = to_string(k) + ".jpg";
+	string folder = "eval-data//urban//frame";
+	int beg_num = 10;
+	for (int k = beg_num; k < SET_NUM + beg_num; k++) {
+		string image_name = folder + to_string(k) + ".png";
 		Mat img = imread(image_name);
 		sfm_add_image(&p_sfm, img);
 	}
