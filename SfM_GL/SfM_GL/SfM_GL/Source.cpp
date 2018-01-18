@@ -33,14 +33,18 @@ int main(int argc, char ** argv) {
 		Mat img = imread(image_name);
 		sfm_add_image(&p_sfm, img);
 	}
-	sfm_set_base_image(&p_sfm);
-	sfm_super_pixel(&p_sfm);
+	sfm_set_base_src_image(&p_sfm, 1);
+	if (METHOD == OPTICAL_FLOW) {
+		sfm_super_pixel(&p_sfm);
+	}
 	//sfm_superpixel_image(&p_sfm, color);
-	sfm_get_keyPoints(&p_sfm, method);
+	sfm_get_keyPoints(&p_sfm, 1);
 	sfm_set_internal_matrix(&p_sfm, 1057.14, p_sfm.base_image.cols/2,p_sfm.base_image.rows/2);
+	sfm_set_base_external_matrix(&p_sfm);
 	sfm_get_external_matrix(&p_sfm);
-	double pro_error = sfm_triangulatePoints(&p_sfm);
-	Mat depth_map = sfm_drawDepths(&p_sfm,method);
+	//double pro_error = sfm_triangulatePoints(&p_sfm,1);
+	sfm_photoconsistency_optimazation(&p_sfm, 1);
+	Mat depth_map = sfm_drawDepths(&p_sfm);
 	//Mat gms_match = sfm_draw_gms_matches(&p_sfm, color, 1);
 	//sfm_drawOptflowKps(&p_sfm);
 	//sfm_drawOptFlowMap(&p_sfm,color);

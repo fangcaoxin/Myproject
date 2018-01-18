@@ -1,7 +1,9 @@
 #include "SfM.h"
 #include "Header.h"
 #include "gms_matcher.h"
+#include "GCMex/GCoptimization.h"
 #include <iostream>
+#include <math.h>
 #define OK 0;
 
 enum {
@@ -10,13 +12,9 @@ enum {
 	MSLIC = 102,
 };
 
-enum {
-	OPTICAL_FLOW = 1,
-	GMS = 2,
-};
-#define DSP_MIN 1e-7
-#define DSP_MAX 5
-#define DSP_LVL 100
+
+
+
 
 static int set_dsp_table(double *dsp_table) {
 	dsp_table[0] = DSP_MIN;
@@ -119,8 +117,8 @@ static int get_superpixel_vertex(sfm_program * const sfm, vector<Point2f>& pt1s)
 	}
 
 }
-int sfm_get_keyPoints(sfm_program *const sfm, int frame_num, int method) {
-	switch (method)
+int sfm_get_keyPoints(sfm_program *const sfm, int frame_num) {
+	switch (METHOD)
 	{
 	case OPTICAL_FLOW:
 	{
@@ -461,7 +459,7 @@ bool MotionFromEssentialAndCorrespondence(const Matx33d &E,
 	}
 }
 
-Mat sfm_drawDepths(sfm_program *const sfm, int method) 
+Mat sfm_drawDepths(sfm_program *const sfm) 
 {
 	double minVal, maxVal;
 	vector<double> depths = sfm->depths;
@@ -473,7 +471,7 @@ Mat sfm_drawDepths(sfm_program *const sfm, int method)
 		Scalar color(255 * (1.0 - (_d)), 255, 255);
 
 	}
-	switch (method)
+	switch (METHOD)
 	{
 	case OPTICAL_FLOW: {
 		Mat tmp(height, width, CV_8UC1, Scalar(0, 0, 0));
@@ -565,12 +563,12 @@ static Point3d sfm_reproj4Bundler(Point2f point_2d, Matx33d K, Matx34d external_
 	double f = K(0, 0);
 	Point3d u((point_2d.x - cx)/f*d, (point_2d.y -cy)/f*d, d);
     	
-	Mat_<double> um = Mat(K).inv()*Mat_<double>(u);
+	//Mat_<double> um = Mat(K).inv()*Mat_<double>(u);
 	Matx33d R(external_martix(0, 0), external_martix(0, 1), external_martix(0, 2),
 		external_martix(1, 0), external_martix(1, 1), external_martix(1, 2),
 		external_martix(2, 0), external_martix(2, 1), external_martix(2, 2));
 	Mat_<double> t(external_martix(0, 3), external_martix(1, 3), external_martix(2, 3));
-	Mat_<double> um = Mat(R)*(um - t);
+	Mat_<double> um = Mat(R)*(Mat_<double>(u) - t);
 	return Point3d(um(0), um(1), um(2));
 }
 
@@ -579,27 +577,99 @@ static Point2f sfm_proj4Bundler(Point3d X, Matx33d K, Matx34d external_martix) {
 		external_martix(1, 0), external_martix(1, 1), external_martix(1, 2),
 		external_martix(2, 0), external_martix(2, 1), external_martix(2, 2));
 	Mat_<double> t(external_martix(0, 3), external_martix(1, 3), external_martix(2, 3));
-	Mat_<double> u = Mat(K)*Mat(R)*Mat_<double>(X) + Mat(K)*t;
+	//Mat_<double> u = Mat(K)*Mat(R)*Mat_<double>(X) + Mat(K)*t;
+	Mat_<double> u = Mat(K)*(Mat(R)*Mat_<double>(X)+t);
 	return Point2f(u(0)/u(2), u(1)/u(2));
 }
 
-int sfm_set_base_image(sfm_program *const sfm) {
+int sfm_set_base_src_image(sfm_program *const sfm, int frame_num) {
 	
-	CV_Assert(sfm->input_images.size() > 0, "NO input images");
+	CV_Assert(sfm->input_images[0].cols > 0, "NO input images");
 	
 	sfm->input_images[0].copyTo(sfm->base_image);
+	sfm->input_images[frame_num].copyTo(sfm->src_image);
 	return OK;
 }
 
-double sfm_photoconsistency_error(sfm_program *const sfm, int frame_num) 
+int sfm_photoconsistency_optimazation(sfm_program *const sfm, int frame_num)
 {
-	Mat img_1 = sfm->base_image;
-	Mat img_2 = sfm->input_images[frame_num];
-	int width = img_1.cols;
-	int height = img_1.rows;
-	for (int i = 0; i < height; i++) {
-		for (int j = 0; j < width; j++) {
+	Mat img_1,img_2;
+	cvtColor(sfm->base_image,img_1,CV_BGR2GRAY);
+	cvtColor(sfm->src_image, img_2, CV_BGR2GRAY);
+	
+	double depth_table[DSP_LVL];
+	set_dsp_table(depth_table);
+	if (METHOD == OPTICAL_FLOW) {
+		vector<Point2f> base_points;
+		vector<Point2f> src_points;
+		KeyPoint::convert(sfm->keypts1, base_points);
+		KeyPoint::convert(sfm->keypts2, src_points);
+		Matx33d K = sfm->internal_matrix;
+		Matx34d External_base = sfm->external_martix[0];
+		Matx34d External_src = sfm->external_martix[frame_num];
+		CV_Assert(base_points.size() == src_points.size(), "Not equal keypoints in base image and src image");
+		double p_error = 0.;
+		vector<double> p_err_at_detph(DSP_LVL);
+		//int *result = new int[base_points.size()];
+		try {
+			GCoptimizationGeneralGraph *gc = new GCoptimizationGeneralGraph((int)(base_points.size()),DSP_LVL);
+			for (int i = 0; i < base_points.size(); i++) {
+				for (int j = 0; j < DSP_LVL; j++) {
+					Point3d X;
+					Point2f x_proj;
+					X = sfm_reproj4Bundler(base_points[i], K, External_base, depth_table[j]);
+					x_proj = sfm_proj4Bundler(X, K, External_src);
+					Point x_proj_round(x_proj.x, x_proj.y);
+					x_proj_round.x = x_proj_round.x < 0 ? 0 : x_proj_round.x;
+					x_proj_round.y = x_proj_round.y < 0 ? 0 : x_proj_round.y;
+					x_proj_round.x = x_proj_round.x > img_1.cols - 1 ? img_1.cols - 1 : x_proj_round.x;
+					x_proj_round.x = x_proj_round.y > img_1.rows - 1 ? img_1.rows - 1 : x_proj_round.y;
+					//cout << Point(base_points[i]) << " " << x_proj_round << endl;
+					float p_err = abs(img_1.at<uchar>(Point(base_points[i])) - img_2.at<uchar>(x_proj_round));
+					
+					cout << "p_err" << p_err << endl;
+					gc->setDataCost(i, j, p_err);
+				}
+			}
+			for (int l1 = 0; l1 < DSP_LVL; l1++) {
+				for (int l2 = 0; l2 < DSP_LVL; l2++) {
+					int cost = (l1 - l2)*(l1 - l2) <= 4 ? (l1 - l2)*(l1 - l2) : 4;
+					gc->setSmoothCost(l1, l2, cost);
+				}
+			}
 
+			for (int k = 0; k < base_points.size(); k++) {
+				for (int t = 0; t < base_points.size(); t++) {
+					if (k == t) continue;
+					if (norm(base_points[k] - base_points[t]) < 25) {
+						gc->setNeighbors(k, t, k*t);
+					}
+				}
+			}
+
+			cout << "Before optimization energy is " << gc->compute_energy() << endl;
+			gc->expansion(5);
+			cout << " After optimization energy is " << gc->compute_energy() << endl;
+			sfm->depths.clear();
+			for (int k = 0; k < base_points.size(); k++) {
+				int result = gc->whatLabel(k);
+				sfm->depths.push_back(depth_table[result]);
+			}
+			delete gc;
+		}
+		catch (GCException e) {
+			e.Report();
+		}
+		
+	}
+	else if (METHOD == GMS) {
+		int width = img_1.cols;
+		int height = img_1.rows;
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+
+			}
 		}
 	}
+	return OK;
 }
