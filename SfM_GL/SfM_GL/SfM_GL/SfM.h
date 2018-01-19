@@ -18,8 +18,8 @@ enum {
 };
 #define METHOD OPTICAL_FLOW
 
-#define DSP_MIN 1
-#define DSP_MAX 500
+#define DSP_MIN 1e-7
+#define DSP_MAX 0.3
 #define DSP_LVL 100
 
 struct CloudPoint {

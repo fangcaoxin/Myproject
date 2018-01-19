@@ -47,8 +47,8 @@ int main(int argc, char ** argv) {
 	Mat depth_map = sfm_drawDepths(&p_sfm);
 	//Mat gms_match = sfm_draw_gms_matches(&p_sfm, color, 1);
 	//sfm_drawOptflowKps(&p_sfm);
-	//sfm_drawOptFlowMap(&p_sfm,color);
-	//sfm_motion_to_color(&p_sfm);
+	sfm_drawOptFlowMap(&p_sfm,color);
+	sfm_motion_to_color(&p_sfm);
 	//imshow("optical flow", p_sfm.color_flow); 
 	//imshow("superpixel", p_sfm.super_pixel_image);
 	//imshow("gms_match", gms_match);

@@ -47,7 +47,7 @@ int sfm_super_pixel(sfm_program * const sfm) {
 	int region_size = 20;
 	int num_iterations = 3;
 	int ruler = 10;
-	Mat img_1 = sfm->input_images[0];
+	Mat img_1 = sfm->base_image;
 	Mat converted;
 	cvtColor(img_1, converted, CV_BGR2HSV);
 	Ptr<ximgproc::SuperpixelSLIC> superpixel = ximgproc::createSuperpixelSLIC(converted, SLICO,region_size,(float)ruler);
@@ -125,7 +125,7 @@ int sfm_get_keyPoints(sfm_program *const sfm, int frame_num) {
 		Mat pregray, gray;
 		Mat img_1, img_2;
 		img_1 = sfm->base_image;
-		img_2 = sfm->input_images[frame_num];
+		img_2 = sfm->src_image;
 		if (!img_1.empty() && !img_2.empty()) {
 			cvtColor(img_1, pregray, CV_BGR2GRAY);
 			cvtColor(img_2, gray, CV_BGR2GRAY);
@@ -561,7 +561,8 @@ static Point3d sfm_reproj4Bundler(Point2f point_2d, Matx33d K, Matx34d external_
 	double cx = K(0, 2);
 	double cy = K(1, 2);
 	double f = K(0, 0);
-	Point3d u((point_2d.x - cx)/f*d, (point_2d.y -cy)/f*d, d);
+	double z = -1 / d;
+	Point3d u(-(point_2d.x - cx)/f*z, -(cy - point_2d.y)/f*z, z);
     	
 	//Mat_<double> um = Mat(K).inv()*Mat_<double>(u);
 	Matx33d R(external_martix(0, 0), external_martix(0, 1), external_martix(0, 2),
@@ -578,6 +579,7 @@ static Point2f sfm_proj4Bundler(Point3d X, Matx33d K, Matx34d external_martix) {
 		external_martix(2, 0), external_martix(2, 1), external_martix(2, 2));
 	Mat_<double> t(external_martix(0, 3), external_martix(1, 3), external_martix(2, 3));
 	//Mat_<double> u = Mat(K)*Mat(R)*Mat_<double>(X) + Mat(K)*t;
+	//cout << "R" << R << endl;
 	Mat_<double> u = Mat(K)*(Mat(R)*Mat_<double>(X)+t);
 	return Point2f(u(0)/u(2), u(1)/u(2));
 }
@@ -623,7 +625,7 @@ int sfm_photoconsistency_optimazation(sfm_program *const sfm, int frame_num)
 					x_proj_round.x = x_proj_round.x < 0 ? 0 : x_proj_round.x;
 					x_proj_round.y = x_proj_round.y < 0 ? 0 : x_proj_round.y;
 					x_proj_round.x = x_proj_round.x > img_1.cols - 1 ? img_1.cols - 1 : x_proj_round.x;
-					x_proj_round.x = x_proj_round.y > img_1.rows - 1 ? img_1.rows - 1 : x_proj_round.y;
+					x_proj_round.y = x_proj_round.y > img_1.rows - 1 ? img_1.rows - 1 : x_proj_round.y;
 					//cout << Point(base_points[i]) << " " << x_proj_round << endl;
 					float p_err = abs(img_1.at<uchar>(Point(base_points[i])) - img_2.at<uchar>(x_proj_round));
 					
