@@ -25,6 +25,7 @@
 #include "libmv/correspondence/feature_matching.h"
 #include "libmv/correspondence/nRobustViewMatching.h"
 #include "libmv/multiview/robust_fundamental.h"
+#include <iostream>
 
 using namespace libmv;
 using namespace correspondence;
@@ -54,7 +55,7 @@ bool nRobustViewMatching::computeData(const string & filename)
 {
   cv::Mat im_cv = cv::imread(filename, 0);
   if (im_cv.empty()) {
-    LOG(FATAL) << "Failed loading image: " << filename;
+    //LOG(FATAL) << "Failed loading image: " << filename;
     return false;
   }
   else
@@ -104,14 +105,14 @@ bool nRobustViewMatching::MatchData(const string & dataA, const string & dataB)
          find(m_vec_InputNames.begin(), m_vec_InputNames.end(), dataB)
           == m_vec_InputNames.end())
   {
-    LOG(INFO) << "[nViewMatching::MatchData] "
+    cout << "[nViewMatching::MatchData] "
               << "Could not identify one of the input name.";
     return false;
   }
   if (m_ViewData.find(dataA) == m_ViewData.end() ||
       m_ViewData.find(dataB) == m_ViewData.end())
   {
-    LOG(INFO) << "[nViewMatching::MatchData] "
+    cout << "[nViewMatching::MatchData] "
               << "Could not identify data for one of the input name.";
     return false;
   }
@@ -154,7 +155,7 @@ bool nRobustViewMatching::MatchData(const string & dataA, const string & dataB)
 bool nRobustViewMatching::computeCrossMatch( const std::vector<string> & vec_data)
 {
   if (m_pDetector == NULL || m_pDescriber == NULL)  {
-    LOG(FATAL) << "Invalid Detector or Describer.";
+    cout << "Invalid Detector or Describer.";
     return false;
   }
 
@@ -181,7 +182,7 @@ bool nRobustViewMatching::computeCrossMatch( const std::vector<string> & vec_dat
 bool nRobustViewMatching::computeRelativeMatch(
     const std::vector<string>& vec_data) {
   if (m_pDetector == NULL || m_pDescriber == NULL)  {
-    LOG(FATAL) << "Invalid Detector or Describer.";
+    cout << "Invalid Detector or Describer.";
     return false;
   }
 
@@ -221,7 +222,7 @@ bool nRobustViewMatching::computeConstrainMatches(const Matches & matchIn,
 {
   if (matchesOut == NULL)
   {
-    LOG(INFO) << "[nViewMatching::computeConstrainMatches]"
+    cout << "[nViewMatching::computeConstrainMatches]"
               << " Could not export constrained matches.";
     return false;
   }

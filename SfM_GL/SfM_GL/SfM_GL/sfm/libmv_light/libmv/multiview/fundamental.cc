@@ -29,6 +29,7 @@
 #include "libmv/multiview/conditioning.h"
 #include "libmv/multiview/projection.h"
 #include "libmv/multiview/triangulation.h"
+#include <iostream>
 
 namespace libmv {
 
@@ -74,10 +75,10 @@ void FundamentalFromProjections(const Mat34 &P1, const Mat34 &P2, Mat3 *F) {
 // HZ 11.1 pag.279 (x1 = x, x2 = x')
 // http://www.cs.unc.edu/~marc/tutorial/node54.html
 static double EightPointSolver(const Mat &x1, const Mat &x2, Mat3 *F) {
-  DCHECK_EQ(x1.rows(), 2);
+ /* DCHECK_EQ(x1.rows(), 2);
   DCHECK_GE(x1.cols(), 8);
   DCHECK_EQ(x1.rows(), x2.rows());
-  DCHECK_EQ(x1.cols(), x2.cols());
+  DCHECK_EQ(x1.cols(), x2.cols());*/
 
   int n = x1.cols();
   Mat A(n, 9);
@@ -111,10 +112,10 @@ void EnforceFundamentalRank2Constraint(Mat3 *F) {
 double NormalizedEightPointSolver(const Mat &x1,
                                   const Mat &x2,
                                   Mat3 *F) {
-  DCHECK_EQ(x1.rows(), 2);
+ /* DCHECK_EQ(x1.rows(), 2);
   DCHECK_GE(x1.cols(), 8);
   DCHECK_EQ(x1.rows(), x2.rows());
-  DCHECK_EQ(x1.cols(), x2.cols());
+  DCHECK_EQ(x1.cols(), x2.cols());*/
 
   // Normalize the data.
   Mat3 T1, T2;
@@ -140,10 +141,10 @@ double NormalizedEightPointSolver(const Mat &x1,
 double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
                                              const Mat &x2,
                                              std::vector<Mat3> *F) {
-  DCHECK_EQ(x1.rows(), 2);
+ /* DCHECK_EQ(x1.rows(), 2);
   DCHECK_EQ(x1.cols(), 7);
   DCHECK_EQ(x1.rows(), x2.rows());
-  DCHECK_EQ(x2.cols(), x2.cols());
+  DCHECK_EQ(x2.cols(), x2.cols());*/
 
   // Build a 9 x n matrix from point matches, where each row is equivalent to
   // the equation x'T*F*x = 0 for a single correspondence pair (x', x). The
@@ -206,10 +207,10 @@ double FundamentalFrom7CorrespondencesLinear(const Mat &x1,
 double FundamentalFromCorrespondences7Point(const Mat &x1,
                                             const Mat &x2,
                                             std::vector<Mat3> *F) {
-  DCHECK_EQ(x1.rows(), 2);
+  /*DCHECK_EQ(x1.rows(), 2);
   DCHECK_GE(x1.cols(), 7);
   DCHECK_EQ(x1.rows(), x2.rows());
-  DCHECK_EQ(x1.cols(), x2.cols());
+  DCHECK_EQ(x1.cols(), x2.cols());*/
 
   // Normalize the data.
   Mat3 T1, T2;
@@ -346,8 +347,8 @@ int MotionFromEssentialChooseSolution(const std::vector<Mat3> &Rs,
                                       const Vec2 &x1,
                                       const Mat3 &K2,
                                       const Vec2 &x2) {
-  DCHECK_EQ(4, Rs.size());
-  DCHECK_EQ(4, ts.size());
+  /*DCHECK_EQ(4, Rs.size());
+  DCHECK_EQ(4, ts.size());*/
 
   Mat34 P1, P2;
   Mat3 R1;
@@ -400,7 +401,7 @@ void FundamentalToEssential(const Mat3 &F, Mat3 *E) {
   double b = svd.singularValues()(1);
   double s = (a + b) / 2.0;
 
-  LG << "Initial reconstruction's rotation is non-euclidean by "
+  std::cout << "Initial reconstruction's rotation is non-euclidean by "
      << (((a - b) / std::max(a, b)) * 100) << "%; singular values:"
      << svd.singularValues().transpose();
 

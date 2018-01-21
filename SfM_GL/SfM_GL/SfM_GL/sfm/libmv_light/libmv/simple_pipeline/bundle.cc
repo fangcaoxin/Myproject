@@ -21,9 +21,10 @@
 #include "libmv/simple_pipeline/bundle.h"
 
 #include <map>
-
+#if CERES_FOUND
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
+#endif 
 #include "libmv/base/vector.h"
 #include "libmv/logging/logging.h"
 #include "libmv/multiview/fundamental.h"

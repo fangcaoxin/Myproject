@@ -7,8 +7,20 @@
 #include <opencv2/video/tracking.hpp>
 #include "sfm_triangulation.h"
 
+//#pragma comment(lib,"ceres.lib")
+
 using namespace cv;
 using namespace std;
+/* method */
+enum {
+	OPTICAL_FLOW = 1,
+	GMS = 2,
+};
+#define METHOD OPTICAL_FLOW
+
+#define DSP_MIN 1e-7
+#define DSP_MAX 1e-2
+#define DSP_LVL 100
 
 struct CloudPoint {
 	Point3d pt;
@@ -27,7 +39,7 @@ struct sfm_program {
 	Mat super_pixel_image;
 	Mat discoeff;
 	Mat base_image;
-	Mat key_image;
+	Mat src_image;
 	int num_superpixel;
 	vector<KeyPoint> keypts1;
 	vector<KeyPoint> keypts2;
@@ -36,11 +48,12 @@ struct sfm_program {
 	vector<KeyPoint> correspImgPt;
 	vector<DMatch> matches;
 	vector<double> depths;
-	Matx34d external_martix;
+	vector<Matx34d> external_martix;
 	vector<Point3d> Pt1;
 	vector<Point3d> Pt2;
 	vector<CloudPoint> pointcloud;
 	vector<uchar> status;
+	vector<vector<Point>> label_points;
 };
 
 int sfm_add_image(sfm_program * const sfm, Mat &p_input_image);
@@ -55,7 +68,7 @@ int sfm_motion_to_color(sfm_program *const sfm);
 
 int sfm_superpixel_image(sfm_program *const sfm, Scalar color);
 
-int sfm_get_keyPoints(sfm_program *const sfm, int method);
+int sfm_get_keyPoints(sfm_program *const sfm, int frame_num);
 
 int sfm_drawOptflowKps(sfm_program *const sfm);
 
@@ -63,12 +76,18 @@ int sfm_set_internal_matrix(sfm_program *const sfm, double f, double cx, double 
 
 int sfm_get_external_matrix(sfm_program *const sfm);
 
-double sfm_triangulatePoints(sfm_program *const sfm);
+int sfm_set_base_external_matrix(sfm_program *const sfm);
 
-Mat sfm_drawDepths(sfm_program *const sfm, int method);
+double sfm_triangulatePoints(sfm_program *const sfm, int frame_num);
+
+Mat sfm_drawDepths(sfm_program *const sfm);
 
 Mat sfm_draw_gms_matches(sfm_program *const sfm, Scalar color, int type);
 
-double sfm_reproj4Bundler(Point2f point, double depth, Matx33d K, Matx34d external_martix);
+Point3d sfm_reproj4Bundler(Point2f point_2d, Matx33d K, Matx34d external_martix, double d);
 
-int sfm_set_base_image(sfm_program *const sfm);
+Point2f sfm_proj4Bundler(Point3d X, Matx33d K, Matx34d external_matrix);
+
+int sfm_set_base_src_image(sfm_program *const sfm, int frame_num);
+
+int sfm_photoconsistency_optimazation(sfm_program *const sfm);
