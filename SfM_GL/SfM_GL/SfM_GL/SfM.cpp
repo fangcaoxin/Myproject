@@ -666,7 +666,7 @@ int sfm_photoconsistency_optimazation(sfm_program *const sfm)
 					//cout << Point(base_points[i]) << " " << x_proj_round << endl;
 					//float p_err = norm(src_points[i] - x_proj);
 					float g_err = abs(img_1n.at<float>(Point(base_points[i])) - img_2n.at<float>(x_proj_round));
-					float t_err = p_err + g_err;
+					float t_err = 0.05*p_err + g_err;
 					
 					//cout << "t_err" <<" "<<j<<" "<< p_err << endl;
 					gc->setDataCost(i, j, t_err);
