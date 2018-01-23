@@ -561,8 +561,8 @@ static Point3d sfm_reproj4Bundler(Point2f point_2d, Matx33d K, Matx34d external_
 	double cx = K(0, 2);
 	double cy = K(1, 2);
 	double f = K(0, 0);
-	double z = -1 / d;
-	Point3d u(-(point_2d.x - cx)/f*z, -(cy - point_2d.y)/f*z, z);
+	double z = 1 / d;
+	Point3d u((point_2d.x - cx )/f*z, (point_2d.y - cy)/f*z, z);
     	
 	//Mat_<double> um = Mat(K).inv()*Mat_<double>(u);
 	Matx33d R(external_martix(0, 0), external_martix(0, 1), external_martix(0, 2),
