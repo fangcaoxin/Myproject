@@ -1,24 +1,11 @@
 #include "keyframe_selection.h"
 #include <Eigen/Eigenvalues>
-#include "numeric/numeric.h"
-#include "multi_view/homography.h"
-#include "multi_view/fundamental.h"
-#include "intersect.h"
-#include "bundle.h"
+#include "SfM.h"
+using namespace std;
 
-namespace libmv {
 
-	Mat3 IntrinsicsNormalizationMatrix(const CameraIntrinsics &intrinsics) {
-		Mat3 T = Mat3::Identity(), S = Mat3::Identity();
 
-		T(0, 2) = -intrinsics.principal_point_x();
-		T(1, 2) = -intrinsics.principal_point_y();
 
-		S(0, 0) /= intrinsics.focal_length_x();
-		S(1, 1) /= intrinsics.focal_length_y();
-
-		return S * T;
-	}
 
 	// P.H.S. Torr
 	// Geometric Motion Segmentation and Model Selection
@@ -32,7 +19,7 @@ namespace libmv {
 	// r is the dimension of the data
 	//     (r = 4 for 2D correspondences between two frames)
 
-	double GRIC(const Vec& e, int d, int k, int r) {
+	double GRIC(const vector<float> &e, int d, int k, int r) {
 		int n = e.size();
 		double lambda1 = log(static_cast<double>(r));
 		double lambda2 = log(static_cast<double>(r*n));
@@ -40,7 +27,7 @@ namespace libmv {
 		double sigma2 = 0.01;
 		double gric = 0.0;
 		for (int i = 0; i < n; i++) {
-			gric += std::min(e(i) * e(i) / sigma2, lambda3 * (r - d));
+			gric += std::min(e[i] * e[i] / sigma2, lambda3 * (r - d));
 		}
 		gric += lambda1 * d * n;
 		gric += lambda2 * k;
@@ -87,8 +74,8 @@ namespace libmv {
 		}
 	}
 
-	void SelectKeyframesBasedOnGRICAndVariance(const Tracks &_tracks,
-		const CameraIntrinsics &intrinsics,
+	void SelectKeyframesBasedOnGRICAndVariance(const sfm_program *p_sfm,
+		const Matx33d &intrinsics,
 		vector<int> &keyframes)
 	{
 		Tracks filtered_tracks;
@@ -104,8 +91,8 @@ namespace libmv {
 		const double Tmin = 0.8;
 		const double Tmax = 1.0;
 
-		Mat3 N = IntrinsicsNormalizationMatrix(intrinsics);
-		Mat3 N_inverse = N.inverse();
+		Matx33d N = intrinsics;
+		Matx33d N_inverse = N.inv();
 
 		double Sc_best = std::numeric_limits<double>::max();
 		double success_intersects_factor_best = 0.0f;
@@ -121,7 +108,7 @@ namespace libmv {
 				vector<Marker> all_markers = filtered_tracks.MarkersInBothImages(currect_keyframe, candidate_image);
 				vector<Marker> tracked_markers =
 					filtered_tracks.MarkersForTracksInBothImages(currect_keyframe, candidate_image);
-				Mat x1, x2;
+				vector<Point2f> x1, x2;
 				CoordinatesForMarkersInImage(tracked_markers, currect_keyframe, &x1);
 				CoordinatesForMarkersInImage(tracked_markers, candidate_image, &x2);
 				if (x1.cols() < 8 || x2.cols() < 8)
@@ -132,25 +119,17 @@ namespace libmv {
 				if (Rc < Tmin || Rc > Tmax)
 					continue;
 				Mat3 H, F;
-				EstimateHomographyOptions estimate_homography_options;
-				EstimateHomography2DFromCorrespondences(x1,
-					x2,
-					estimate_homography_options,
-					&H);
+			
+				Mat H = findHomography(x1, x2, Mat(), 0, 3.0);
 				// Convert homography to original pixel space.
-				H = N_inverse * H * N;
-
-				EstimateFundamentalOptions estimate_fundamental_options;
-				EstimateFundamentalFromCorrespondences(x1,
-					x2,
-					estimate_fundamental_options,
-					&F);
-				F = N_inverse * F * N;
+				H = N_inverse * H * Mat(N);
+				Mat F = findFundamentalMat(x1, x2, CV_FM_RANSAC, 3.0, 0.99, Mat());
+				F = N_inverse * F * Mat(N);
 				Vec H_e, F_e;
 				H_e.resize(x1.cols());
 				F_e.resize(x1.cols());
-				for (int i = 0; i < x1.cols(); i++) {
-					Vec2 current_x1, current_x2;
+				for (int i = 0; i < x1.size(); i++) {
+					Point2f current_x1, current_x2;
 
 					intrinsics.NormalizedToImageSpace(x1(0, i), x1(1, i),
 						&current_x1(0), &current_x1(1));
@@ -187,4 +166,3 @@ namespace libmv {
 	}
 
 
-} /*libmv*/

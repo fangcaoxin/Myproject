@@ -1,9 +1,7 @@
-#include "tracks.h"
-#include "camera_intrinsics.h"
-#include  "vector.h"
-namespace libmv {
+#include <opencv2/core/core.hpp>
+using namespace cv;
+
 	void SelectKeyframesBasedOnGRICAndVariance(
 		const Tracks &tracks,
-		const CameraIntrinsics &intrinsics,
+		const Matx33d &intrinsics,
 		vector<int> &keyframes);
-}

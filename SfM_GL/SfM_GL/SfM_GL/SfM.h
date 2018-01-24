@@ -13,13 +13,14 @@ using namespace cv;
 using namespace std;
 /* method */
 enum {
-	OPTICAL_FLOW = 1,
+	OPTICAL_FLOW_PATCH = 1,
 	GMS = 2,
+	OPTICAL_FLOW_POINT = 3,
 };
-#define METHOD OPTICAL_FLOW
+#define METHOD OPTICAL_FLOW_PATCH
 
 #define DSP_MIN 1e-7
-#define DSP_MAX 0.3
+#define DSP_MAX 1e-2
 #define DSP_LVL 100
 
 struct CloudPoint {
@@ -53,6 +54,7 @@ struct sfm_program {
 	vector<Point3d> Pt2;
 	vector<CloudPoint> pointcloud;
 	vector<uchar> status;
+	vector<vector<Point>> label_points;
 };
 
 int sfm_add_image(sfm_program * const sfm, Mat &p_input_image);
@@ -89,4 +91,4 @@ Point2f sfm_proj4Bundler(Point3d X, Matx33d K, Matx34d external_matrix);
 
 int sfm_set_base_src_image(sfm_program *const sfm, int frame_num);
 
-int sfm_photoconsistency_optimazation(sfm_program *const sfm, int frame_num);
+int sfm_photoconsistency_optimazation(sfm_program *const sfm);
