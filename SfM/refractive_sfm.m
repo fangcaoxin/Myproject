@@ -1,4 +1,7 @@
 % parameters %
+point_num = 100;
+range = 1500;
+X = 1500*rand([3,point_num]);
 n1 = 1.000; % air
 n2 = 1.49; % glass
 n3 = 1.333; % water
@@ -14,9 +17,9 @@ u = 40;
 d1 = d -f;
 s = (sqrt(f*f*d1*d1-(v*v + f*f)*(d1*d1-r*r))-f*d1)/(v*v+f*f);
 r_in = [s*u,s*v,s*f];
-r_in_norm = norm(r_in);
+r_in_norm = r_in/norm(r_in);
 N = [0,s*v,s*f+d1];
-N_norm = norm(N);
+N_norm = N/norm(N);
 theta_1 = atan(sqrt(u*u+v*v)/f);
 r_glass = n1/n2*r_in_norm - (n1/n2*cos(theta_1)-sqrt(1- n1*n1/(n2*n2)*sin(theta_1)*sin(theta_1)))*N_norm;
 r_glass_norm = norm(r_glass);
