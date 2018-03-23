@@ -1,8 +1,8 @@
 function get_pixel
-%ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“—pDÀ”•\¦‚Ì‰æ‘œÀ•W‚ğCƒsƒNƒZƒ‹•\Œ»‚É•ÏŠ·‚·‚é
+%ï¿½Vï¿½~ï¿½ï¿½ï¿½ï¿½ï¿½[ï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½pï¿½Dï¿½ï¿½ï¿½ï¿½\ï¿½ï¿½ï¿½Ì‰æ‘œï¿½ï¿½Wï¿½ï¿½ï¿½Cï¿½sï¿½Nï¿½Zï¿½ï¿½ï¿½\ï¿½ï¿½ï¿½É•ÏŠï¿½ï¿½ï¿½ï¿½ï¿½
 	load imgs.mat;
 	load parameter.mat;
-    load n_cp.matrix;
+  load n_cp.matrix;
 	
 	imgp1=[];
 	imgp2=[];
@@ -24,7 +24,7 @@ hcy
 		X1=img1(i,1)+hcx;
 		Y1=img1(i,2)+hcy;
 		
-		%--------------------lÌŒÜ“ü---------------------
+		%--------------------ï¿½lï¿½ÌŒÜ“ï¿½---------------------
 		X1=X1*pa;
 		Y1=Y1*pa;
 		
@@ -33,7 +33,7 @@ hcy
 		
 		X1=X1/pa;
 		Y1=Y1/pa;
-		%--------------------lÌŒÜ“ü---------------------
+		%--------------------ï¿½lï¿½ÌŒÜ“ï¿½---------------------
 		
 		imgp1=[imgp1;X1 Y1];
 	
@@ -42,7 +42,7 @@ hcy
 		X2=img2(i,1)+hcx;
 		Y2=img2(i,2)+hcy;
 		
-		%--------------------lÌŒÜ“ü---------------------
+		%--------------------ï¿½lï¿½ÌŒÜ“ï¿½---------------------
 		X2=X2*pa;
 		Y2=Y2*pa;
 		
@@ -51,21 +51,21 @@ hcy
 		
 		X2=X2/pa;
 		Y2=Y2/pa;
-		%--------------------lÌŒÜ“ü---------------------
+		%--------------------ï¿½lï¿½ÌŒÜ“ï¿½---------------------
         
 		imgp2=[imgp2;X2 Y2];
     end
     
-    %ƒKƒEƒVƒAƒ“ƒmƒCƒY‚Ì•t‰Á
+    %ï¿½Kï¿½Eï¿½Vï¿½Aï¿½ï¿½ï¿½mï¿½Cï¿½Yï¿½Ì•tï¿½ï¿½
     if (add_Gaussian==1)
 
-        %‰æ‘œ1@x¬•ª—pŒë·
+        %ï¿½æ‘œ1ï¿½@xï¿½ï¿½ï¿½ï¿½ï¿½pï¿½ë·
         randn_error1_x=randn(1,n_cp);
         G_error1_x=sigma*randn_error1_x+ave;
-        %‰æ‘œ1@y¬•ª—pŒë·
+        %ï¿½æ‘œ1ï¿½@yï¿½ï¿½ï¿½ï¿½ï¿½pï¿½ë·
         randn_error1_y=randn(1,n_cp);
         G_error1_y=sigma*randn_error1_y+ave;
-        %•½‹ÏC•W€•Î·‚ÌŠm”F@
+        %ï¿½ï¿½ï¿½ÏCï¿½Wï¿½ï¿½ï¿½Îï¿½ï¿½ÌŠmï¿½Fï¿½@
         stats1 = [mean(G_error1_x) std(G_error1_x) mean(G_error1_y) std(G_error1_y)];
 
         imgp1(:,1)=imgp1(:,1)+G_error1_x';
@@ -73,13 +73,13 @@ hcy
         
         stats1_log(i,:)=stats1;
 
-        %‰æ‘œ2@x¬•ª—pŒë·
+        %ï¿½æ‘œ2ï¿½@xï¿½ï¿½ï¿½ï¿½ï¿½pï¿½ë·
         randn_error2_x=randn(1,n_cp);
         G_error2_x=sigma*randn_error2_x+ave;
-        %‰æ‘œ2@y¬•ª—pŒë·
+        %ï¿½æ‘œ2ï¿½@yï¿½ï¿½ï¿½ï¿½ï¿½pï¿½ë·
         randn_error2_y=randn(1,n_cp);
         G_error2_y=sigma*randn_error2_y+ave;
-        %•½‹ÏC•W€•Î·‚ÌŠm”F@
+        %ï¿½ï¿½ï¿½ÏCï¿½Wï¿½ï¿½ï¿½Îï¿½ï¿½ÌŠmï¿½Fï¿½@
         stats2 = [mean(G_error2_x) std(G_error2_x) mean(G_error2_y) std(G_error2_y)];
         
         imgp2(:,1)=imgp2(:,1)+G_error2_x';

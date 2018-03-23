@@ -11,7 +11,7 @@ hcx = 640;
 hcy = 480;
 R = 50; %
 r = 46; % radius 50mm
-d = 25; % distance between camera center and axis
+d = 0; % distance between camera center and axis
 r_pixel = r/sx;
 d_pixel = d/sx;
 
