@@ -1,24 +1,31 @@
 function g=lagrange(U,g0)
-	gg0=[g0;0;0;0];%ggï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½ï¿½D
-	f=@(gg)Ug(gg,U);%ggï¿½ÍCgï¿½ÉCalphaï¿½Cbetaï¿½ï¿½ï¿½Ç‰ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÌD
-	%options=optimoptions('fsolve','Display','off','TolFun',3e-16,'TolX',3e-16,'MaxIter',1e20);
-	%[gg,fval,info]=fsolve(f,gg0,options);
-  [gg, fval, info] = fsolve(f, gg0);
+	gg0=[g0;0;0;0;0;0;0];%gg‚Ì‰Šú‰ğD
+	f=@(gg)Ug(gg,U);%gg‚ÍCg‚ÉCalphaCbeta‚ğ’Ç‰Á‚µ‚½‚à‚ÌD
+%	[gg,fval,info]=fsolve(f,gg0,optimset("TolFun",3e-16,"TolX",3e-16,"MaxIter",1e20));
+    options=optimoptions('fsolve','Display','off','TolFun',1e-10,'TolX',1e-10,'MaxIter',1e20);
+	[gg,fval,info]=fsolve(f,gg0,options);
+    
 %info
 	g=gg;
 %fval
 	g(19,:)=[];
+    g(19,:)=[];
 	g(19,:)=[];
-	g(19,:)=[];%ï¿½ï¿½ï¿½ï¿½ï¿½Å‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ‚ï¿½ï¿½É‚È‚ï¿½
+    g(19,:)=[];
+    g(19,:)=[];
+	g(19,:)=[];%‚±‚ê‚Å‚¿‚á‚ñ‚Æ‚‡‚É‚È‚é
 end
 
 
 function Ug_val=Ug(gg,U)
-%ggï¿½ÍCgï¿½ÉCalphaï¿½Cbetaï¿½ï¿½ï¿½Ç‰ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÌD
+%gg‚ÍCg‚ÉCalphaCbeta‚ğ’Ç‰Á‚µ‚½‚à‚ÌD
 	g=gg;
+    g(19,:)=[];
     g(19,:)=[];
 	g(19,:)=[];
 	g(19,:)=[];
+    g(19,:)=[];
+    g(19,:)=[];
     UU=U'*U;
 	Ug_val(1)= UU(1,:)*g;
 	Ug_val(2)= UU(2,:)*g;
@@ -29,17 +36,20 @@ function Ug_val=Ug(gg,U)
 	Ug_val(7)= UU(7,:)*g;
 	Ug_val(8)= UU(8,:)*g;
 	Ug_val(9)= UU(9,:)*g;
-	Ug_val(10)= UU(10,:)*g+gg(19)*gg(10);
-	Ug_val(11)= UU(11,:)*g+gg(19)*gg(11);
-	Ug_val(12)= UU(12,:)*g+gg(19)*gg(12);
-	Ug_val(13)= UU(13,:)*g+gg(20)*gg(13);
-	Ug_val(14)= UU(14,:)*g+gg(20)*gg(14);
-	Ug_val(15)= UU(15,:)*g+gg(20)*gg(15);
-	Ug_val(16)= UU(16,:)*g+gg(21)*gg(16);
-	Ug_val(17)= UU(17,:)*g+gg(21)*gg(17);
-	Ug_val(18)= UU(18,:)*g+gg(21)*gg(18);
-	Ug_val(19)= gg(10)^2+gg(11)^2+gg(12)^2-1;
-	Ug_val(20)= gg(13)^2+gg(14)^2+gg(15)^2-1;
-	Ug_val(21)= gg(16)^2+gg(17)^2+gg(18)^2-1;
+	Ug_val(10)= UU(10,:)*g+gg(19)*gg(10)-gg(15)*gg(23)+gg(14)*gg(24)+gg(13)*gg(21);
+	Ug_val(11)= UU(11,:)*g+gg(19)*gg(11)-gg(13)*gg(24)+gg(15)*gg(22)+gg(14)*gg(21);
+	Ug_val(12)= UU(12,:)*g+gg(19)*gg(12)-gg(14)*gg(22)+gg(13)*gg(23)+gg(15)*gg(21);
+	Ug_val(13)= UU(13,:)*g+gg(20)*gg(13)-gg(11)*gg(24)+gg(12)*gg(23)+gg(10)*gg(21);
+	Ug_val(14)= UU(14,:)*g+gg(20)*gg(14)-gg(12)*gg(22)+gg(10)*gg(24)+gg(11)*gg(21);
+	Ug_val(15)= UU(15,:)*g+gg(20)*gg(15)-gg(10)*gg(23)+gg(11)*gg(22)+gg(12)*gg(21);
+    Ug_val(16)= UU(16,:)*g-gg(22);
+	Ug_val(17)= UU(17,:)*g-gg(23);
+	Ug_val(18)= UU(18,:)*g-gg(24);
+	Ug_val(19)= (gg(10)^2+gg(11)^2+gg(12)^2-1)/2;
+	Ug_val(20)= (gg(13)^2+gg(14)^2+gg(15)^2-1)/2;
+	Ug_val(21)= gg(10)*gg(13)+gg(11)*gg(14)+gg(12)*gg(15);
+    Ug_val(22)= gg(11)*gg(15)-gg(12)*gg(14)-gg(16);
+    Ug_val(23)= gg(12)*gg(13)-gg(10)*gg(15)-gg(17);
+    Ug_val(24)= gg(10)*gg(14)-gg(11)*gg(13)-gg(18);
 	
-end 
+end
