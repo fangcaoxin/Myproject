@@ -27,9 +27,9 @@ function [c]=fermat(point,n1,n2,n3,R,r,d)
     z = point(3);
 	f=@(c)L(c,x,y,z,n1,n2,n3,R,r,d);
 
-  options=optimoptions('fsolve','Display','off','TolFun',3e-16,'TolX',3e-16); %only matlab
-   [c,fval,info]=fsolve(f,c0,options);
- % [c, fval, info] = fsolve(f, c0);
+  %options=optimoptions('fsolve','Display','off','TolFun',3e-16,'TolX',3e-16); %only matlab
+  % [c,fval,info]=fsolve(f,c0,options);
+   [c, fval, info] = fsolve(f, c0);
 
 %fval
 %info

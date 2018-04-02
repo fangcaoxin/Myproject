@@ -13,7 +13,7 @@ t_0 = (-r_in(3)*d + sqrt(r_in(3)*r_in(3)*d*d-(r_in(2)*r_in(2)+r_in(3)*r_in(3))*(
 if(d+r_in(3)*t_0 < 0)
     t_0 = (-r_in(3)*d - sqrt(r_in(3)*r_in(3)*d*d-(r_in(2)*r_in(2)+r_in(3)*r_in(3))*(d*d-r*r)))/(r_in(2)*r_in(2)+r_in(3)*r_in(3));
 end
-p1 = [r_in(1)*t_0 r_in(2)*t_0 r_in(3)*t_0+d];
+p1 = [r_in(1)*t_0 r_in(2)*t_0 r_in(3)*t_0+d]; % point at glass and air
 N = [0 p1(2) p1(3)]; % normal between air and glass
 N_norm = N/norm(N);
 s1 = norm(cross(r_in, N_norm)); % sin(theta_1)

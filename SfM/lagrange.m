@@ -1,9 +1,10 @@
 function g=lagrange(U,g0)
-	gg0=[g0;0;0;0;0;0;0];%gg‚Ì‰Šú‰ğD
-	f=@(gg)Ug(gg,U);%gg‚ÍCg‚ÉCalphaCbeta‚ğ’Ç‰Á‚µ‚½‚à‚ÌD
+	gg0=[g0;0;0;0;0;0;0];%ggï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½ï¿½D
+	f=@(gg)Ug(gg,U);%ggï¿½ÍCgï¿½ÉCalphaï¿½Cbetaï¿½ï¿½ï¿½Ç‰ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÌD
 %	[gg,fval,info]=fsolve(f,gg0,optimset("TolFun",3e-16,"TolX",3e-16,"MaxIter",1e20));
-    options=optimoptions('fsolve','Display','off','TolFun',1e-10,'TolX',1e-10,'MaxIter',1e20);
-	[gg,fval,info]=fsolve(f,gg0,options);
+   % options=optimoptions('fsolve','Display','off','TolFun',1e-10,'TolX',1e-10,'MaxIter',1e20);
+	%[gg,fval,info]=fsolve(f,gg0,options);
+  [gg,fval,info]=fsolve(f,gg0);
     
 %info
 	g=gg;
@@ -13,12 +14,12 @@ function g=lagrange(U,g0)
 	g(19,:)=[];
     g(19,:)=[];
     g(19,:)=[];
-	g(19,:)=[];%‚±‚ê‚Å‚¿‚á‚ñ‚Æ‚‡‚É‚È‚é
+	g(19,:)=[];%ï¿½ï¿½ï¿½ï¿½ï¿½Å‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ‚ï¿½ï¿½É‚È‚ï¿½
 end
 
 
 function Ug_val=Ug(gg,U)
-%gg‚ÍCg‚ÉCalphaCbeta‚ğ’Ç‰Á‚µ‚½‚à‚ÌD
+%ggï¿½ÍCgï¿½ÉCalphaï¿½Cbetaï¿½ï¿½ï¿½Ç‰ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÌD
 	g=gg;
     g(19,:)=[];
     g(19,:)=[];
