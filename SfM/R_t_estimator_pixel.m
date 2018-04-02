@@ -2,20 +2,20 @@ function [R_est,t_est,ray1_vector,ray2_vector]=R_t_estimator_pixel(imgp1,imgp2,c
 load parameter.mat
 	[U,ray1_vector,ray2_vector]=umatrix_generator_pixel(imgp1,imgp2);		
 
-	[v,lambda]=eig(U'*U,'nobalance');
+	[v,lambda]=eig(U'*U);
 % 	save v.mat v
 	g=v(:,1);
     
-    gf=[0 0 0 0 0 0 0 0 0 -1 0 0 0 0 0 0 0 0]';
+    gf=[0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0]';
     if(norm(g-gf)<1e-6)
         g=v(:,2)
     end
     
-	k=sqrt(g(13)^2+g(14)^2+g(15)^2);
+	k=sqrt(g(10)^2+g(11)^2+g(12)^2);
 	g0=g/k;
-	R2=[g0(13) g0(14) g0(15)]; %the first row of R
-	R3=[g0(16) g0(17) g0(18)]; %the second row of R
-	R1=cross(R2,R3);
+    R1=[g0(10) g0(11) g0(12)]; %the first row of R
+	R2=[g0(13) g0(14) g0(15)];  %the second row of R
+	R3=cross(R1,R2);
 	%	if (abs(g(16)-R3(1))<1)&&(abs(g(17)-R3(2))<1) %?½?½?½Ì•ï¿½?½?½?½?½è‚·?½?½?½B
 %	if (g0(16)*R3(1)>1e-16)&&(g0(17)*R3(2)>1e-16) %?½?½?½Ì•ï¿½?½?½?½?½è‚·?½?½?½B
 %	else
@@ -54,9 +54,9 @@ g(16)^2+g(17)^2+g(18)^2
 %	t_1=(g(10)*t_2-g(3))/g(11)																	%6/5
 
 
-	t_3=(R_est(3,3)*g(4)-R_est(2,3)*g(7))/(R_est(3,3)*R_est(2,2)-R_est(2,3)*R_est(3,2))
-	t_2=(R_est(3,2)*g(4)-R_est(2,2)*g(7))/(R_est(2,2)*R_est(3,3)-R_est(3,2)*R_est(2,3))
-	t_1=(R_est(2,1)*g(3)-R_est(1,1)*g(6))/(R_est(1,1)*R_est(2,2)-R_est(2,1)*R_est(1,2))
+	t_3=(R_est(3,3)*g(4)-R_est(2,3)*g(7))/(R_est(3,3)*R_est(2,2)-R_est(2,3)*R_est(3,2));
+	t_2=(R_est(3,2)*g(4)-R_est(2,2)*g(7))/(R_est(2,2)*R_est(3,3)-R_est(3,2)*R_est(2,3));
+	t_1=(R_est(2,1)*g(3)-R_est(1,1)*g(6))/(R_est(1,1)*R_est(2,2)-R_est(2,1)*R_est(1,2));
 
 	
 	E=[g(1) g(2) g(3);

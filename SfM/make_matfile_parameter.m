@@ -7,11 +7,11 @@ sx = 0.0035;
 sy = 0.0035;
 fx = focal/sx;
 fy = focal/sy;
-hcx = 2560;
-hcy = 1920;
+hcx = 640;
+hcy = 480;
 R = 50; %
 r = 46; % radius 50mm
-d = 0; % distance between camera center and axis
+d = 41; % distance between camera center and axis
 r_pixel = r/sx;
 d_pixel = d/sx;
 

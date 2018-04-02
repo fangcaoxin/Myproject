@@ -2,6 +2,7 @@
 function [c]=fermat(point,n1,n2,n3,R,r,d)
 	load parameter.mat
   v = [point(1), point(2), point(3)-d];
+ % v =[0 point(2)-camera_center(2) point(3)-camera_center(3)];
   v = v/norm(v);
   t =( -(point(2)*v(2) +point(3)*v(3)) + sqrt((point(2)*v(2) +point(3)*v(3))*(point(2)*v(2) +point(3)*v(3))...
       -(v(2)*v(2)+v(3)*v(3))*(point(2)*point(2) + point(3)*point(3)-R*R)))/(v(2)*v(2)+v(3)*v(3));
@@ -16,7 +17,7 @@ function [c]=fermat(point,n1,n2,n3,R,r,d)
   if(z1 < 0)
      t1 =( -(point(2)*v(2) +point(3)*v(3)) - sqrt((point(2)*v(2) +point(3)*v(3))*(point(2)*v(2) +point(3)*v(3))-(v(2)*v(2)+v(3)*v(3))*(point(2)*point(2) + point(3)*point(3)-r*r)))/(v(2)*v(2)+v(3)*v(3));
   end
-  x0 = point(1) + v(1)*t;
+  x0 = point(1) + v(1)*t ;
   y0 = point(2) + v(2)*t;
   x1 = point(1) + v(1)*t1;
   y1 = point(2) + v(2)*t1;

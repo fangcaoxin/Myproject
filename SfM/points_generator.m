@@ -1,10 +1,10 @@
 function points_generator()
 
-	n_p=100; % number of points
-	xmin=-300; 
-	xmax=300;
-	ymin=-200;
-	ymax=200;
+	n_p=500; % number of points
+	xmin=-1000; 
+	xmax=1000;
+	ymin=-750;
+	ymax=750;
 	zmin=1500;
 	zmax=2000;
 	points = zeros(n_p, 3);
