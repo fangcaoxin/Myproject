@@ -1,6 +1,6 @@
 function points_generator()
 
-	n_p=500; % number of points
+	n_p=100; % number of points
 	xmin=-1000; 
 	xmax=1000;
 	ymin=-750;
