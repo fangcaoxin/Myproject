@@ -12,7 +12,10 @@ R_base = [1 0 0; 0 1 0;0 0 1];
 t_base = [0; 0 ;0];
 t_co = [0; 0; d];
 check = 0;
+type = 1; % thin = 1, thick = 0
  test_point = [-10,10,100];
- [image_point1,image_point2] = point3d_t_2d(points, R_base, t_base, Rotate, translation);
+ [image_point1,image_point2] = point3d_t_2d(points, R_base, t_base, Rotate, translation, type);
  [image1_new, image2_new] = delete_outlier(image_point1, image_point2);
- [R_est,t_est,ray1_vector,ray2_vector]= R_t_estimator_pixel(image1_new,image2_new,check);
+ [R_est,t_est,ray1_vector,ray2_vector]= R_t_estimator_pixel(image1_new,image2_new,check,type);
+
+ 

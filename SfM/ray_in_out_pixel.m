@@ -45,10 +45,10 @@ r_out = r_out/norm(r_out);
 % project_line = n_norm_project_point - r_in_project_point;
 % project_line = project_line/norm(project_line);
 %t2 = cross((n_norm_project_point - p1),r_in)/cross(r_in, project_line);
-t2 = p2(3)/r_out(3);
+t2 = p2(1)/r_out(1);
 
 %cross_point = n_norm_project_point + t2*project_line;
-cross_point = [p2(1)-t2*r_out(1) p2(2)-t2*r_out(2) 0];
+cross_point = [0 p2(2)-t2*r_out(2) p2(3)-t2*r_out(3)];
 %dis = p2;
 dis = cross_point;
 

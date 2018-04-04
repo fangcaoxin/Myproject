@@ -1,12 +1,17 @@
-function [U,ray1_vector,ray2_vector]=umatrix_generator_pixel(img1,img2)
+function [U,ray1_vector,ray2_vector]=umatrix_generator_pixel(img1,img2,type)
     n_cp = size(img1,1);
 	for i=1:n_cp
 		uv1=img1(i,:);
 		uv2=img2(i,:);
+    if(type==0)
 		[r1_in,r1, d1]=ray_in_out_pixel(uv1);
 		[r2_in,r2, d2]=ray_in_out_pixel(uv2);
-        d1_mat(i,:)=d1;
-        d2_mat(i,:)=d2;
+    else
+    [r1_in,r1, d1] = ray_in_out_thin(uv1);
+    [r2_in,r2, d2] = ray_in_out_thin(uv2);
+    end
+    d1_mat(i,:)=d1;
+    d2_mat(i,:)=d2;
 		ray1_vector(i,:)=r1;
 		ray2_vector(i,:)=r2;
 		ray1_in_vector(i,:)=r1_in;
