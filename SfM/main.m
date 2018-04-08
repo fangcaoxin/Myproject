@@ -11,7 +11,7 @@ load parameter.mat
 R_base = [1 0 0; 0 1 0;0 0 1];
 t_base = [0; 0 ;0];
 t_co = [0; 0; d];
-check = 0;
+scale = 0; % if scale 1 else 0
 type = 1; % thin = 1, thick = 0
  test_point = [-10,10,100];
  [image_point1,image_point2] = point3d_t_2d(points, R_base, t_base, Rotate, translation, type);
