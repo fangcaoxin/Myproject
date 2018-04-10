@@ -1,7 +1,7 @@
 function points_3d = points_reconstruction
 load ray1_select.mat
 load ray2_select.mat
-%load R_t_est.mat
+load R_t_est.mat
 load d_vector.mat
 load effctive_num.mat 
 load camera_motion.mat

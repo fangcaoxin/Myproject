@@ -1,12 +1,12 @@
-
 function [R_est,t_est,ray1_vector,ray2_vector]=R_t_estimator_pixel(imgp1,imgp2,scale,type)
 load parameter.mat
-	[U,ray1_vector,ray2_vector]=umatrix_generator_pixel(imgp1,imgp2,type);		
-	[v,lambda]=eig(U'*U);
+	%[U,ray1_vector,ray2_vector]=umatrix_generator_pixel(imgp1,imgp2,type,scale);		
+	[U,ray1_vector,ray2_vector]=umatrix_generator_general(imgp1,imgp2,type,scale);
+ if(scale == 1)
+ [v,lambda]=eig(U'*U);
 	g=v(:,1);
   gf=[0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0]';
   gf_1=[0 0 0 0 0 0 0 0 0 -1 0 0 0 0 0 0 0 0]';
- if(scale == 1)
      if(norm(g-gf)<1e-6 || norm(g-gf_1)<1e-6)
         g=v(:,2);
         k=sqrt(g(13)^2+g(14)^2+g(15)^2);
@@ -39,10 +39,10 @@ load parameter.mat
 	
 	t_est=[t_1;t_2;t_3] 
  else
-    k=sqrt(g(10)^2+g(11)^2+g(12)^2);
+    %k=sqrt(2);
 	  g0=g/k;
     g = lagrange_no_scale(U,g0);
-     E=[g(1) g(2) g(3);
+     E=[(1) g(2) g(3);
 	   g(4) g(5) g(6);
 	   g(7) g(8) g(9)];
     [U_,S_,V_] = svd(E);
