@@ -48,8 +48,8 @@ r_out = r_out/norm(r_out);
 t2 = p2(1)/r_out(1);
 
 %cross_point = n_norm_project_point + t2*project_line;
-cross_point = [0 p2(2)-t2*r_out(2) p2(3)-t2*r_out(3)];
-%dis = p2;
-dis = cross_point;
+%cross_point = [0 p2(2)-t2*r_out(2) p2(3)-t2*r_out(3)];
+dis = p2;
+%dis = cross_point;
 
 end
