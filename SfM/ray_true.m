@@ -1,6 +1,6 @@
 % caculate the ray from 3D point to 2D point
 % this 3D point is in camera coordinate
-function [r_in_true,image_point,r_out_true] = ray_true(point,type)
+function [r_in_true,image_point,point_at_glass_water,r_out_true] = ray_true(point,type)
 	load parameter.mat
   if(type == 1)
     c = fermat_thin(point,n1,n3,R,d);
