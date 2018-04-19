@@ -16,7 +16,8 @@ function [U,ray1_vector,ray2_vector]=umatrix_generator_general(img1,img2,type,sc
 		ray2_vector(i,:)=r2;
 		ray1_in_vector(i,:)=r1_in;
 		ray2_in_vector(i,:)=r2_in;
-        
+    x_s_1(i,:) =x_s1;
+    x_s_2(i,:) =x_s2;   
 		
 %		u=[r1(1)*r2(1) r1(2)*r2(1) r1(3)*r2(1) r1(1)*r2(2) r1(2)*r2(2) r1(3)*r2(2) r1(1)*r2(3) r1(2)*r2(3) r1(3)*r2(3) d1*r1(2)*r2(1)+d2*r1(1)*r2(2) -d1*r1(1)*r2(1)+d2*r1(2)*r2(2) d2*r1(3)*r2(2) d1*r1(2)*r2(2)-d2*r1(1)*r2(1) -d1*r1(1)*r2(2)-d2*r1(2)*r2(1) -d2*r1(3)*r2(1) d1*r1(2)*r2(3) -d1*r1(1)*r2(3)];
 
@@ -33,7 +34,17 @@ function [U,ray1_vector,ray2_vector]=umatrix_generator_general(img1,img2,type,sc
            r1(3)*M2(2)+M1(3)*r2(2) ...
            r1(1)*M2(3)+M1(1)*r2(3) ...
            r1(2)*M2(3)+M1(2)*r2(3) ...
-           r1(3)*M2(3)+M1(3)*r2(3)];
+           r1(3)*M2(3)+M1(3)*r2(3)]; 
+    % u=[-r1(1)*r2(1) -r1(1)*r2(2) -r1(1)*r2(3) -r1(2)*r2(1) -r1(2)*r2(2) -r1(2)*r2(3) -r1(3)*r2(1) -r1(3)*r2(2) -r1(3)*r2(3) ...
+         %  r1(1)*M2(1)+M1(1)*r2(1) ...
+         %  r1(1)*M2(2)+M1(1)*r2(2) ...
+         %  r1(1)*M2(3)+M1(1)*r2(3) ...
+         %  r1(2)*M2(1)+M1(2)*r2(1) ...
+          % r1(2)*M2(2)+M1(2)*r2(2) ...
+          % r1(2)*M2(3)+M1(2)*r2(3) ...
+          % r1(3)*M2(1)+M1(3)*r2(1) ...
+          % r1(3)*M2(2)+M1(3)*r2(2) ...
+          % r1(3)*M2(3)+M1(3)*r2(3)];
 else
     %u= [r1_in(1)*r2_in(1) r1_in(2)*r2_in(1) r1_in(3)*r2_in(1) r1_in(1)*r2_in(2) r1_in(2)*r2_in(2) r1_in(3)*r2_in(2) r1_in(1)*r2_in(3) r1_in(2)*r2_in(3) r1_in(3)*r2_in(3)];
     u = [r1(1)*r2(1) r1(2)*r2(1) r1(3)*r2(1) r1(1)*r2(2) r1(2)*r2(2) r1(3)*r2(2) r1(1)*r2(3) r1(2)*r2(3) r1(3)*r2(3)];
@@ -42,9 +53,9 @@ end
 
  end
 
- 	%save startpoint.mat startpoint;
+ 	save startpoint.mat x_s_1 x_s_2;
  	save ray_vectors.mat ray1_in_vector ray2_in_vector ray1_vector ray2_vector;
 	save U.mat U;
-%   save d_vector.mat d1_mat d2_mat
+  %save d_vector.mat d1_mat d2_mat
 
 end

@@ -1,5 +1,6 @@
 function [R_est,t_est,ray1_vector,ray2_vector]=R_t_estimator_pixel(imgp1,imgp2,scale,type)
 load parameter.mat
+load camera_motion.mat
 	%[U,ray1_vector,ray2_vector]=umatrix_generator_pixel(imgp1,imgp2,type,scale);		
 	[U,ray1_vector,ray2_vector]=umatrix_generator_general(imgp1,imgp2,type,scale);
  if(scale == 1)
@@ -20,7 +21,7 @@ load parameter.mat
   g(10)^2+g(11)^2+g(12)^2
   g(13)^2+g(14)^2+g(15)^2
   g(16)^2+g(17)^2+g(18)^2
-     R1=[g(10) g(11) g(12)]; 
+  R1=[g(10) g(11) g(12)]; 
 	R2=[g(13) g(14) g(15)]; 
 	R3=[g(16) g(17) g(18)];
 	R_est=[R1;R2;R3];
@@ -31,8 +32,7 @@ load parameter.mat
 	   g(4) g(5) g(6);
 	   g(7) g(8) g(9)];
 	
-	T=R_est*E'*R_est
-    T=T';
+	T=R_est*E'
 	t_3=(T(2,1)-T(1,2))/2;
 	t_2=(T(1,3)-T(3,1))/2;
 	t_1=(T(3,2)-T(2,3))/2;
@@ -42,7 +42,7 @@ load parameter.mat
     %k=sqrt(2);
 	  g0=g/k;
     g = lagrange_no_scale(U,g0);
-     E=[(1) g(2) g(3);
+     E=[g(1) g(2) g(3);
 	   g(4) g(5) g(6);
 	   g(7) g(8) g(9)];
     [U_,S_,V_] = svd(E);

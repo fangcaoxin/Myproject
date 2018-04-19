@@ -4,6 +4,7 @@ count = 0;
 load parameter.mat;
 load ray1_true.mat;
 load ray2_true.mat;
+load cross_point.mat
 load points.mat;
 for i= 1:point_num
     if(image1_pt(i,1)>=0&&image1_pt(i,1)<=2*hcx&&image1_pt(i,2)>=0&&image1_pt(i,2)<=2*hcy&&...
@@ -16,6 +17,8 @@ for i= 1:point_num
         ray2_in_select(count,:) = r2_in_true(i,:);
        ray2_out_select(count,:) = r2_out_true(i,:);
        point3d_effctive(count,:) = points(i,:);
+       cross_point1_effctive(count,:)= cross_point_1(i,:);
+       cross_point2_effctive(count,:) = cross_point_2(i,:);
     end
 end
 effctive_point = count;
@@ -23,3 +26,4 @@ save ray1_select.mat ray1_in_select ray1_out_select;
 save ray2_select.mat ray2_in_select ray2_out_select;
 save effctive_num.mat effctive_point;
 save point3d_effctive.mat point3d_effctive;
+save cross_point_effctive.mat cross_point1_effctive cross_point2_effctive;
