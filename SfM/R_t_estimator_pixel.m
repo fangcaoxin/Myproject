@@ -25,16 +25,14 @@ load camera_motion.mat
 	R2=[g(13) g(14) g(15)]; 
 	R3=[g(16) g(17) g(18)];
 	R_est=[R1;R2;R3];
-  t_3=(R_est(3,3)*g(4)-R_est(2,3)*g(7))/(R_est(3,3)*R_est(2,2)-R_est(2,3)*R_est(3,2));
-	t_2=(R_est(3,2)*g(4)-R_est(2,2)*g(7))/(R_est(2,2)*R_est(3,3)-R_est(3,2)*R_est(2,3));
-	t_1=(R_est(2,1)*g(3)-R_est(1,1)*g(6))/(R_est(1,1)*R_est(2,2)-R_est(2,1)*R_est(1,2));
+    t_3=(R_est(3,2)*g(1)-R_est(3,1)*g(2))/(R_est(2,2)*R_est(3,1)-R_est(2,1)*R_est(3,2));
+	t_2=(R_est(2,2)*g(1)-R_est(2,1)*g(2))/(R_est(2,2)*R_est(3,1)-R_est(3,2)*R_est(2,1));
+	t_1=(R_est(1,2)*g(4)-R_est(1,1)*g(5))/(R_est(1,1)*R_est(3,2)-R_est(1,2)*R_est(3,1));
   E=[g(1) g(2) g(3);
 	   g(4) g(5) g(6);
 	   g(7) g(8) g(9)];
 	
-	%T=R_est'*E
-  T = Rotate'*E
-
+	T=R_est*E'
 	t_3=(T(2,1)-T(1,2))/2;
 	t_2=(T(1,3)-T(3,1))/2;
 	t_1=(T(3,2)-T(2,3))/2;
