@@ -94,9 +94,9 @@ int main(int argc, char** argv) {
 	string filename = folder_name + to_string(beg_no) + ".jpg";
 #endif//OLD
 #ifdef LIST
-	string saveImage = "..//..//..//..//result//20171210_correction//";
+	string saveImage = "..//..//..//..//result//20180517//my_test2//";
 	ifstream image_file;
-	image_file.open("list.txt", ios::in);
+	image_file.open("test2.txt", ios::in);
 	vector<string> image_list;
 	Mat res;
 	while (!image_file.eof()) {
@@ -107,10 +107,15 @@ int main(int argc, char** argv) {
 		if (image_name.length() == 0) break;
 		string filename = image_name;
 		Mat image = imread(filename);
+		/*Mat res;
+		resize(image, res, Size(640, 480));*/
 		opticalModelCorrect(image, res);
+		//dehaze(image, res);
+		//enhance(image, res);
 		imwrite(save_filename, res);
-		/*imshow("res", res);
-		waitKey(0);*/
+		imshow("res", res);
+		waitKey(0);
+
 	}
 	image_file.close();
 	

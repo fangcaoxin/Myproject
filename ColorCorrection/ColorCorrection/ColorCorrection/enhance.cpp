@@ -45,7 +45,7 @@ void enhance(Mat src, Mat& dst) {
 	Mat img1;
 	SimplestColorBalance(src, img1, 5);
 	img1.convertTo(img1, CV_8UC3);
-	imshow("colorBalance", img1);
+	//imshow("colorBalance", img1);
 	Mat LabIm1, L1;
 	vector<Mat> result;
 	//img1 = src;
@@ -55,7 +55,7 @@ void enhance(Mat src, Mat& dst) {
 	applyCLAHE(LabIm1, L1, result);
 	Mat img2 = result[0];
 	Mat L2 = result[1];
-	imshow("image after histogram", img2);
+	//imshow("image after histogram", img2);
 	Mat w1, w2;
 	vector<Mat> weight1, weight2, bCnl1, gCnl1, rCnl1, bCnl2, gCnl2, rCnl2;
 	calWieght(img1, L1, w1);

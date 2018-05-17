@@ -14,16 +14,6 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 	Mat bbchannel,darkchannel,colorRelfectMap,brightchannel;
 	vector<Mat> colorRelfectMapChannels;
 
-	/*caculate bright channel of RGB */
-	calcDarkChannel(darkchannel, brightchannel, src, radius);
-	//guidedFilter(src, darkchannel, darkchannel, 32, 1e-2);
-	//darkchannel.convertTo(darkchannel, CV_32FC1);
-	//normalize(darkchannel, darkchannel, 0, 1, NORM_MINMAX, -1, Mat());
-	guidedFilter(src, brightchannel, brightchannel, 32, 1e-2);
-	
-	//normalize(brightchannel, brightchannel, 0, 1, NORM_MINMAX, -1, Mat());
-	//imshow("brightchannel", brightchannel);
-
 #ifdef COLORREFLECTFREE
 	/*caculate bright R,G,B channel*/
 	calcMaxReflectChannelColorMap(src, colorRelfectMap, radius);
@@ -35,36 +25,28 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 
 	/*caculate color of ambient illumination*/
 	colorRelfectMap.convertTo(colorRelfectMap, CV_32FC3);
-	
 	split(colorRelfectMap, colorRelfectMapChannels);
 	brightchannel.convertTo(brightchannel, CV_32FC1);
 	Mat ita_b, ita_g, ita_r,ita_merge;
 	vector<Mat> color_ita;
-	ita_b = colorRelfectMapChannels[0].mul(1 / brightchannel);
+	ita_r = colorRelfectMapChannels[0].mul(1 / brightchannel);
 	ita_g = colorRelfectMapChannels[1].mul(1 / brightchannel);
-	ita_r = colorRelfectMapChannels[2].mul(1 / brightchannel);
+	ita_b = colorRelfectMapChannels[2].mul(1 / brightchannel);
 	color_ita.push_back(ita_b);
 	color_ita.push_back(ita_g);
 	color_ita.push_back(ita_r);
 	merge(color_ita, ita_merge);
-	//normalize(ita_merge, ita_merge, 0, 1, NORM_MINMAX);
-	/*src.convertTo(src, CV_32FC3);
+	normalize(ita_merge, ita_merge, 0, 1, NORM_MINMAX);
+	src.convertTo(src, CV_32FC3);
 	normalize(src, src, 0, 1, NORM_MINMAX, -1, Mat());
-	
-	guidedFilter(src, ita_merge, ita_merge, 32, 1e-2);*/
-	guidedFilter(src, colorRelfectMapChannels[2], colorRelfectMapChannels[2], 32, 1e-2);
-	//imshow("color_ita", ita_merge);
-	//imwrite("color_red.jpg", colorRelfectMapChannels[2]);
-	
+	guidedFilter(src, ita_merge, ita_merge, 32, 1e-2);
 	/*to get the color ambient illumination free src image */
-
-	
-	//Mat src_colorRefelectFree = src.mul(1 / ita_merge);
-	Mat src_colorRefelectFree = src;
-
+	Mat src_colorRefelectFree = src.mul(1 / ita_merge);
 	normalize(src_colorRefelectFree, src_colorRefelectFree, 0, 255, NORM_MINMAX);
 	src_colorRefelectFree.convertTo(src_colorRefelectFree, CV_8UC3);
-	//imshow("src_colorRefelectFree", src_colorRefelectFree);
+#else
+	Mat src_colorRefelectFree = src;
+#endif /* COLORREFLECTFREE */
 	
 	/* caluculate src_colorRefelctFree for bbchannel */
 	Mat light_brightchannel, light_darkchannel;
@@ -72,7 +54,6 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 	guidedFilter(src, light_brightchannel, light_brightchannel, 32, 1e-2);
 	//imshow("airlight", light_brightchannel);
 	//imwrite("airlight.jpg", light_brightchannel);
-#endif //COLORREFLECTFREE
 //#define TRANSESTIMATION_ESTI
 #ifdef TRANSESTIMATION_ESTI
 	Mat transmission;
