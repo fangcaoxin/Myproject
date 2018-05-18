@@ -1,29 +1,33 @@
+
 #include <iostream>
-#include "core.h"
-#include "math.h"
-#include "dehaze.h"
-#include "utility.h"
-#include "EM.h"
-#include "restoration.h"
-//#define FLOW
-//#define MOG
-//#define DEHAZE
-#define BAYESIAN
+//#include "core.h"
+//#include "math.h"
+//#include "dehaze.h"
+//#include "utility.h"
+//#include "EM.h"
+//#include "restoration.h"
+#include "particle_removal.h"
+#define TIME
+#ifdef TIME
+#include <windows.h>
+#endif 
+
 //#define SAVERESULT
 //#define EM
 #define CAMERAMOTION
 #define CONNECTED
-//#define CONTOURS
-#define RGBSTDANALYSIS
-//using namespace cv::optflow;
-Ptr<BackgroundSubtractor> pMOG;
+#ifdef TIME
+LARGE_INTEGER Freq; 
+LARGE_INTEGER st;                 
+LARGE_INTEGER et;
+#endif
 //string folderName = "img_170721_01j";
-string folderName = "img_170724_02j";
-string saveFolder = "..//..//..//image//" + folderName + "//" + folderName + "_";
-string saveImage = "..//..//..//result//20171210//" + folderName + "_";
+std::string folderName = "img_170724_02j";
+std::string saveFolder = "..//..//..//image//" + folderName + "//" + folderName + "_";
+std::string saveImage = "..//..//..//result//20171210//" + folderName + "_";
 int width = 1358; //1358 without black range
 int height = 1080; //1080
-Rect rect(6, 4, width - 6, height - 8);
+cv::Rect rect(6, 4, width - 6, height - 8);
 int main(int argc, char* argv[]) {
 
 
@@ -32,92 +36,71 @@ int main(int argc, char* argv[]) {
 
 	int beg_num = 39;
 	int frame_num = 150;
-	Mat backgroud;
+	cv::Mat backgroud;
 	int frame_count = 0;
-	vector<Mat> image_list;
-	vector<Mat> image_list_gray;
-
-
+	std::vector<cv::Mat> image_list;
+	std::vector<cv::Mat> image_list_gray;
 	int count = 0;
 	for (int i = beg_num; i < beg_num + frame_num; i = i + 1) {
-		string file_name = saveFolder + to_string(i) + ".jpg";
-		string save_name = saveImage + to_string(i - 1) + "_1210out.jpg";
-		cout << "file name :" << file_name << endl;
-		Mat cur = imread(file_name);
-		Mat input_resize, cur_gray;
-		resize(cur(rect), input_resize, Size(width_input, height_input));
+		std::string file_name = saveFolder + std::to_string(i) + ".jpg";
+		std::string save_name = saveImage + std::to_string(i - 1) + "_1210out.jpg";
+		std::cout << "file name :" << file_name << std::endl;
+		cv::Mat cur = cv::imread(file_name);
+		cv::Mat input_resize, cur_gray;
+		resize(cur(rect), input_resize, cv::Size(640, 480));
 		image_list.push_back(input_resize);
 		cvtColor(input_resize, cur_gray, CV_BGR2GRAY);
 		image_list_gray.push_back(cur_gray);
 		count++;
 
-#ifdef TEST
-		string file_1 = "..//..//..//result//1-1.jpg";
-		string file_2 = "..//..//..//result//2-1.jpg";
-
-		vector<Mat> diff_patch;
-		Mat img_1 = imread(file_1);
-		Mat img_2 = imread(file_2);
-		cvtColor(img_1, img_1, CV_BGR2GRAY);
-		cvtColor(img_2, img_2, CV_BGR2GRAY);
-		diff_patch.push_back(img_1);
-		diff_patch.push_back(img_2);
-		Mat sum(img_1.size(), CV_8UC1, Scalar(0));
-		Mat inter(img_1.size(), CV_8UC1, Scalar(0));
-		sumAreaByRadius(diff_patch, sum, 5);
-		showLabelImg(sum);
-		diffByPreNext(diff_patch, inter);
-		imwrite("..//..//..//result//sum_1_2.jpg", sum);
-		imwrite("..//..//..//result//inter_1_2.jpg", inter);
-	}
-#endif //TEST
-
 		if (count < 3) {
 			continue;
 		}
 		else {
-			vector<Mat> diff_c;
-			vector<Mat> diff_wb_c;
-			vector<Mat> channels;
-			vector<Mat> image_list_compensation;
-			vector<Mat> image_list_gray_compensation;
-			Mat output;
-
-			
-			Mat diff_output_c, darkChannel, brightChannel;
-			
+			std::vector<cv::Mat> diff_c;
+			std::vector<cv::Mat> diff_wb_c;
+			std::vector<cv::Mat> channels;
+			std::vector<cv::Mat> image_list_compensation;
+			std::vector<cv::Mat> image_list_gray_compensation;
+			std::vector<cv::Mat> camera_motion;
+			cv::Mat output;
+			cv::Mat diff_output_c, darkChannel, brightChannel;
+#ifdef TIME
+			QueryPerformanceFrequency(&Freq);
+			QueryPerformanceCounter(&st);
+#endif
 #ifdef CAMERAMOTION
 			calcDarkChannel(darkChannel, brightChannel, image_list[1], 0);
-			split(image_list[1], channels);
-			Mat trans = channels[2] - darkChannel;
-			threshold(trans, trans, 20, 255, CV_THRESH_BINARY);
-			vector<Mat> camera_motion;
+			cv::split(image_list[1], channels);
+			cv::Mat trans = channels[2] - darkChannel;
+			cv::threshold(trans, trans, 20, 255, CV_THRESH_BINARY);
 			calcPyrLKflow(image_list_gray, trans,camera_motion);
 			imageListCompensation(image_list, image_list_compensation, camera_motion);
 			imageListGrayCompensation(image_list_gray, image_list_gray_compensation, camera_motion);
-			
 			FrameRelativeDiff(image_list_gray_compensation, diff_c);
 			diffByThreshold(diff_c, diff_wb_c, 5);
 #endif //CAMERAMOTION
 #ifdef CONNECTED
-			
-			Mat cdfd,normalize_std,normalize_std1;
-			
-			Mat labels, stats, centroids;
-			Mat labels1, stats1, centroids1;
-			Mat labels_final, stats_final, centroids_final;
-			Mat labels_show, labels1_show;
-			vector<Mat> diff_wb_c_std;
-			int size= connectedComponentsWithStats(diff_wb_c[0], labels, stats, centroids, 8, 4);
-			int size1 = connectedComponentsWithStats(diff_wb_c[1], labels1, stats1, centroids1, 8, 4);
+			cv::Mat cdfd,normalize_std,normalize_std1;
+			cv::Mat labels, stats, centroids;
+			cv::Mat labels1, stats1, centroids1;
+			cv::Mat labels_final, stats_final, centroids_final;
+			cv::Mat labels_show, labels1_show;
+			std::vector<cv::Mat> diff_wb_c_std;
+			int size= cv::connectedComponentsWithStats(diff_wb_c[0], labels, stats, centroids, 8, 4);
+			int size1 = cv::connectedComponentsWithStats(diff_wb_c[1], labels1, stats1, centroids1, 8, 4);
 			rgbStdDev(image_list[1], labels, stats, normalize_std, size-1);
 			rgbStdDev(image_list[1], labels1, stats1, normalize_std1, size1 - 1);
 			getMaskFromStd(labels, normalize_std);
 			getMaskFromStd(labels1, normalize_std1);
-			int num = sumAreaByRadius(labels, labels1, centroids, centroids1, diff_output_c, 20);
+			int num = sumAreaByRadius(labels, labels1, centroids, centroids1, diff_output_c, 5);
 			imageClosing(diff_output_c, diff_output_c, 12);
 			int size_final = connectedComponentsWithStats(diff_output_c, labels_final, stats_final, centroids_final);
 			floatingAreaRestoration(image_list_compensation, image_list_gray_compensation, stats_final, labels_final, output);
+#ifdef TIME
+			QueryPerformanceCounter(&et);
+			std::cout << "Processint time: " << (et.QuadPart - st.QuadPart) * 1000 / Freq.QuadPart << "ms" << std::endl;
+#endif
 			//showMaskImg(labels, labels_show);
 			//showMaskImg(labels1, labels1_show);
 			//imwrite("label.jpg", labels_show);
@@ -127,47 +110,7 @@ int main(int argc, char* argv[]) {
 			//vector<float> probs_similar;
 			//nearNeighourSimilarity(image_list[1], stats, probs_similar);
 #endif //CONNECTED
-#ifdef EM
-			Mat samples;
-			vector<int> valid_labels;
-			vector<float> probs_color;
-			createSamples(image_list[1], stats,labels, samples);
-			EMSegmetationSamples(image_list[1], samples, valid_labels,probs_color,2);
-		
-			getMaskFromValidLabels(labels, valid_labels);
-			//imwrite("valid_label.jpg", labels);
-			showAreaLabel(img_label, labels, centroids, size);
-			showMaskImg(labels);
-		EMSegmetation(image_list[1], diff_output_c, num, 3);
-#endif //EM
-#ifdef CONTOURS
-		vector<vector<Point>> contours;
-		vector<Vec4i> hierarchy;
-		
-		vector<float> probs_grad;
-		findContours(diff_output_c, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-		contourSobel(image_list_gray[1], hierarchy, probs_grad, contours);
-		float sum = 0.;
-		for (int i = 0; i < size - 1; i++) {
-			float prob = probs_color[i] * probs_grad[i];
-			sum += prob;
 
-
-		}
-		for (int k = 0; k < size - 1; k++) {
-			float prob = probs_color[k] * probs_grad[k];
-			/*prob /= sum;*/
-			cout << "prob " << prob << endl;
-		}
-#endif //CONTOURS
-		
-
-		
-
-		//getMaskFromProbs(labels, probs_similar, probs_grad);
-		/*showLabelImg(cdfd);*/
-		//Mat show_img(height_input, width_input, CV_8UC1, Scalar(0));
-		//showMaskImg(labels, show_img);
 #ifdef SAVERESULT
 		Mat combine1, combine2, combine;
 		//cvtColor(cdfd, cdfd, CV_GRAY2BGR);
@@ -200,7 +143,7 @@ int main(int argc, char* argv[]) {
 			//imwrite("cdfd.jpg", diff_output_c);
 			//imshow("output", output);
 			//imshow("trans", trans);
-			imwrite(save_name, output);
+			//imwrite(save_name, output);
 			//imshow("diff_cur_pre_camera", diff_wb_c[0]);
 			//imshow("diff_cur_next_camera", diff_wb_c[1]);
 			//imwrite(save_name, output);
@@ -211,7 +154,7 @@ int main(int argc, char* argv[]) {
 			image_list_gray.erase(image_list_gray.begin());
 
 			count = 2;
-			waitKey(0);
+			cv::waitKey(0);
 
 
 		}
