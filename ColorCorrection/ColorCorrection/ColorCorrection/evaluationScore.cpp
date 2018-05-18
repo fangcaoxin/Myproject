@@ -10,46 +10,46 @@
 * lab color space chroma C_ab=sqrt(a*a+b*b)
 * lab color space saturation S_ab=
 */
-double evaluationScore_UCIQUE(Mat& src_original) {
+double evaluationScore_UCIQUE(cv::Mat& src_original) {
 	double c1 = 0.4680;
 	double c2 = 0.2745;
 	double c3 = 0.2575;
-	Mat src;
+	cv::Mat src;
 	src_original.copyTo(src);
-	Mat src_lab,src_float;
-	vector<Mat> lab_channels;
-	Scalar c_mean, c_stddev,s_mean,s_stddev;
+	cv::Mat src_lab,src_float;
+	std::vector<cv::Mat> lab_channels;
+	cv::Scalar c_mean, c_stddev,s_mean,s_stddev;
 	if (src.type() == CV_8UC3) {
 		src.convertTo(src_float, CV_32FC3);
-		normalize(src_float, src_float, 0, 1, NORM_MINMAX, -1, Mat());
+		cv::normalize(src_float, src_float, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
 		//src_float = src;
 	}
 	else if(src.type()==CV_32FC3){
 		src_float = src;
-		normalize(src_float, src_float, 0, 1, NORM_MINMAX, -1, Mat());
+		normalize(src_float, src_float, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
 	}
 	else {
-		cout << "not support " << endl;
+		std::cout << "not support " << std::endl;
 		return 0;
 	}
 	
 	
-	cvtColor(src_float, src_float,CV_BGR2Lab);
+	cv::cvtColor(src_float, src_float,CV_BGR2Lab);
 	//normalize(src_float, src_float, 0, 1, NORM_MINMAX, -1, Mat());
-	cout << "value" << src_float.at<Vec3f>(10, 10) << endl;
+	std::cout << "value" << src_float.at<cv::Vec3f>(10, 10) << std::endl;
 	split(src_float, lab_channels);
 
-	Mat l = lab_channels[0];
-	Mat a = lab_channels[1];
-	Mat b = lab_channels[2];
-	Mat C_ab, S_ab;
-	Mat S_ab_bottom;
+	cv::Mat l = lab_channels[0];
+	cv::Mat a = lab_channels[1];
+	cv::Mat b = lab_channels[2];
+	cv::Mat C_ab, S_ab;
+	cv::Mat S_ab_bottom;
 	cv::sqrt(a.mul(a) + b.mul(b),C_ab);
 	sqrt(a.mul(a) + b.mul(b) + l.mul(l), S_ab_bottom);
 	S_ab = C_ab.mul(1 / S_ab_bottom);
-	normalize(C_ab, C_ab, 0, 1, NORM_MINMAX);
-	meanStdDev(C_ab, c_mean, c_stddev);
-	meanStdDev(S_ab, s_mean, s_stddev);
+	cv::normalize(C_ab, C_ab, 0, 1, cv::NORM_MINMAX);
+	cv::meanStdDev(C_ab, c_mean, c_stddev);
+	cv::meanStdDev(S_ab, s_mean, s_stddev);
 	//Mat H_ab(src.size(),CV_32FC1);
 	//for (int i = 0; i < src.rows; i++) {
 	//	for (int j = 0; j < src.cols; j++) {
@@ -60,10 +60,10 @@ double evaluationScore_UCIQUE(Mat& src_original) {
 	//normalize(H_ab, H_ab, 0, 1, NORM_MINMAX);
 	//meanStdDev(H_ab, h_mean, h_stddev);
 
-	Mat flat;
-	vector<float> low_value, high_value;
+	cv::Mat flat;
+	std::vector<float> low_value, high_value;
 	lab_channels[0].reshape(1, 1).copyTo(flat);
-	cv::sort(flat, flat, SORT_ASCENDING);
+	cv::sort(flat, flat, cv::SORT_ASCENDING);
 	int area = flat.cols*0.01;
 	double low_value_average = 0.;
 	double high_value_average = 0.;

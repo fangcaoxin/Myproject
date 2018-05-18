@@ -1,15 +1,15 @@
 #include "dehaze.h"
 #include <opencv2/highgui/highgui.hpp>
 
-void dehaze(Mat& input, Mat& recover) {
+void dehaze(cv::Mat& input, cv::Mat& recover) {
 	int height = input.rows;
 	int width = input.cols;
 
-	Mat darkchannel;
-	Mat brightchannel;
-	Mat transmission;
-	Mat refine_transmission;
-    recover=Mat(height, width, CV_8UC3);
+	cv::Mat darkchannel;
+	cv::Mat brightchannel;
+	cv::Mat transmission;
+	cv::Mat refine_transmission;
+    recover= cv::Mat(height, width, CV_8UC3);
 	int darkchannelradius = cvRound(MIN(width, height)*0.015);
 	//int darkchannelradius = 10;
 	double Airlight[3] = { 0,0,0 };
@@ -25,7 +25,7 @@ void dehaze(Mat& input, Mat& recover) {
 	calcTransmission(transmission, input, Airlight, darkchannelradius);
 
 	printf("GuidedFilterColor...");
-	guidedFilter(input, transmission, refine_transmission, 32, 1e-2);
+	cv::ximgproc::guidedFilter(input, transmission, refine_transmission, 32, 1e-2);
 
 	printf("CalcRecover...");
 	calcRecover(recover, input, refine_transmission, Airlight);
@@ -102,32 +102,29 @@ void dehazeDC(Mat image, Mat &dehaze)
 
 }
 
-void dehazeMY(Mat image, Mat &mydehaze)
+void dehazeMY(cv::Mat image, cv::Mat &mydehaze)
 {
-	vector<Mat>bgr;
+	std::vector<cv::Mat>bgr;
 	split(image, bgr);
 	bgr[0].convertTo(bgr[0], CV_32FC1);
 	bgr[1].convertTo(bgr[1], CV_32FC1);
 	bgr[2].convertTo(bgr[2], CV_32FC1);
-	normalize(bgr[0], bgr[0], 0, 1, NORM_MINMAX, -1, Mat());
-	normalize(bgr[1], bgr[1], 0, 1, NORM_MINMAX, -1, Mat());
-	normalize(bgr[2], bgr[2], 0, 1, NORM_MINMAX, -1, Mat());
+	cv::normalize(bgr[0], bgr[0], 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
+	cv::normalize(bgr[1], bgr[1], 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
+	cv::normalize(bgr[2], bgr[2], 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
 
-	Mat bright = Mat::zeros(image.rows, image.cols, CV_8U);
-	Mat dark = Mat::zeros(image.rows, image.cols, CV_8U);
+	cv::Mat bright = cv::Mat::zeros(image.rows, image.cols, CV_8U);
+	cv::Mat dark = cv::Mat::zeros(image.rows, image.cols, CV_8U);
 
 	//CalcBrightChannel(bright, image, 0);
 	//CalcDarkChannel(dark, image, 0);
 	calcDarkChannel(dark, bright, image, 5);
-
-
-
 	bright.convertTo(bright, CV_32FC1);
 	dark.convertTo(dark, CV_32FC1);
-	normalize(bright, bright, 0, 1, NORM_MINMAX, -1, Mat());
-	normalize(dark, dark, 0, 1, NORM_MINMAX, -1, Mat());
+	cv::normalize(bright, bright, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
+	cv::normalize(dark, dark, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
 	//Mat transmission = 1 - bright + dark; //key
-	Mat transmission = 1-dark;
+	cv::Mat transmission = 1-dark;
 
 	//Mat reddark=Mat::zeros(image.rows, image.cols, CV_8U);
 	//CalcRedDarkChannel(reddark, image, 3);
@@ -136,19 +133,17 @@ void dehazeMY(Mat image, Mat &mydehaze)
 	//transmission=1-transmission;
 	//Mat gray;
 	//cvtColor(image, gray, CV_BGR2GRAY);
-	guidedFilter(image, transmission, transmission, 60, 1e-6);
-
-
+	cv::ximgproc::guidedFilter(image, transmission, transmission, 60, 1e-6);
 	imshow("trans", transmission);
 	double minVal, maxVal;
 	minMaxLoc(transmission, &minVal, &maxVal);
 
 	double A = minVal;
-	cout << "myair=" << minVal << endl;
-	Mat tb = Mat::ones(image.rows, image.cols, CV_32FC1);
-	Mat tg = Mat::ones(image.rows, image.cols, CV_32FC1);
-	Mat tr = Mat::ones(image.rows, image.cols, CV_32FC1);
-	Mat redtrans = Mat::ones(image.rows, image.cols, CV_32FC3);
+	std::cout << "myair=" << minVal << std::endl;
+	cv::Mat tb = cv::Mat::ones(image.rows, image.cols, CV_32FC1);
+	cv::Mat tg = cv::Mat::ones(image.rows, image.cols, CV_32FC1);
+	cv::Mat tr = cv::Mat::ones(image.rows, image.cols, CV_32FC1);
+	cv::Mat redtrans = cv::Mat::ones(image.rows, image.cols, CV_32FC3);
 
 	for (int i = 0; i<image.cols; i++)
 		for (int j = 0; j<image.rows; j++)
@@ -159,9 +154,9 @@ void dehazeMY(Mat image, Mat &mydehaze)
 			tb.at<float>(j, i) = (bgr[0].at<float>(j, i) - t) / t+t;
 			tg.at<float>(j, i) = (bgr[1].at<float>(j, i) - t) / t+t;
 			tr.at<float>(j, i) = (bgr[2].at<float>(j, i)-t) / t+t;
-			redtrans.at<Vec3f>(j, i)[0] = 0.0;
-			redtrans.at<Vec3f>(j, i)[1] = 0.0;
-			redtrans.at<Vec3f>(j, i)[2] = transmission.at<float>(j, i);
+			redtrans.at<cv::Vec3f>(j, i)[0] = 0.0;
+			redtrans.at<cv::Vec3f>(j, i)[1] = 0.0;
+			redtrans.at<cv::Vec3f>(j, i)[2] = transmission.at<float>(j, i);
 		}
 
 	//imshow("redt",redtrans);
@@ -169,10 +164,10 @@ void dehazeMY(Mat image, Mat &mydehaze)
 	/*bgr[0] = tb;
 	bgr[1] = tg;
 	bgr[2] = tr;*/
-	normalize(bgr[0], bgr[0], 0, 1, NORM_MINMAX);
-	normalize(bgr[1], bgr[1], 0, 1, NORM_MINMAX);
-	normalize(bgr[2], bgr[2], 0, 1, NORM_MINMAX);
-	merge(bgr, mydehaze);
+	cv::normalize(bgr[0], bgr[0], 0, 1, NORM_MINMAX);
+	cv::normalize(bgr[1], bgr[1], 0, 1, NORM_MINMAX);
+	cv::normalize(bgr[2], bgr[2], 0, 1, NORM_MINMAX);
+	cv::merge(bgr, mydehaze);
 
 	//mydehaze.convertTo(mydehaze, CV_8UC3);
 }

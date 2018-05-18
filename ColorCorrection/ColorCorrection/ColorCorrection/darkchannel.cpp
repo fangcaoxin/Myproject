@@ -1,7 +1,7 @@
 #include "core.h"
 #include  <opencv2/highgui/highgui.hpp>
 
-void calcDarkChannel(Mat& darkchannel,Mat& brightchannel, Mat& input, int radius) {
+void calcDarkChannel(cv::Mat& darkchannel, cv::Mat& brightchannel, cv::Mat& input, int radius) {
 
 	
 	int height = input.rows;
@@ -35,7 +35,7 @@ void calcDarkChannel(Mat& darkchannel,Mat& brightchannel, Mat& input, int radius
 						for (int k = 0; k < channels; k++)
 						{
 
-							int cur = input.at<Vec3b>(m, n)[k];
+							int cur = input.at<cv::Vec3b>(m, n)[k];
 							if (cur < min)
 								min = cur;
 
@@ -62,7 +62,7 @@ void calcDarkChannel(Mat& darkchannel,Mat& brightchannel, Mat& input, int radius
 
 }
 
-void blockAverage(Mat& darkChannel, Mat& mask, int radius) {
+void blockAverage(cv::Mat& darkChannel, cv::Mat& mask, int radius) {
 	int width = darkChannel.cols;
 	int height = darkChannel.rows;
 
@@ -106,10 +106,10 @@ void blockAverage(Mat& darkChannel, Mat& mask, int radius) {
 
 struct pixel {
 	int value;
-	vector<Point2i> pos;
+	std::vector<cv::Point2i> pos;
 };
 //#define DRAWHIST
-void darkChannelMask(Mat& darkchannel, Mat& mask) {
+void darkChannelMask(cv::Mat& darkchannel, cv::Mat& mask) {
 #ifdef DRAWHIST
 	Mat hist;
 	int histSize = 256;
@@ -152,28 +152,6 @@ void darkChannelMask(Mat& darkchannel, Mat& mask) {
 #endif //DRAWHIST
 }
 
-void linerConstraint(Mat& gray_pre, Mat& gray, Mat& output) {
-	int width = gray.cols;
-	int height = gray.rows;
-
-	Mat diff = gray - gray_pre;
-	Mat tmp(height, width, CV_8UC1, Scalar(0));
-	Mat tmp_show(height, width, CV_8UC1, Scalar(0));
-	for (int i = 0; i < height; i++) {
-		for (int j = 0; j < width; j++) {
-			int diff_val = diff.at<uchar>(i, j);
-			int cur_val_bg = gray_pre.at<uchar>(i, j);
-			if (diff_val > 10) {
-				tmp.at<uchar>(i, j) = 255;
-				float ratio = (float)diff_val /(float) cur_val_bg;
-				int ratio_normalize = ratio * 255;
-				tmp_show.at<uchar>(i, j) = ratio_normalize;
-			}
-		}
-	}
-	output = tmp;
-	imshow("ratio_show", tmp_show);
-}
 
 void calcDarkChannelByIllumi(Mat& darkchannel, Mat& input, int radius) {
 
