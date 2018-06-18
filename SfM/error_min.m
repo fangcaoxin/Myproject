@@ -2,14 +2,16 @@ function res =  error_min(init, x,x_w, K, c, Ra, ra)
 fun = @(gg)fun1(gg, x, K, c, Ra, ra) - x_w;
 lb = [-1 -1 -1 -1 -1 -1 -500 -500 0 0];
 ub = [1 1 1 1 1 1 500 500 800 45];
-options=optimoptions('lsqnonlin', 'Display','iter','FunctionTolerance',1e-10);
-res = lsqnonlin(fun, init,lb, ub, options);
-problem = createOptimProblem('lsqnonlin','x0',init,'objective',fun,...
-    'lb',lb,'ub',ub);
-ms = MultiStart;
-[xx,f] = run(ms, problem, 30);
-f
-res = xx;
+%options=optimoptions('lsqnonlin', 'Display','iter','FunctionTolerance',1e-10);
+opts = optimset("MaxIter", 1e5, "Display", "on");
+res = lsqnonlin(fun, init,lb, ub, opts);
+%problem = createOptimProblem('lsqnonlin','x0',init,'objective',fun,...
+ %   'lb',lb,'ub',ub);
+%ms = MultiStart;
+%[xx,f] = run(ms, problem, 30);
+%f
+%res = xx;
+fun
 end
 
 function val = fun1(gg, x, K, c, Ra, ra)
