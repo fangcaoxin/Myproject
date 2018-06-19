@@ -10,12 +10,13 @@ Ra = 50;
 ra = 46;
 %Rot = Rotation_Matrix(:,:,1);
 %trans = Translation(:,:,1);
-Rot = [1 0 0; 0 1 0; 0 0 1];
-trans = [0; 0; 500];
+Rot = [0.99 0.1 0; 0 0.98 0.2; 0 0.05 0.99];
+trans = [5; 25; 483];
+Rt_c = [0.5 0.5 25 -1 1 1.5];
 init = [Rot(1,1) Rot(1,2) Rot(1,3) ...
         Rot(2,1) Rot(2,2) Rot(2,3) ...
-        trans(1) trans(2) trans(3) 25];
+        trans(1) trans(2) trans(3) Rt_c];
 x = imagePoints(:,:,1);
-x_w = worldPoints(:,:,1);
+x_w = worldPoints;
 %res =  error_min(init, x,x_w, K, c, Ra, ra);
-res = error_min_1(init, x, x_w, K, c, Ra, ra);
+res = error_min_2(init, x, x_w, K, c, Ra, ra);

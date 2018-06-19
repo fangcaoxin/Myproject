@@ -1,7 +1,7 @@
 function res =  error_min_1(init, x,x_w, K, c, Ra, ra)
 fun = @(gg)fun1(gg, x, x_w, K, c, Ra, ra);
-lb = [-1 -1 -1 -1 -1 -1 -500 -500 0 0];
-ub = [1 1 1 1 1 1 500 500 800 100];
+lb = [-1 -1 -1 -1 -1 -1 -500 -500 0 -5 -5 0 -5 -5 -5];
+ub = [1 1 1 1 1 1 500 500 800 5 5 46 5 5 5];
 %options=optimoptions('lsqnonlin', 'Display','iter','FunctionTolerance',1e-10);
 opts = optimset("MaxIter", 1e5, "Display", "on");
 nonlcon = @(gg)cameraRot(gg, x, x_w, K , c, Ra, ra);
@@ -109,7 +109,9 @@ r2 = r2/norm(r2);
 r3 = cross(r1,r2);
 Rot = [r1;r2;r3];
 ts = [gg(7); gg(8);gg(9)];
-d = gg(10);
+tc = [gg(10); gg(11); gg(12)];
+ac = [gg(13); gg(14); gg(15)]; %rotate x, y, z
+Rc = angle2Rot(gg(13), gg(14), gg(15));
 hcx = K(3,1);
 hcy = K(3,2);
 fx = K(1,1);
@@ -122,14 +124,14 @@ r = ra;
 u_v = x - [hcx hcy];
 u_v(:,3) = 1;
 r_in = u_v./[fx fy 1];
-
+r_in = r_in*Rc';
 r_in = r_in./sqrt(sum(r_in.*r_in,2)); % normalize
-t_0 = (-r_in(:,3)*d + sqrt(r_in(:,3).*r_in(:,3)*d*d-(r_in(:,2).*r_in(:,2)+r_in(:,3).*...
-    r_in(:,3))*(d*d-r*r)))./(r_in(:,2).*r_in(:,2)+r_in(:,3).*r_in(:,3));
+t_0 = (-(r_in(:,3)*tc(3) + r_in(:,2)*tc(2)) + sqrt((r_in(:,3).*tc(3) + r_in(:,2).*tc(2)).^2 -(r_in(:,2).*r_in(:,2)+r_in(:,3).*...
+    r_in(:,3))*(tc(2)*tc(2)+ tc(3)*tc(3)-r*r)))./(r_in(:,2).*r_in(:,2)+r_in(:,3).*r_in(:,3));
  %if(d+r_in(3)*t_0 < 0)
  %     t_0 = (-r_in(3)*d - sqrt(r_in(3)*r_in(3)*d*d-(r_in(2)*r_in(2)+r_in(3)*r_in(3))*(d*d-r*r)))/(r_in(2)*r_in(2)+r_in(3)*r_in(3));
  %end
-p1 = r_in.* t_0 + [0 0 d]; % point at glass and air
+p1 = r_in.* t_0 + tc'; % point at glass and air
 tmp = [0 1 1];
 coeff = repmat(tmp, size(p1,1), 1);
 N = p1.* coeff; % normal between air and glass
@@ -161,4 +163,18 @@ x_chess(:,1) = xs_w(:,1) + lamda.*r_out_w(:,1);
 x_chess(:,2) = xs_w(:,2) + lamda.*r_out_w(:,2);
 error = x_chess - x_w;
 val = norm(error, 'fro');
+end
+
+function rotate = angle2Rot(alpha, beta, gamma)
+rotate = zeros(3,3);
+r1 = [cosd(gamma) sind(gamma) 0;
+      -sind(gamma) cosd(gamma) 0;
+      0 0 1 ];
+r2 = [cosd(beta) 0 -sind(beta);
+      0 1 0;
+      sind(beta) 0 cosd(beta)];
+r3 = [1 0 0;
+      0 cosd(alpha) sind(alpha);
+      0 -sind(alpha) cosd(alpha)];
+rotate = r1*r2*r3;
 end
