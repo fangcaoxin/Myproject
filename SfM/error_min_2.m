@@ -1,50 +1,48 @@
-function res =  error_min_1(init, x,x_w, K, c, Ra, ra)
+function res =  error_min_2(init, x,x_w, K, c, Ra, ra)
 fun = @(gg)fun1(gg, x, x_w, K, c, Ra, ra);
-lb = [-1 -1 -1 -1 -1 -1 -500 -500 0 -5 -5 0 -5 -5 -5];
-ub = [1 1 1 1 1 1 500 500 800 5 5 46 5 5 5];
-%options=optimoptions('lsqnonlin', 'Display','iter','FunctionTolerance',1e-10);
-opts = optimset("MaxIter", 1e5, "Display", "on");
-nonlcon = @(gg)cameraRot(gg, x, x_w, K , c, Ra, ra);
-nonlcon1 = @(gg)cameraRot1(gg);
+lb = [-1 -1 -1 -1 -1 -1 -500 -500 0 -3 -3 20 -2 -2 -2];
+ub = [1 1 1 1 1 1 500 500 800 3 3 42 2 2 2];
+options=optimoptions(@fmincon, 'Display','iter', 'Algorithm','sqp',...
+    'MaxIterations',3000, 'MaxFunctionEvaluations', 1e4, 'ConstraintTolerance', 1e-1);
+% opts = optimset("MaxIter", 1e5, "Display", "on");
+% nonlcon1 = @(gg)cameraRot1(gg);
+nonlcon1 = @(gg)cameraRot(gg, x, x_w, K , c, Ra, ra);
 A = [];
 b = [];
 Aeq = [];
 beq = [];
-%res = fmincon(fun, init, A, b, Aeq, beq, lb, ub, nonlcon);
-%problem  =createOptimProblem('fmincon', 'x0', init, 'objective', fun, ...
-%'A', A, 'b', b, 'Aeq', Aeq, 'beq', beq, 'lb', lb, 'ub', ub, 'nonlcon', nonlcon);
-%gs = GlobalSearch;
-%[xg, fg, flg, og] = run(gs, problem);
+ res = fmincon(fun, init, A, b, Aeq, beq, lb, ub, nonlcon1,options);
+%  problem  =createOptimProblem('fmincon', 'objective', fun,'x0', init, 'lb', lb, 'ub', ub, 'nonlcon', nonlcon1,'options',options);
+%  gs = GlobalSearch;
+%  [res, val]= run(gs, problem);
 %[gg, val] = sqp(init, fun, nonlcon1, [], lb, ub);
-[res, val, info, iter, nf, lambda] = sqp(init, fun, nonlcon1, [], lb, ub);
-res
-val
-info
-iter
-nf
-lambda
+% [res, val, info, iter, nf, lambda] = sqp(init, fun, nonlcon1, [], lb, ub);
+ res
+%  val
+
 end
 
-function ceq = cameraRot1(gg)
-
+function[c, ceq] = cameraRot1(gg)
+c =[];
 ceq(1,1) = gg(1)^2 + gg(2)^2 + gg(3)^2 -1;
 ceq(2,1) = gg(4)^2 + gg(5)^2 + gg(6)^2 -1;
 ceq(3,1) = gg(1)*gg(4) + gg(2)*gg(5) + gg(3)*gg(6);
 
 end
-function ceq = cameraRot(gg, uv, x_w, K , c, Ra, ra)
+function[c1, ceq] = cameraRot(gg, uv, x_w, K , c, Ra, ra)
+c1=[];
 ceq = zeros(3+size(uv,1),1);
 ceq(1,1) = gg(1)^2 + gg(2)^2 + gg(3)^2 -1;
 ceq(2,1) = gg(4)^2 + gg(5)^2 + gg(6)^2 -1;
 ceq(3,1) = gg(1)*gg(4) + gg(2)*gg(5) + gg(3)*gg(6);
 r1 = [gg(1) gg(2) gg(3)];
 r2 = [gg(4) gg(5) gg(6)];
-r1 = r1/norm(r1);
-r2 = r2/norm(r2);
 r3 = cross(r1,r2);
 Rot = [r1;r2;r3];
 ts = [gg(7); gg(8);gg(9)];
-d = gg(10);
+tc = [gg(10); gg(11); gg(12)];
+ac = [gg(13); gg(14); gg(15)]; %rotate x, y, z
+Rc = angle2Rot(gg(13), gg(14), gg(15));
 hcx = K(3,1);
 hcy = K(3,2);
 fx = K(1,1);
@@ -57,24 +55,18 @@ r = ra;
 u_v = uv - [hcx hcy];
 u_v(:,3) = 1;
 r_in = u_v./[fx fy 1];
-%u = uv(:,1) - hcx; % coord on image sensor
-%v = uv(:,2) - hcy;
-%r_in=[u, v*fx/fy, fx]; % ray in air
+r_in = r_in*Rc';
 r_in = r_in./sqrt(sum(r_in.*r_in,2)); % normalize
-t_0 = (-r_in(:,3)*d + sqrt(r_in(:,3).*r_in(:,3)*d*d-(r_in(:,2).*r_in(:,2)+r_in(:,3).*...
-    r_in(:,3))*(d*d-r*r)))./(r_in(:,2).*r_in(:,2)+r_in(:,3).*r_in(:,3));
- %if(d+r_in(3)*t_0 < 0)
- %     t_0 = (-r_in(3)*d - sqrt(r_in(3)*r_in(3)*d*d-(r_in(2)*r_in(2)+r_in(3)*r_in(3))*(d*d-r*r)))/(r_in(2)*r_in(2)+r_in(3)*r_in(3));
- %end
-p1 = r_in.* t_0 + [0 0 d]; % point at glass and air
+t_0 = (-(r_in(:,3)*tc(3) + r_in(:,2)*tc(2)) + sqrt((r_in(:,3).*tc(3) + r_in(:,2).*tc(2)).^2 -(r_in(:,2).*r_in(:,2)+r_in(:,3).*...
+    r_in(:,3))*(tc(2)*tc(2)+ tc(3)*tc(3)-r*r)))./(r_in(:,2).*r_in(:,2)+r_in(:,3).*r_in(:,3));
+p1 = r_in.* t_0 + tc'; % point at glass and air
 tmp = [0 1 1];
 coeff = repmat(tmp, size(p1,1), 1);
 N = p1.* coeff; % normal between air and glass
 N_norm = N./sqrt(sum(N.*N, 2));
-s1 = cross(r_in, N_norm); % sin(theta_1)
-s1_norm = s1./sqrt(sum(s1.*s1,2));
-c1 = r_in.*N_norm; % cos(theta_1)
-c1_norm = c1./sqrt(sum(c1.*c1,2));
+s1 = cross(r_in, N_norm,2); % sin(theta_1)
+s1_norm = sqrt(sum(s1.*s1,2));
+c1_norm = dot(r_in, N_norm,2); % cos(theta_1)
 r_glass = n1*r_in/n2 - (n1*c1_norm./n2-sqrt(1- n1*n1/(n2*n2)*s1_norm.*s1_norm)).*N_norm;
 r_glass_norm = r_glass./sqrt(sum(r_glass.*r_glass, 2));
 t_1 =( -(p1(:,2).*r_glass_norm(:,2) +p1(:,3).*r_glass_norm(:,3)) + sqrt((p1(:,2).*r_glass_norm(:,2) +p1(:,3).*r_glass_norm(:,3)).*(p1(:,2).*r_glass_norm(:,2) +p1(:,3).*r_glass_norm(:,3))...
@@ -84,10 +76,9 @@ tmp = [0 1 1];
 coeff = repmat(tmp, size(p2,1), 1);
 N1 = p2.* coeff; % normal between  glass and water
 N1_norm = N1./sqrt(sum(N1.*N1,2));
-s2 = cross(r_glass_norm,N1_norm);
-s2_norm = s2./sqrt(sum(s2.*s2, 2));
-c2 = r_glass_norm.*N1_norm;
-c2_norm = c2./sqrt(sum(c2.*c2, 2));
+s2 = cross(r_glass_norm,N1_norm,2);
+s2_norm = sqrt(sum(s2.*s2, 2));
+c2_norm = dot(r_glass_norm, N1_norm, 2);
 r_out = n2/n3*r_glass_norm - (n2/n3*c2_norm - sqrt(1- n2*n2/(n3*n3)*s2_norm.*s2_norm)).*N1_norm;
 r_out_norm = r_out./sqrt(sum(r_out.*r_out, 2));
 x_s = p2;
@@ -97,8 +88,10 @@ x_out = x_wc - x_s;
 x_out_norm = x_out./sqrt(sum(x_out.*x_out, 2));
 angle = cross(x_out_norm, r_out_norm);
 angle_norm = sqrt(sum(angle.*angle, 2));
-ceq(4: 73,1) = angle_norm;
-
+ceq(4: 6,1) = angle_norm(1:3);
+ceq(7: 9,1) = angle_norm(24:26);
+ceq(10: 12,1) = angle_norm(50:52);
+ceq(13: 15,1) = angle_norm(68:70);
 end
 
 function val = fun1(gg, x, x_w, K, c, Ra, ra)
@@ -136,10 +129,9 @@ tmp = [0 1 1];
 coeff = repmat(tmp, size(p1,1), 1);
 N = p1.* coeff; % normal between air and glass
 N_norm = N./sqrt(sum(N.*N, 2));
-s1 = cross(r_in, N_norm); % sin(theta_1)
-s1_norm = s1./sqrt(sum(s1.*s1,2));
-c1 = r_in.*N_norm; % cos(theta_1)
-c1_norm = c1./sqrt(sum(c1.*c1,2));
+s1 = cross(r_in, N_norm, 2); % sin(theta_1)
+s1_norm = sqrt(sum(s1.*s1,2));
+c1_norm = dot(r_in, N_norm,2); % cos(theta_1)
 r_glass = n1*r_in/n2 - (n1*c1_norm./n2-sqrt(1- n1*n1/(n2*n2)*s1_norm.*s1_norm)).*N_norm;
 r_glass_norm = r_glass./sqrt(sum(r_glass.*r_glass, 2));
 t_1 =( -(p1(:,2).*r_glass_norm(:,2) +p1(:,3).*r_glass_norm(:,3)) + sqrt((p1(:,2).*r_glass_norm(:,2) +p1(:,3).*r_glass_norm(:,3)).*(p1(:,2).*r_glass_norm(:,2) +p1(:,3).*r_glass_norm(:,3))...
@@ -149,10 +141,9 @@ tmp = [0 1 1];
 coeff = repmat(tmp, size(p2,1), 1);
 N1 = p2.* coeff; % normal between  glass and water
 N1_norm = N1./sqrt(sum(N1.*N1,2));
-s2 = cross(r_glass_norm,N1_norm);
-s2_norm = s2./sqrt(sum(s2.*s2, 2));
-c2 = r_glass_norm.*N1_norm;
-c2_norm = c2./sqrt(sum(c2.*c2, 2));
+s2 = cross(r_glass_norm,N1_norm, 2);
+s2_norm = sqrt(sum(s2.*s2, 2));
+c2_norm = dot(r_glass_norm, N1_norm, 2);
 r_out = n2/n3*r_glass_norm - (n2/n3*c2_norm - sqrt(1- n2*n2/(n3*n3)*s2_norm.*s2_norm)).*N1_norm;
 r_out_norm = r_out./sqrt(sum(r_out.*r_out, 2));
 x_s = p2;
