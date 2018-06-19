@@ -17,4 +17,5 @@ init = [Rot(1,1) Rot(1,2) Rot(1,3) ...
         trans(1) trans(2) trans(3) 25];
 x = imagePoints(:,:,1);
 x_w = worldPoints(:,:,1);
-res =  error_min(init, x,x_w, K, c, Ra, ra);
+%res =  error_min(init, x,x_w, K, c, Ra, ra);
+res = error_min_1(init, x, x_w, K, c, Ra, ra);
