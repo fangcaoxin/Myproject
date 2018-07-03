@@ -3,7 +3,7 @@ fun = @(gg)fun1(gg, x, x_w, K, c, Ra, ra);
 lb = [-1 -1 -1 -1 -1 -1 -500 -500 0 0];
 ub = [1 1 1 1 1 1 500 500 800 43];
 options=optimoptions(@fmincon, 'Display','iter', 'Algorithm','sqp',...
-    'MaxIterations',3000, 'MaxFunctionEvaluations', 1e4,'ConstraintTolerance', 1e-1);
+    'MaxIterations',3000, 'MaxFunctionEvaluations', 1e5,'ConstraintTolerance', 1e-3);
 % opts = optimset("MaxIter", 1e5, "Display", "on");
 % nonlcon1 = @(gg)cameraRot1(gg);
 nonlcon1 = @(gg)cameraRot(gg, x, x_w, K , c, Ra, ra);
@@ -87,7 +87,12 @@ x_out = x_wc - x_s;
 x_out_norm = x_out./sqrt(sum(x_out.*x_out, 2));
 angle = cross(x_out_norm, r_out_norm);
 angle_norm = sqrt(sum(angle.*angle, 2));
-ceq(4: 10,1) = angle_norm(1:7);
+ceq(4,1) = angle_norm(1);
+ceq(5,1) = angle_norm(25);
+ceq(6,1) = angle_norm(50);
+ceq(7,1) = angle_norm(60);
+%ceq(8: 9,1) = angle_norm(50:51);
+% ceq(10,1) = angle_norm(70);
 
 end
 

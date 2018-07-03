@@ -1,26 +1,30 @@
-function res =  error_min_2(init, x,x_w, K, c, Ra, ra)
-fun = @(gg)fun1(gg, x, x_w, K, c, Ra, ra);
-lb = [-1 -1 -1 -1 -1 -1 -500 -500 0 -3 -3 20 -2 -2 -2];
-ub = [1 1 1 1 1 1 500 500 800 3 3 42 2 2 2];
-options=optimoptions(@fmincon, 'Display','iter', 'Algorithm','sqp',...
+function res =  error_min_2(init, x,x_w, K, c, Ra, ra,lb,ub, N)
+historyn5.x = [];
+historyn5.fval = [];
+fun = @(ga)fun_total(ga, x, x_w, K, c, Ra, ra, N);
+% options=optimoptions(@fmincon, 'Display','iter', 'Algorithm','sqp',...
+%     'MaxIterations',3000, 'MaxFunctionEvaluations', 1e4, 'ConstraintTolerance', 1e-1);
+options=optimoptions(@fmincon,  'OutputFcn', @outfun,'Display','iter', 'Algorithm','sqp',...
     'MaxIterations',3000, 'MaxFunctionEvaluations', 1e4, 'ConstraintTolerance', 1e-1);
 % opts = optimset("MaxIter", 1e5, "Display", "on");
 % nonlcon1 = @(gg)cameraRot1(gg);
-nonlcon1 = @(gg)cameraRot(gg, x, x_w, K , c, Ra, ra);
+
+nonlcon1 = @(ga)cameraRot_total(ga, x, x_w, K , c, Ra, ra, N);
+
 A = [];
 b = [];
 Aeq = [];
 beq = [];
- res = fmincon(fun, init, A, b, Aeq, beq, lb, ub, nonlcon1,options);
+res = fmincon(fun, init, A, b, Aeq, beq, lb, ub, nonlcon1,options);
 %  problem  =createOptimProblem('fmincon', 'objective', fun,'x0', init, 'lb', lb, 'ub', ub, 'nonlcon', nonlcon1,'options',options);
-%  gs = GlobalSearch;
-%  [res, val]= run(gs, problem);
+%   gs = GlobalSearch;
+%   [res, val]= run(gs, problem);
 %[gg, val] = sqp(init, fun, nonlcon1, [], lb, ub);
 % [res, val, info, iter, nf, lambda] = sqp(init, fun, nonlcon1, [], lb, ub);
- res
+res
 %  val
 
-end
+
 
 function[c, ceq] = cameraRot1(gg)
 c =[];
@@ -29,9 +33,17 @@ ceq(2,1) = gg(4)^2 + gg(5)^2 + gg(6)^2 -1;
 ceq(3,1) = gg(1)*gg(4) + gg(2)*gg(5) + gg(3)*gg(6);
 
 end
+
+function [c1, ceq] = cameraRot_total(ga, uv, x_w, K , c, Ra, ra, N)
+   ceq = zeros(15*N+3,1);
+   for i = 1:N
+       gg = [ga(9*i-8:9*i) ga(9*N+1: end)];
+       [c1, ceq(15*i-14:15*i,1)] = cameraRot(gg, uv(:,:,i), x_w, K , c, Ra, ra);
+   end
+end
 function[c1, ceq] = cameraRot(gg, uv, x_w, K , c, Ra, ra)
 c1=[];
-ceq = zeros(3+size(uv,1),1);
+% ceq = zeros(3+size(uv,1),1);
 ceq(1,1) = gg(1)^2 + gg(2)^2 + gg(3)^2 -1;
 ceq(2,1) = gg(4)^2 + gg(5)^2 + gg(6)^2 -1;
 ceq(3,1) = gg(1)*gg(4) + gg(2)*gg(5) + gg(3)*gg(6);
@@ -93,7 +105,14 @@ ceq(7: 9,1) = angle_norm(24:26);
 ceq(10: 12,1) = angle_norm(50:52);
 ceq(13: 15,1) = angle_norm(68:70);
 end
-
+function val_total = fun_total(ga, x, x_w, K, c, Ra, ra, N)
+    gg = [ga(1:9) ga(9*N+1:end)];
+     val_total = fun1(gg, x(:,:,1), x_w, K, c, Ra, ra);
+   for i = 2:N
+       gg = [ga(i*9-8:i*9) ga(9*N+1:end)];
+      val_total= val_total + fun1(gg, x(:,:,i), x_w, K, c, Ra, ra);
+   end
+end
 function val = fun1(gg, x, x_w, K, c, Ra, ra)
 r1 = [gg(1) gg(2) gg(3)];
 r2 = [gg(4) gg(5) gg(6)];
@@ -153,7 +172,10 @@ lamda = -xs_w(:,3)./r_out_w(:,3);
 x_chess(:,1) = xs_w(:,1) + lamda.*r_out_w(:,1);
 x_chess(:,2) = xs_w(:,2) + lamda.*r_out_w(:,2);
 error = x_chess - x_w;
-val = norm(error, 'fro');
+val = error.*error;
+val = sum(val, 2);
+val = sum(val, 1);
+% val = norm(error, 'fro');
 end
 
 function rotate = angle2Rot(alpha, beta, gamma)
@@ -168,4 +190,37 @@ r3 = [1 0 0;
       0 cosd(alpha) sind(alpha);
       0 -sind(alpha) cosd(alpha)];
 rotate = r1*r2*r3;
+end
+
+function stop = outfun(x,optimValues,state)
+    stop = false;
+  
+ 
+    switch state
+        case 'init'
+           hold on
+         case 'iter'
+         % Concatenate current point and objective function
+         % value with history. x must be a row vector.
+          historyn5.fval = [historyn5.fval; optimValues.fval];
+           historyn5.x = [historyn5.x; x];
+%            plot(ga(48),optimValues.fval, 'o');
+%            optimValues.fval
+         % Concatenate current search direction with 
+         % searchdir.
+%            searchdir = [searchdir;... 
+%                         optimValues.searchdirection'];
+%            plot(x(1),x(2),'o');
+         % Label points with iteration number and add title.
+         % Add .15 to x(1) to separate label from plotted 'o'
+%            text(x(1)+.15,x(2),... 
+%                 num2str(optimValues.iteration));
+%            title('Sequence of Points Computed by fmincon');
+        case 'done'
+            save historyn5.mat historyn5;
+         
+             hold off
+         otherwise
+     end
+end
 end
