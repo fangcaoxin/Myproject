@@ -1,6 +1,6 @@
 function g=lagrange_special(U,g0)
-	gg0=[g0;0;0;0;0;0;0];%gg�̏������D
-	f=@(gg)Ug(gg,U);%gg�́Cg�ɁCalpha�Cbeta���ǉ�������́D
+	gg0=[g0;0;0;0;0;0;0]; % init
+	f=@(gg)Ug(gg,U);
 %	[gg,fval,info]=fsolve(f,gg0,optimset("TolFun",3e-16,"TolX",3e-16,"MaxIter",1e20));
    % options=optimoptions('lsqnonlin','Display','off','TolFun',1e-10,'TolX',1e-10,'MaxIter',1e20);
 	[gg,fval,info]=fsolve(f,gg0);
