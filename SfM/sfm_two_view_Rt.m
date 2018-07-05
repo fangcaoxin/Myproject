@@ -20,13 +20,37 @@ U=umatrix_generator_general(vec1, vec2);
 [R_est,t_est]=R_t_estimator_pixel(U);
 R_est
 t_est
+ r_out_w1 = ro1;
+ xs_w1 = xs1;
+r_out_w2 = ro2*R_est';
+xs_w2 = xs2*R_est';
+xs_w2 = xs_w2 + t_est';
+v1 = sum(r_out_w1.*r_out_w1,2);
+v2 = sum(r_out_w2.*r_out_w2,2);
+v3 = sum(r_out_w1.*r_out_w2,2);
+w1 = sum((xs_w2-xs_w1).*r_out_w1,2);
+w2 = sum((xs_w2-xs_w1).*r_out_w2,2);
+s1 = (w1.*v2 - w2.*v3)./(v1.*v2-v3.*v3);
+s2 = (s1.*v3 -w2)./v2;
+xw_est = (xs_w1 + s1.*r_out_w1 + xs_w2 + s2.*r_out_w2)/2;
+%% draw 
+loc1 = [0;0;0];
+loc2 = t_est;
+ori1 = [1 0 0; 0 1 0; 0 0 1];
+ori2 = R_est;
+
+cam1 = plotCamera('Location',loc1, 'Orientation', ori1,'Size', 1.5);
+hold on
+cam2 = plotCamera('Location',loc2, 'Orientation', ori2,'Size', 1.5);
+hold on
+% scatter3(worldPoints(:,1), worldPoints(:,2), Z,'MarkerFaceColor',[0 0 1]);
+% hold on
+scatter3(xw_est(:,1), xw_est(:,2), xw_est(:,3),'MarkerFaceColor',[1 0 0]);
+grid on
+xlabel('X(mm)');
+ylabel('Y(mm)');
+zlabel('Z(mm)');
+
+ axis([-10 10 -0 10 -100 50]);
 end
-function [loc, ori] = camera_pose(gg)
-r1 = [gg(1) gg(2) gg(3)];
-r2 = [gg(4) gg(5) gg(6)];
-r3 = cross(r1,r2);
-Rot = [r1;r2;r3];
-ts = [gg(7); gg(8);gg(9)];
-ori = Rot';
-loc = -Rot'*ts;
-end
+
