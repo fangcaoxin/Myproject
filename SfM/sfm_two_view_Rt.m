@@ -51,6 +51,6 @@ xlabel('X(mm)');
 ylabel('Y(mm)');
 zlabel('Z(mm)');
 
- axis([-10 10 -0 10 -100 50]);
+ axis([-10 10 -20 50 -300 50]);
 end
 

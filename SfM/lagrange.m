@@ -1,5 +1,5 @@
 function g=lagrange(U,g0)
-	gg0=[g0;0;0;0;0;0;0];%init
+	gg0=[g0;0.5;0.5;0.5;1;1;1];%init
 	f=@(gg)Ug(gg,U);%
 %	[gg,fval,info]=fsolve(f,gg0,optimset("TolFun",3e-16,"TolX",3e-16,"MaxIter",1e20));
    % options=optimoptions('fsolve','Display','off','TolFun',1e-10,'TolX',1e-10,'MaxIter',1e20);

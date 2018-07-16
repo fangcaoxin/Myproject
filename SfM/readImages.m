@@ -1,5 +1,5 @@
 function images = readImages()
-    imageDir = fullfile('', '', '',);
+    imageDir = fullfile('cube');
     imds = imageDatastore(imageDir);
     images = cell(1, numel(imds.Files));
     for i = 1: numel(imds.Files)
