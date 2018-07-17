@@ -1,7 +1,8 @@
 %  load imagePoints.mat
-load cube_points.mat
-% cube_points = imagePoints;
-views = [1 3 4 7 8];
+load cube1_points.mat
+%cube_points = imagePoints;
+cube_points = cube1_points;
+views = [1 3 5 7 9];
 m = size(views, 2);
 n = size(cube_points, 1);
 [xw_average, v, Rt, count_of_each_point] = sfm_multi_view_Rt(cube_points, views);

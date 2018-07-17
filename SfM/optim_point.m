@@ -4,8 +4,8 @@ function out = optim_point(p, Rt, v, m, n, count_of_each_point)
 p_one_row = reshape(p, 1, []);
 Rt_one_row = reshape(Rt, 1, []);
 x0 = [p_one_row Rt_one_row];
-% opts = optimset('Display', 'off');
-opts = optimoptions(@lsqnonlin,'Algorithm','levenberg-marquardt','MaxFunEvals',3e4,'TolFun',1e-3);
+ opts = optimset('Display', 'off');
+%opts = optimoptions(@lsqnonlin,'Algorithm','levenberg-marquardt','MaxFunEvals',3e4,'TolFun',1e-3);
 out = lsqnonlin(@(x)fun(x,v,m,n, count_of_each_point), x0, [],[], opts);
 
 end
