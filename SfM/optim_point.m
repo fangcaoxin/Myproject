@@ -1,17 +1,30 @@
-function out = optim_point(p, Rt, v, m, n, count_of_each_point)
+function out = optim_point(p, view, m, n, matchedPairs)
 % p is point 1xN , Rt estimated rotation and translation mat4x3xM
 % v calucated bearing vector
-p_one_row = reshape(p, 1, []);
-Rt_one_row = reshape(Rt, 1, []);
-x0 = [p_one_row Rt_one_row];
+[r c] = find(matchedPairs(:,1)>0);
+p_one_row = reshape(p(r,:), 1, []);
+R_one_row = reshape([view.rot], 1, []);
+t_one_row = reshape([view.trans], 1, []);
+v = reshape([view.bearing_vector], [], 6, m);
+x0 = [p_one_row Rt_one_row t_one_row];
  opts = optimset('Display', 'off');
 %opts = optimoptions(@lsqnonlin,'Algorithm','levenberg-marquardt','MaxFunEvals',3e4,'TolFun',1e-3);
-out = lsqnonlin(@(x)fun(x,v,m,n, count_of_each_point), x0, [],[], opts);
+out = lsqnonlin(@(x)fun(x,v,m,n, matchedPairs), x0, [],[], opts);
 
 end
 
-function fval = fun(x, v, m, n, count_of_each_point)
-fval = zeros(3*n+6,1,m);
+function fval = fun(x, v, m, n, matchedPairs)
+   [baseRow baseCol] = find(matchedPairs(:,1)>0);
+   pointsNum = zeros(1, m-1);
+   points = struct('p',{});
+ for j = 2:m
+   [srcRows srccols] = find(matchedPairs(:,j)>0);
+    pointsNum(1,j-1) = size(srcRows, 1);
+    sRows = findRows(baseRow, srcRows);
+    points(j-1).p = x(1: size(baseRow,1));
+ end
+ 
+fval = zeros(6*sum(pointsNum)+(m-1)*6,1,m);
 p = reshape (x(1:3*n), [n 3]);
 Rt = reshape(x(3*n+1:end), [4 3 m]);
 
@@ -47,5 +60,12 @@ for i = 1:m
   fval(3*num+4,:, i) = r3(1) - Rt(3,1,i);
   fval(3*num+5,:, i) = r3(2) - Rt(3,2,i);
   fval(3*num+6,:, i) = r3(3) - Rt(3,3,i);  
+end
+% to get 
+function sRows = findRows(x1, x2)
+  sRows = zeros(size(x2,1),1);
+  for i = 1: size(x2,1)
+     [sRows(i,1), sCols]=find(x1 == x2(i,1));
+  end
 end
 end
