@@ -15,33 +15,27 @@ end
 
 function fval = fun(x, v, m, n, matchedPairs)
    [baseRow baseCol] = find(matchedPairs(:,1)>0);
-   pointsNum = zeros(1, m-1);
-   points = struct('p',{});
+   pointsNumOfEachView = zeros(1, m);
+   points = struct('p',{}, 'vec',{});
+   inputPointNum = size(baseRow,1);
  for j = 2:m
    [srcRows srccols] = find(matchedPairs(:,j)>0);
-    pointsNum(1,j-1) = size(srcRows, 1);
+    pointsNumOfEachView(1,j) = size(srcRows, 1);
     sRows = findRows(baseRow, srcRows);
-    points(j-1).p = x(1: size(baseRow,1));
+    points(j-1).p = x(1: 3*size(baseRow,1));
+    points(j-1).vec = v(srcRows);
  end
  
-fval = zeros(6*sum(pointsNum)+(m-1)*6,1,m);
-p = reshape (x(1:3*n), [n 3]);
-Rt = reshape(x(3*n+1:end), [4 3 m]);
+fval = zeros(3*sum(pointsNumOfEachView)+(m-1)*6,1);
+ Rot = reshape(x(3*inputPointNum+1:3*inputPointNum+1+9*(m-1)), [3 3 m-1]);
+  trans = reshape(x(3*inputPointNum+1+9*(m-1)+1:end),[1 3 m-1]);
 
-for i = 1:m
-  num = sum(count_of_each_point(:,i)==1);
-  xc = zeros(num, 3);
-  ro = zeros(num,3);
-  xs = zeros(num,3);
-  count = 1;
-  for k = 1: n
-      if(count_of_each_point(k,i)==1)
-      xc(count,:)= (p(k,:) - Rt(4,:,i))*Rt(1:3,:,i);
-      ro(count,:) = v(k, 1:3,i);
-      xs(count,:) = v(k, 4:6,i);
-      count = count + 1;
-      end
-  end
+for i = 2:m
+    % m view m-1 rot needed to optim
+ 
+  xc = (points(i-1).p -trans(:,:,i-1))*Rot(:,:,i-1);
+  ro = points(i-1).vec(:,1:3);
+  xs = points(i-1).vec(:,4:6);
   tmp = [0 1 1];
   coeff = repmat(tmp, size(xs,1), 1);
   N1 = xs.* coeff; % normal between  glass and water
@@ -49,8 +43,9 @@ for i = 1:m
   ro_est = xc - xs;
   ro_proj = ro(:,1:2)./ro(:,3);
   ro_est_proj = ro_est(:, 1:2)./ro_est(:,3);
-  fval(1:num,1,i) = ro_proj(:,1)- ro_est_proj(:,1);
-  fval(num+1:2*num,:,i) = ro_proj(:,2)- ro_est_proj(:,2);
+  fval(pointsNum(i-1)+1,pointsNum(i-1)+ pointsNum(i))= ro_proj(:,1)- ro_est_proj(:,1);
+  fval(pointsNum(i-1)+ pointsNum(i)+1:pointsNum(i-1)+ pointsNum(i)+1+num)...
+      = ro_proj(:,2)- ro_est_proj(:,2);
   xw_normal = cross(ro, N1_norm, 2);
   fval(2*num+1:3*num,:,i) = dot(ro_est, xw_normal, 2);
   fval(3*num+1,:, i) = norm(Rt(1,:,i)) - 1;
@@ -64,8 +59,8 @@ end
 % to get 
 function sRows = findRows(x1, x2)
   sRows = zeros(size(x2,1),1);
-  for i = 1: size(x2,1)
-     [sRows(i,1), sCols]=find(x1 == x2(i,1));
+  for k = 1: size(x2,1)
+     [sRows(k,1), sCols]=find(x1 == x2(k,1));
   end
 end
 end
