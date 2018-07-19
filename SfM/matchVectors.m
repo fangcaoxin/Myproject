@@ -1,5 +1,5 @@
-function [v1_s, v2_s, i_label] = matchVectors(v1,v2, label_1,label_2)
-   i_label = label_1&label_2;
+function [v1_s, v2_s, i_label] = matchVectors(v1,v2, l1,l2)
+   i_label = l1&l2;
    num = sum(i_label(:)==1);
    v1_s = zeros(num, size(v1,2));
    v2_s = zeros(num, size(v2,2));
