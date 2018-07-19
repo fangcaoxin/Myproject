@@ -21,12 +21,12 @@ prevBearing = [ro xs];
 view = struct('points',{}, 'label',{},'rot',{},'trans',{}, 'bearing_vector',{});
 view = addview(view, prevPoints, prevLabels, eye(3), zeros(1,3), prevBearing,1);
 matchedPairs= zeros(n,m);
+ xw_total = zeros(n, 3);
 for i = 2:m
     currPoints = imagePoints(:,:, views(i));
     currLabels = set_label(currPoints);
     [xs1, ro1] = sfm_one_view_Rt(gg, currPoints, K, c, Ra, ra);
     currBearing = [xs1 ro1];
-    bearing_vec = [ro xs];
     [matchedVector1, matchedVector2, indexPairs] = matchVectors...
         (prevBearing,currBearing,prevLabels,currLabels);
      U=umatrix_generator_general(matchedVector1, matchedVector2);
@@ -42,15 +42,15 @@ for i = 2:m
     matchedPairs(:,1) = matchedPairs(:,1) + indexPairs;
     matchedPairs(:,i) = indexPairs;
     points_num = sum(matchedPairs(:,1)>0);
-    xw_total = zeros(n, 3);
     xw = zeros(n, 3);
-    for k = 1: i-1
-      xyzPoints = triangulate(matchedVector1, matchedVector2,rot, trans);
-      [rows cols] = find(indexPairs > 0);
-      xw(rows,:) = xyzPoints;
-      xw_total = xw_total + xw;
+    for j = 2:i
+     xyzPoints = triangulate(view(j-1).bearing_vector, view(j).bearing_vector,...
+         view(j-1).rot, view(j-1).trans, view(j).rot, view(j).trans, matchedPairs, j);
+     [rows cols] = find(matchedPairs(:,j) > 0);
+     xw(rows,:) = xyzPoints;
+     xw_total = xw_total + xw;
     end
-    xw_average = sum(xw_total, 3)./sum(matchedPairs,2);
+    xw_average = sum(xw_total, 3)./matchedPairs(:,1);
     out = optim_point(xw_average, view, i, n, matchedPairs);
     xw_est = reshape(out(1:3*points_num),[points_num, 3]);
     R_opm = reshape(out(3*points_num+1:3*points_num + 9*(i-1)),[3,3, i-1]);
@@ -62,14 +62,17 @@ end
 
 end
 
-function xw = triangulate(vec1, vec2, R_est, t_est)
-    r_out_w1 = vec1(:, 1:3);
-    xs_w1 = vec1(:, 4:6);
+function xw = triangulate(vec1Full, vec2Full, R1_est, t1_est, R2_est, t2_est, matchedPairs, k)
+    [rows cols] = find(matchedPairs(:,k) > 0);
+    vec1 =  vec1Full(rows,:);
+    vec2  = vec2Full(rows,:);
+    r_out_w1 = vec1(:, 1:3)*R1_est';
+    xs_w1 = vec1(:, 4:6)*R1_est' + t1_est;
     ro2 = vec2(:, 1:3);
     xs2 = vec2(:, 4:6);
-    r_out_w2 = ro2*R_est';
-    xs_w2 = xs2*R_est';
-    xs_w2 = xs_w2 + t_est;
+    r_out_w2 = ro2*R2_est';
+    xs_w2 = xs2*R2_est';
+    xs_w2 = xs_w2 + t2_est;
     v1 = sum(r_out_w1.*r_out_w1,2);
     v2 = sum(r_out_w2.*r_out_w2,2);
     v3 = sum(r_out_w1.*r_out_w2,2);
