@@ -2,7 +2,7 @@
 load cube_points.mat
 %cube_points = imagePoints;
 % cube_points = cube1_points;
-views = [1 2 3 4 ];
+views = [1 2];
 m = size(views, 2);
 n = size(cube_points, 1);
 [xw_est, Rot, trans] = sfm_multi_view_Rt(cube_points, views);

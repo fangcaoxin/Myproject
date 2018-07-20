@@ -49,8 +49,10 @@ for i = 2:m
      [rows cols] = find(matchedPairs(:,j) > 0);
      xw(rows,:) = xyzPoints;
      xw_total = xw_total + xw;
+     %scatter3(xyzPoints(:,1), xyzPoints(:,2), xyzPoints(:,3));
     end
     xw_average = sum(xw_total, 3)./matchedPairs(:,1);
+   %scatter3(xw_average(:,1), xw_average(:,2), xw_average(:,3));
     out = optim_point(xw_average, view, i, n, matchedPairs);
     xw_est = reshape(out(1:3*points_num),[points_num, 3]);
     R_opm = reshape(out(3*points_num+1:3*points_num + 9*(i-1)),[3,3, i-1]);
