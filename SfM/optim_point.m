@@ -7,9 +7,17 @@ R_one_row = reshape([view.rot], 1, []);
 t_one_row = reshape([view.trans], 1, []);
 v = reshape([view.bearing_vector], [], 6, m);
 x0 = [p_one_row R_one_row(10:9*m) t_one_row(4:3*m)];
+lb(1:2*size(p_one_row,2)/3)= -500;
+lb(end+1: end+size(p_one_row,2)/3)=1;
+lb(end+1: end+9*m)=-1;
+lb(end+1: end+3*m)= -500;
+ub(1:2*2*size(p_one_row,2)/3)= 500;
+ub(end+1: end+size(p_one_row,2)/3)=1000;
+ub(end+1: end+9*m)=1;
+ub(end+1: end+3*m)= 500;
   opts = optimset('Display', 'off');
 %opts = optimoptions(@lsqnonlin,'Algorithm','levenberg-marquardt','MaxFunEvals',3e4,'TolFun',1e-3);
-out = lsqnonlin(@(x)fun(x,v,m,n, matchedPairs), x0, [],[], opts);
+out = lsqnonlin(@(x)fun(x,v,m,n, matchedPairs), x0, lb,ub, opts);
 
 end
 
@@ -31,6 +39,8 @@ for i = 2:m
     vec = v(srcRows,:,i);
   cpn(i) = 3*sum(pointsNumOfEachView(1:i)+(i-1)*6);
   xc = (points -trans(:,:,i-1))*Rot(:,:,i-1);
+  %scatter3(points(:,1), points(:,2), points(:,3));
+  %scatter3(xc(:,1), xc(:,2), xc(:,3));
   ro = vec(:,1:3);
   xs = vec(:,4:6);
   tmp = [0 1 1];
