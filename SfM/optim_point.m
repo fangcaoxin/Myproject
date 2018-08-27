@@ -7,17 +7,11 @@ R_one_row = reshape([view.rot], 1, []);
 t_one_row = reshape([view.trans], 1, []);
 v = reshape([view.bearing_vector], [], 6, m);
 x0 = [p_one_row R_one_row(10:9*m) t_one_row(4:3*m)];
-lb(1:2*size(p_one_row,2)/3)= -500;
-lb(end+1: end+size(p_one_row,2)/3)=1;
-lb(end+1: end+9*m)=-1;
-lb(end+1: end+3*m)= -500;
-ub(1:2*2*size(p_one_row,2)/3)= 500;
-ub(end+1: end+size(p_one_row,2)/3)=1000;
-ub(end+1: end+9*m)=1;
-ub(end+1: end+3*m)= 500;
-  opts = optimset('Display', 'off');
-%opts = optimoptions(@lsqnonlin,'Algorithm','levenberg-marquardt','MaxFunEvals',3e4,'TolFun',1e-3);
-out = lsqnonlin(@(x)fun(x,v,m,n, matchedPairs), x0, lb,ub, opts);
+
+%   opts = optimset('Display', 'off');
+opts = optimoptions(@lsqnonlin,'Algorithm','levenberg-marquardt','MaxFunEvals',3e4,'TolFun',1e-3);
+out = lsqnonlin(@(x)fun(x,v,m,n, matchedPairs), x0, [],[], opts);
+
 
 end
 
@@ -47,11 +41,17 @@ for i = 2:m
   coeff = repmat(tmp, size(xs,1), 1);
   N1 = xs.* coeff; % normal between  glass and water
   N1_norm = N1./sqrt(sum(N1.*N1,2));
+  t = (ro(:,3).*xc(:,3) + ro(:,2).*xc(:,2) + sqrt((ro(:,3).*xc(:,3) + ro(:,2).*xc(:,2)).^2 -(ro(:,2).*ro(:,2)+ro(:,3).*...
+    ro(:,3)).*(xc(:,2).*xc(:,2)+ xc(:,3).*xc(:,3)-50*50)))./(ro(:,2).*ro(:,2)+ro(:,3).*ro(:,3)); 
+ xs_est = xc - t.*ro;
   ro_est = xc - xs;
-  ro_proj = ro(:,1:2)./ro(:,3);
-  ro_est_proj = ro_est(:, 1:2)./ro_est(:,3);
+  %ro_proj = ro(:,1:2)./ro(:,3);
+  %ro_est_proj = ro_est(:, 1:2)./ro_est(:,3);
   %fval(end+1: end+pointsNumOfEachView(i)) = ro_proj(:,1)- ro_est_proj(:,1);
   %fval(end+1: end + pointsNumOfEachView(i))= ro_proj(:,2)- ro_est_proj(:,2);
+%   fval(end+1: end + pointsNumOfEachView(i))= xs_est(:,1)-xs(:,1);
+%   fval(end+1: end + pointsNumOfEachView(i))= xs_est(:,2)-xs(:,2);
+%   fval(end+1: end + pointsNumOfEachView(i))= xs_est(:,3)-xs(:,3);
   xw_normal = cross(ro, N1_norm, 2);
   fval(end+1: end+ pointsNumOfEachView(i)) = dot(ro_est, xw_normal, 2);
   fval(end+1)= norm(Rot(1,:,i-1)) -1;

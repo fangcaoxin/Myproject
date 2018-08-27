@@ -1,4 +1,5 @@
 function [R_est,t_est]=R_t_estimator_pixel(U)
+    U = cast(U, 'double');
     [v,lambda]=eig(U'*U);
     g=v(:,1);
     k=sqrt(g(10)^2+g(11)^2+g(12)^2);
