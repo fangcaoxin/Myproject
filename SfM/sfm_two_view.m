@@ -36,17 +36,17 @@ Z = zeros(70,1);
 [loc2, ori2] = camera_pose(gg2);
 cam1 = plotCamera('Location',loc1, 'Orientation', ori1,'Size', 15);
 hold on
-cam2 = plotCamera('Location',loc2, 'Orientation', ori2,'Size', 15);
+cam2 = plotCamera('Location',loc2, 'Orientation', ori2,'Size', 15, 'color', [0 0 1]);
 hold on
-scatter3(worldPoints(:,1), worldPoints(:,2), Z,'MarkerFaceColor',[0 0 1]);
+scatter3(worldPoints(:,1), worldPoints(:,2), Z,  15,'MarkerFaceColor',[0 0 1]);
 hold on
-scatter3(xw_est(:,1), xw_est(:,2), xw_est(:,3),'MarkerFaceColor',[1 0 0]);
+scatter3(xw_est(:,1), xw_est(:,2), xw_est(:,3), 15, 'MarkerFaceColor',[1 0 0]);
 grid on
 xlabel('X(mm)');
 ylabel('Y(mm)');
 zlabel('Z(mm)');
 legend('groud truth', 'constructed points', 'Location', 'northeast');
-axis([-150 350 0 380 -600 20]);
+axis([-150 380 0 380 -600 20]);
 end
 function [loc, ori] = camera_pose(gg)
 r1 = [gg(1) gg(2) gg(3)];

@@ -4,6 +4,7 @@ function [c]=fermat(point,n1,n2,n3,R,r,d, cali)
   if(cali > 0)
       n3 = n1;
   end
+%   point = double(point);
   v = [point(1), point(2), point(3)-d];
  % v =[0 point(2)-camera_center(2) point(3)-camera_center(3)];
   v = v/norm(v);
@@ -31,9 +32,10 @@ function [c]=fermat(point,n1,n2,n3,R,r,d, cali)
     z = point(3);
 	f=@(c)L(c,x,y,z,n1,n2,n3,R,r,d);
 
-  options=optimoptions('fsolve','Display','off','TolFun',3e-16,'TolX',3e-16); %only matlab
-   [c,fval,info]=fsolve(f,c0,options);
-   %[c, fval, info] = fsolve(f, c0);
+   options=optimoptions('fmincon','Display','off'); %only matlab
+%    [c,fval,info]=fsolve(f,c0,options);
+c = fmincon(f, c0,[],[],[],[],[-25 -25 -25 -23], [25 25 25 23],[], options);
+  
 
 %fval
 %info

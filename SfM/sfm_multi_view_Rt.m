@@ -26,9 +26,7 @@ for i = 2:m
     currPoints = imagePoints(:,:, views(i));
     currLabels = set_label(currPoints);
     [xs1, ro1] = sfm_one_view_Rt(gg, currPoints, K, c, Ra, ra);
-    currBearing = [xs1 ro1];
-    %scatter3(xs1(:,1), xs1(:,2), xs1(:,3),[]);
-    hold on;
+    currBearing = [ro1 xs1];
     [matchedVector1, matchedVector2, indexPairs] = matchVectors...
         (prevBearing,currBearing,prevLabels,currLabels);
      U=umatrix_generator_general(matchedVector1, matchedVector2);
