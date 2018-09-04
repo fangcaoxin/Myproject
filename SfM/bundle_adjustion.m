@@ -1,7 +1,12 @@
 %load imagePoints.mat
 % load cube_points.mat
 load imagePointMatrix.mat
-views = [1 3 6 8];
+load basePoint.mat
+imagePoints = zeros(size(basePoint,1), size(basePoint,2),size(imagePointMatrix, 3) + 1);
+imagePoints(:,:,1) = basePoint;
+imagePoints(:,:,2:end) = imagePointMatrix;
 
-[xw_est, Rot, trans] = sfm_multi_view_simulation(imagePointMatrix, views);
+views = [1 2 6 8];
+test_imagePoints = imagePoints(1:10:end, :,:);
+[xw_est, Rot, trans] = sfm_multi_view_simulation(imagePoints, views);
 scatter3(xw_est(:,1), xw_est(:,2), xw_est(:,3));
