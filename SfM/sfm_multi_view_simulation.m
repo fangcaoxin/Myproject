@@ -6,27 +6,34 @@ load TransMatrix.mat
 base_view = views(1);
 m = size(views, 2);
 prevPoints = imagePoints(:,:, base_view);
+prevLabels = set_label(prevPoints);
+% plot(prevPoints(:,1), prevPoints(:,2),'r.');
+% hold on
 [ro, xs] = ray_in_out_pixel(prevPoints,d, 0);
 prevBearing = [ro xs];
 point_num = size(imagePoints, 1);
 view = struct('points',{}, 'label',{},'rot',{},'trans',{}, 'bearing_vector',{});
-view = addview(view, prevPoints, [], rotateMatrix(:,:,base_view), ...
-    TransMatrix(base_view, :), prevBearing,base_view);
+view = addview(view, prevPoints, prevLabels, eye(3), zeros(1,3), prevBearing,base_view);
  xw_total = zeros(point_num, 3);
 for i = 2:m
     currPoints = imagePoints(:,:, views(i));
+    currLabels = set_label(currPoints);
+%     plot(currPoints(:,1),currPoints(:,2),'g.');
     [ro1, xs1] = ray_in_out_pixel(currPoints,d, 0);
     currBearing = [ro1 xs1];
-     U=umatrix_generator_general(prevBearing, currBearing);
+     [matchedVector1, matchedVector2, indexPairs] = matchVectors...
+        (prevBearing,currBearing,prevLabels,currLabels);
+     U=umatrix_generator_general(matchedVector1, matchedVector2);
      [R_est,t_est]=R_t_estimator_pixel(U);
      prevRot = view(i-1).rot;
      prevTrans = view(i-1).trans;
      rot = R_est* prevRot;
      trans = prevTrans + t_est'*prevRot; 
-     view = addview(view, currPoints, [], rot, trans, currBearing,i);
+     view = addview(view, currPoints, currLabels, rot, trans, currBearing,i);
     for j = 2:i
-     xyzPoints = triangulate(view(j-1).bearing_vector, view(j).bearing_vector,...
-         view(j-1).rot, view(j-1).trans, view(j).rot, view(j).trans);
+     xyzPoints = triangulate(matchedVector1, matchedVector2,...
+         view(j).rot, view(j).trans);
+     plot3(xyzPoints(:,1), xyzPoints(:,2),xyzPoints(:,3),'.');
      xw_total = xw_total + xyzPoints;
      %scatter3(xyzPoints(:,1), xyzPoints(:,2), xyzPoints(:,3));
     end
@@ -43,16 +50,13 @@ end
 
 end
 
-function xw = triangulate(vec1Full, vec2Full, R1_est, t1_est, R2_est, t2_est)
-    vec1 =  vec1Full;
-    vec2  = vec2Full;
-    r_out_w1 = vec1(:, 1:3)*R1_est';
-    xs_w1 = vec1(:, 4:6)*R1_est' + t1_est;
+function xw = triangulate(vec1, vec2, R_est, t_est)
+    r_out_w1 = vec1(:, 1:3)*R_est';
+    xs_w1 = vec1(:, 4:6)*R_est' + t_est;
     ro2 = vec2(:, 1:3);
     xs2 = vec2(:, 4:6);
-    r_out_w2 = ro2*R2_est';
-    xs_w2 = xs2*R2_est';
-    xs_w2 = xs_w2 + t2_est;
+    r_out_w2 = ro2;
+    xs_w2 = xs2;
     v1 = sum(r_out_w1.*r_out_w1,2);
     v2 = sum(r_out_w2.*r_out_w2,2);
     v3 = sum(r_out_w1.*r_out_w2,2);

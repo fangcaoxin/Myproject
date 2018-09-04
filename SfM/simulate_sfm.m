@@ -48,7 +48,7 @@ draw(R_est, t_est, xw, color1);
 % hold on 
 % scatter3(teapot2(:,1), teapot2(:,2), teapot2(:,3), 5, 'MarkerFaceColor',[0 0 1]);
  hold on
- draw(R1_est, t1_est, 50*xw_no_scale, [0 1 0]);
+ draw(Rotate, t_no_scale, 50*xw_no_scale, [0 1 0]);
 
 function xw = triangulate(vec1, vec2, R_est, t_est)
     r_out_w1 = vec1(:, 1:3)*R_est';
