@@ -1,16 +1,16 @@
 function g=lagrange(U,g0)
 
-     l = zeros(6,1);
-%    l = [0.5;0.5;0.5;0.5;0.5;0.5];
+    % l = zeros(6,1);
+   %l = [0.5;0.5;0.5;0.5;0.5;0.5];
 	gg0=[g0;l];%init
 	f=@(gg)Ug(gg,U);%
-% 	[gg,fval,info]=fsolve(f,gg0,optimset("TolFun",3e-16,"TolX",3e-16,"MaxIter",1e20));
-   options=optimoptions('fsolve','Algorithm', 'levenberg-marquardt',...
-   'Display','iter',...
-       'FunctionTolerance',1e-6,'MaxFunctionEvaluations', 1e6, ...
-       'StepTolerance', 1e-6,'MaxIterations',3000);
-	[gg,fval,info]=fsolve(f,gg0,options);
-%   [gg,fval,info]=fsolve(f,gg0); % octave
+ 	[gg,fval,info]=fsolve(f,gg0,optimset("TolFun",3e-16,"TolX",3e-16,"MaxIter",1e20));
+   %options=optimoptions('fsolve','Algorithm', 'levenberg-marquardt',...
+   %'Display','iter',...
+    %   'FunctionTolerance',1e-6,'MaxFunctionEvaluations', 1e6, ...
+    %   'StepTolerance', 1e-6,'MaxIterations',3000);
+	%[gg,fval,info]=fsolve(f,gg0,options);
+
 	g=gg;
 
     g(19,:)=[];

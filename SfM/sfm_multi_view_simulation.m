@@ -6,53 +6,51 @@ load TransMatrix.mat
 base_view = views(1);
 m = size(views, 2);
 prevPoints = imagePoints(:,:, base_view);
-prevLabels = set_label(prevPoints);
+
 % plot(prevPoints(:,1), prevPoints(:,2),'r.');
 % hold on
 [ro, xs] = ray_in_out_pixel(prevPoints,d, 0);
 prevBearing = [ro xs];
 point_num = size(imagePoints, 1);
 view = struct('points',{}, 'label',{},'rot',{},'trans',{}, 'bearing_vector',{});
-view = addview(view, prevPoints, prevLabels, eye(3), zeros(1,3), prevBearing,base_view);
- xw_total = zeros(point_num, 3);
+view = addview(view, prevPoints, [], eye(3), ...
+    zeros(1,3), prevBearing,base_view);
+
 for i = 2:m
     currPoints = imagePoints(:,:, views(i));
-    currLabels = set_label(currPoints);
 %     plot(currPoints(:,1),currPoints(:,2),'g.');
     [ro1, xs1] = ray_in_out_pixel(currPoints,d, 0);
     currBearing = [ro1 xs1];
-     [matchedVector1, matchedVector2, indexPairs] = matchVectors...
-        (prevBearing,currBearing,prevLabels,currLabels);
-     U=umatrix_generator_general(matchedVector1, matchedVector2);
-     [R_est,t_est]=R_t_estimator_pixel(U);
+    testVector(:,:,1) = prevBearing(1:2,:);
+    testVector(:,:,2) = currBearing(1:2,:);
+     U=umatrix_generator_general(prevBearing, currBearing);
+     [R_est,t_est]=R_t_estimator_pixel(U, testVector);
      prevRot = view(i-1).rot;
      prevTrans = view(i-1).trans;
-     rot = R_est* prevRot;
-     trans = prevTrans + t_est'*prevRot; 
-     view = addview(view, currPoints, currLabels, rot, trans, currBearing,i);
-    for j = 2:i
-     xyzPoints = triangulate(matchedVector1, matchedVector2,...
-         view(j).rot, view(j).trans);
-     plot3(xyzPoints(:,1), xyzPoints(:,2),xyzPoints(:,3),'.');
-     xw_total = xw_total + xyzPoints;
-     %scatter3(xyzPoints(:,1), xyzPoints(:,2), xyzPoints(:,3));
-    end
-    xw_average = sum(xw_total, 3)./point_num;
-   %scatter3(xw_average(:,1), xw_average(:,2), xw_average(:,3));
-   matchedPairs = ones(point_num, m);
-    out = optim_point(xw_average, view, i, point_num, matchedPairs);
+     rot = R_est* prevRot
+     trans = prevTrans + t_est'*prevRot 
+     view = addview(view, currPoints, [], rot, trans, currBearing,i);    
+    
+     %xyzPoints = triangulate(view(j-1).bearing_vector, view(j).bearing_vector,...
+      %    rotateMatrix(:,:,j-1), TransMatrix(j-1,:)'); test
+     xyzPoints = triangulate(view(i-1).bearing_vector, view(i).bearing_vector,...
+         R_est, TransMatrix(1,:)'); 
+    
+     scatter3(xyzPoints(:,1), xyzPoints(:,2), xyzPoints(:,3),'MarkerFaceColor',[1 0 0]);
+    out = optim_point(xyzPoints, view, i, point_num);
     xw_est = reshape(out(1:3*point_num),[point_num, 3]);
     R_opm = reshape(out(3*point_num+1:3*point_num + 9*(i-1)),[3,3, i-1]);
-    t_opm = reshape(out(3*point_num + 9*(i-1)+1:end), [1 3 i-1]);
+    t_opm = reshape(out(3*point_num +9*(i-1)+ 1:end), [1 3 i-1]);
     view = updateView(view, R_opm, t_opm, i);
     prevBearing = currBearing;
+     scatter3(xw_est(:,1), xw_est(:,2), xw_est(:,3));
 end
 
 end
 
 function xw = triangulate(vec1, vec2, R_est, t_est)
     r_out_w1 = vec1(:, 1:3)*R_est';
-    xs_w1 = vec1(:, 4:6)*R_est' + t_est;
+    xs_w1 = vec1(:, 4:6)*R_est' + t_est';
     ro2 = vec2(:, 1:3);
     xs2 = vec2(:, 4:6);
     r_out_w2 = ro2;
