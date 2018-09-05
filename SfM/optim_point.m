@@ -31,7 +31,7 @@ for i = 2:m
   N1 = xs.* coeff; % normal between  glass and water
   N1_norm = N1./sqrt(sum(N1.*N1,2));
   %t = (ro(:,3).*xc(:,3) + ro(:,2).*xc(:,2) + sqrt((ro(:,3).*xc(:,3) + ro(:,2).*xc(:,2)).^2 -(ro(:,2).*ro(:,2)+ro(:,3).*...
-  %  ro(:,3)).*(xc(:,2).*xc(:,2)+ xc(:,3).*xc(:,3)-50*50)))./(ro(:,2).*ro(:,2)+ro(:,3).*ro(:,3)); 
+   % ro(:,3)).*(xc(:,2).*xc(:,2)+ xc(:,3).*xc(:,3)-50*50)))./(ro(:,2).*ro(:,2)+ro(:,3).*ro(:,3)); 
   % xs_est = xc - t.*ro;
   ro_est = xc - xs;
   ro_proj = ro(:,1:2)./ro(:,3);
@@ -39,8 +39,8 @@ for i = 2:m
   fval(end+1: end+n) = ro_proj(:,1)- ro_est_proj(:,1);
   fval(end+1: end + n)= ro_proj(:,2)- ro_est_proj(:,2);
   %fval(end+1: end + n)= xs_est(:,1)-xs(:,1);
-   %fval(end+1: end + n)= xs_est(:,2)-xs(:,2);
-   %fval(end+1: end + n))= xs_est(:,3)-xs(:,3);
+  % fval(end+1: end + n)= xs_est(:,2)-xs(:,2);
+   %fval(end+1: end + n)= xs_est(:,3)-xs(:,3);
   %xw_normal = cross(ro, N1_norm, 2);
   %fval(end+1: end+ n) = dot(ro_est, xw_normal, 2);
   fval(end+1)= norm(Rot(1,:,i-1)) -1;

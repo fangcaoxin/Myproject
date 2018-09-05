@@ -1,11 +1,12 @@
 function [R_est,t_est]=R_t_estimator_pixel(U, test_points)
 load parameter.mat
+Rotate4 = zeros(3,3,4);
+Trans4 = zeros(3,4);
 [R_est, t_est] = Rt_estimate(U, 0);
-xw = triangulate(test_points(:,:,1), test_points(:,:,2), R_est, t_est);
-if(xw(:,3) < R)
-    [R_est, t_est] = Rt_estimate(U, 1);
-end
-
+ xw = triangulate(test_points(:,:,1), test_points(:,:,2), R_est, t_est);
+ if(xw < R + 100)
+ [R_est, t_est] = Rt_estimate(U, 1);
+ end 
 end
 
 function [R_est, t_est] = Rt_estimate(U, mark)
@@ -30,14 +31,20 @@ function [R_est, t_est] = Rt_estimate(U, mark)
   E=[g(1) g(2) g(3);
 	   g(4) g(5) g(6);
 	   g(7) g(8) g(9)];
-	
-	T=E*R_est';
-   
-	t_3=(T(2,1)-T(1,2))/2;
-	t_2=(T(1,3)-T(3,1))/2;
-	t_1=(T(3,2)-T(2,3))/2;
-	
-	t_est=[t_1;t_2;t_3];
+	[U1 S1 V1] = svd(E);
+  %U1
+  %S1
+  %V1
+  T  = E*R_est';
+  t_err = 0.5*[T(3,2)-T(2,3); T(1,3)-T(3,1);T(2,1)-T(1,2)];
+  sign_t_err = sign(t_err);
+  scale = (S1(1,1) + S1(2,2))/2;
+  t_est = scale * V1(:,3)
+  sign_t_est = sign(t_est);
+  if(sign_t_err ~= sign_t_est)
+     t_est = -t_est;
+  end
+
 end
 
 function xw = triangulate(vec1Full, vec2Full, R1_est, t1_est)

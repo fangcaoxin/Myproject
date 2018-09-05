@@ -33,13 +33,13 @@ for i = 2:m
           R_est, t_est); 
     
      scatter3(xyzPoints(:,1), xyzPoints(:,2), xyzPoints(:,3));
-    out = optim_point(xyzPoints, view, i, point_num);
-    xw_est = reshape(out(1:3*point_num),[point_num, 3]);
-    R_opm = reshape(out(3*point_num+1:3*point_num + 9*(i-1)),[3,3, i-1]);
-    t_opm = reshape(out(3*point_num +9*(i-1)+ 1:end), [1 3 i-1]);
-    view = updateView(view, R_opm, t_opm, i);
+    %out = optim_point(xyzPoints, view, i, point_num);
+   % xw_est = reshape(out(1:3*point_num),[point_num, 3]);
+   % R_opm = reshape(out(3*point_num+1:3*point_num + 9*(i-1)),[3,3, i-1]);
+   % t_opm = reshape(out(3*point_num +9*(i-1)+ 1:end), [1 3 i-1]);
+    view = updateView(view, rot, trans, i);
     prevBearing = currBearing;
-     scatter3(xw_est(:,1), xw_est(:,2), xw_est(:,3));
+    % scatter3(xw_est(:,1), xw_est(:,2), xw_est(:,3));
 end
 
 end
