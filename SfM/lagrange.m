@@ -1,6 +1,6 @@
 function g=lagrange(U,g0)
 
-    % l = zeros(6,1);
+    l = zeros(6,1);
    %l = [0.5;0.5;0.5;0.5;0.5;0.5];
 	gg0=[g0;l];%init
 	f=@(gg)Ug(gg,U);%
