@@ -1,4 +1,4 @@
-function out = optim_point(p, view, m, n)
+function out = optim_point(p, view, m, tracks)
 % p is point 1xN , Rt estimated rotation and translation mat4x3xM
 % v calucated bearing vector
 p_one_row = reshape(p, 1, []);

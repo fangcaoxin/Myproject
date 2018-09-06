@@ -13,39 +13,48 @@ prevPoints = imagePoints(:,:, base_view);
  prevBearing = [ro xs];
 point_num = size(imagePoints, 1);
 view = struct('points',{}, 'label',{},'rot',{},'trans',{}, 'bearing_vector',{});
+tracks = struct ('points',{}, 'views', {}, 'pointcloud',{});
 view = addview(view, prevPoints, [], eye(3), ...
-    zeros(1,3), prevBearing,base_view);
+    zeros(3,1), prevBearing,base_view);
 
-for i = 2:m
-
-   
+for i = 2:m 
     currPoints = imagePoints(:,:, views(i));
-    plot(currPoints(:,1),currPoints(:,2),'g.');
+    matchPairs = matching_points(prevPoints, currPoints);
+    plot(currPoints(matchPairs,1),currPoints(matchPairs,2),'g.');
+    axis([0 1280 0 960]);
     [ro1, xs1] = ray_in_out_pixel(currPoints,d, 0);
     currBearing = [ro1 xs1];
+    matchVector1 = prevBearing(matchPairs, :);
+    matchVector2 = currBearing(matchPairs, :);
     testVector(:,:,1) = prevBearing(1:2,:);
     testVector(:,:,2) = currBearing(1:2,:);
-    
-    
-     U=umatrix_generator_general(prevBearing, currBearing);
+   
+     U=umatrix_generator_general(matchVector1, matchVector2);
      [R_est,t_est]=R_t_estimator_pixel(U, testVector);
  
      prevRot = view(i-1).rot;
      prevTrans = view(i-1).trans;
      rot = R_est* prevRot
-     trans = prevTrans + t_est'*prevRot 
+    % trans = prevTrans + t_est'*prevRot 
+    trans = R_est*prevTrans + t_est;
      view = addview(view, currPoints, [], rot, trans, currBearing,i);    
     
      %xyzPoints = triangulate(view(j-1).bearing_vector, view(j).bearing_vector,...
       %    rotateMatrix(:,:,j-1), TransMatrix(j-1,:)'); test
-     xyzPoints = triangulate(view(i-1).bearing_vector, view(i).bearing_vector,...
-         R_est, t_est); 
-    
-     scatter3(xyzPoints(:,1), xyzPoints(:,2), xyzPoints(:,3));
-    %out = optim_point(xyzPoints, view, i, point_num);
-   % xw_est = reshape(out(1:3*point_num),[point_num, 3]);
-   % R_opm = reshape(out(3*point_num+1:3*point_num + 9*(i-1)),[3,3, i-1]);
-   % t_opm = reshape(out(3*point_num +9*(i-1)+ 1:end), [1 3 i-1]);
+     
+     xyzPoints = triangulate(matchVector1, matchVector2,...
+          R_est, t_est); 
+      scatter3(xyzPoints(:,1), xyzPoints(:,2), xyzPoints(:,3));
+    tracks = update_tracks(tracks, matchPairs, i, xyzPoints);
+    tracks_cell = struct2cell(tracks);
+    nxyzPoints = reshape(cell2mat(tracks_cell(3,:,:)), 3, []);
+    nxyzPoints = nxyzPoints';
+     scatter3(nxyzPoints(:,1), nxyzPoints(:,2), nxyzPoints(:,3));
+    valid_num = size(tracks, 1);
+    out = optim_point(xyzPoints, view, i, tracks);
+    xw_est = reshape(out(1:3*point_num),[point_num, 3]);
+    R_opm = reshape(out(3*point_num+1:3*point_num + 9*(i-1)),[3,3, i-1]);
+    t_opm = reshape(out(3*point_num +9*(i-1)+ 1:end), [1 3 i-1]);
     view = updateView(view, rot, trans, i);
     prevBearing = currBearing;
     % scatter3(xw_est(:,1), xw_est(:,2), xw_est(:,3));
