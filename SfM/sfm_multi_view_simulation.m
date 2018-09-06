@@ -10,16 +10,21 @@ prevPoints = imagePoints(:,:, base_view);
 prevBearing = [ro xs];
 point_num = size(imagePoints, 1);
 view = struct('points',{}, 'label',{},'rot',{},'trans',{}, 'bearing_vector',{});
+tracks = struct ('points',{}, 'views', {});
 view = addview(view, prevPoints, [], eye(3), ...
     zeros(1,3), prevBearing,base_view);
  xw_total = zeros(point_num, 3);
 for i = 2:m
     currPoints = imagePoints(:,:, views(i));
+    matchPairs = matching_points(prevPoints, currPoints);
     [ro1, xs1] = ray_in_out_pixel(currPoints,d, 0);
     currBearing = [ro1 xs1];
+    matchVector1 = prevBearing(matchPairs, :);
+    matchVector2 = currBearing(matchPairs, :);
     testVector(:,:,1) = prevBearing(1:2,:);
     testVector(:,:,2) = currBearing(1:2,:);
-     U=umatrix_generator_general(prevBearing, currBearing);
+    tracks = update_tracks(tracks, matchPairs, i);   
+     U=umatrix_generator_general(matchVector1, matchVector2);
      [R_est,t_est]=R_t_estimator_pixel(U, testVector);
      prevRot = view(i-1).rot;
      prevTrans = view(i-1).trans;
@@ -29,7 +34,7 @@ for i = 2:m
     
      %xyzPoints = triangulate(view(j-1).bearing_vector, view(j).bearing_vector,...
       %    rotateMatrix(:,:,j-1), TransMatrix(j-1,:)'); test
-     xyzPoints = triangulate(view(i-1).bearing_vector, view(i).bearing_vector,...
+     xyzPoints = triangulate(matchVector1, matchVector2,...
           R_est, t_est); 
     
      scatter3(xyzPoints(:,1), xyzPoints(:,2), xyzPoints(:,3));
