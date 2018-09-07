@@ -1,7 +1,7 @@
 function g=lagrange(U,g0)
 
-     l = zeros(6,1);
-%    l = [0.5;0.5;0.5;0.5;0.5;0.5];
+    l = zeros(6,1);
+   %l = [0.5;0.5;0.5;0.5;0.5;0.5];
 	gg0=[g0;l];%init
 	f=@(gg)Ug(gg,U);%
   options = optimset("TolFun",1e-10,"TolX",1e-10,"MaxIter",1e3);

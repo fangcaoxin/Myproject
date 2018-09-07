@@ -30,14 +30,16 @@ load image_points_2.mat
 %% estimate R and t
 matchedVector1 = [r_out_norm1 x_s1];
 matchedVector2 = [r_out_norm2 x_s2];
+ testVector(:,:,1) = matchedVector1(1:2,:);
+ testVector(:,:,2) = matchedVector2(1:2,:);
 U=umatrix_generator_general(matchedVector1, matchedVector2);
-[R_est,t_est]=R_t_estimator_pixel(U);
+[R_est,t_est]=R_t_estimator_pixel(U, testVector);
 Rotate
 R_est
 translation
 t_est
 %% reconstruction
-xw = triangulate(matchedVector1, matchedVector2, Rotate, t_est);
+xw = triangulate(matchedVector1, matchedVector2, R_est, t_est);
 t_no_scale = translation/norm(translation);
 vec1_no_scale = vectorNoScale(image_points_1);
 vec2_no_scale = vectorNoScale(image_points_2);
@@ -45,10 +47,10 @@ xw_no_scale = triangulate(vec1_no_scale, vec2_no_scale, Rotate, t_no_scale);
 %% draw
 color1 = [1 0 0];
 draw(R_est, t_est, xw, color1);
-% hold on 
-% scatter3(teapot2(:,1), teapot2(:,2), teapot2(:,3), 5, 'MarkerFaceColor',[0 0 1]);
- hold on
- draw(R1_est, t1_est, 50*xw_no_scale, [0 1 0]);
+ hold on 
+ scatter3(teapot2(:,1), teapot2(:,2), teapot2(:,3), 5, 'MarkerFaceColor',[0 0 1]);
+% hold on
+% draw(Rotate, t_no_scale, 50*xw_no_scale, [0 1 0]);
 
 function xw = triangulate(vec1, vec2, R_est, t_est)
     r_out_w1 = vec1(:, 1:3)*R_est';

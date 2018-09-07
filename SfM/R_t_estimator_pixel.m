@@ -1,7 +1,6 @@
 function [R_est,t_est]=R_t_estimator_pixel(U, test_points)
 load parameter.mat
-Rotate4 = zeros(3,3,4);
-Trans4 = zeros(3,4);
+
 [R_est, t_est] = Rt_estimate(U, 0);
  xw = triangulate(test_points(:,:,1), test_points(:,:,2), R_est, t_est);
  if(xw < R + 100)
@@ -19,7 +18,7 @@ function [R_est, t_est] = Rt_estimate(U, mark)
     g0 = -g/k;
     end
     g = lagrange(U,g0); 
-    %g = g0;
+   % g = g0;
  
   g(10)^2+g(11)^2+g(12)^2
   g(13)^2+g(14)^2+g(15)^2

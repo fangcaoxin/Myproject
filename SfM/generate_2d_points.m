@@ -3,12 +3,16 @@
 
  
 function generate2D()
-load teapotMatrix.mat
-imagePointMatrix = zeros(size(teapotMatrix,1), 2, 10);
-for i = 1:10
-    imagePointMatrix(:,:,i) = point3d_t_2d(teapotMatrix(:,:,i));
-end
-save imagePointMatrix.mat imagePointMatrix
+% load teapotMatrix.mat
+% imagePointMatrix = zeros(size(teapotMatrix,1), 2, 10);
+% for i = 1:10
+%     imagePointMatrix(:,:,i) = point3d_t_2d(teapotMatrix(:,:,i));
+% end
+% save imagePointMatrix.mat imagePointMatrix
+load('teapot.mat');
+ teapot1 = teapot(1:10:end,:) + [0 0 600]; % Z>600
+ basePoint = point3d_t_2d(double(teapot1));
+ save basePoint.mat basePoint
 end
  function drawmultiview()
   load RotateMatrix.mat

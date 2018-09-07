@@ -39,9 +39,9 @@ loc2 = t_est;
 ori1 = [1 0 0; 0 1 0; 0 0 1];
 ori2 = R_est;
 
-cam1 = plotCamera('Location',loc1, 'Orientation', ori1,'Size', 1.5);
+cam1 = plotCamera('Location',loc1, 'Orientation', ori1,'Size', 1.5, 'label', '1');
 hold on
-cam2 = plotCamera('Location',loc2, 'Orientation', ori2,'Size', 1.5);
+cam2 = plotCamera('Location',loc2, 'Orientation', ori2,'Size', 1.5, 'label', '2');
 hold on
 % scatter3(worldPoints(:,1), worldPoints(:,2), Z,'MarkerFaceColor',[0 0 1]);
 % hold on

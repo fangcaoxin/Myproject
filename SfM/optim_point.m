@@ -1,4 +1,4 @@
-function out = optim_point(p, view, m, n)
+function out = optim_point(p, view, m, tracks)
 % p is point 1xN , Rt estimated rotation and translation mat4x3xM
 % v calucated bearing vector
 p_one_row = reshape(p, 1, []);
@@ -7,8 +7,9 @@ t_one_row = reshape([view.trans], 1, []);
 v = reshape([view.bearing_vector], [], 6, m);
 x0 = [p_one_row R_one_row(10:end) t_one_row(4:end)];
 
-opts = optimset('Display', 'iter');
+%opts = optimset('Display', 'iter');
 %opts = optimoptions(@lsqnonlin,'Algorithm','levenberg-marquardt','MaxFunEvals',3e4,'TolFun',1e-3);
+opts = optimoptions('lsqnonlin','Display','iter','Algorithm','levenberg-marquardt');
 out = lsqnonlin(@(x)fun(x,v,m,n), x0, [],[], opts);
 
 
@@ -43,13 +44,13 @@ for i = 2:m
    %fval(end+1: end + n)= xs_est(:,3)-xs(:,3);
   %xw_normal = cross(ro, N1_norm, 2);
   %fval(end+1: end+ n) = dot(ro_est, xw_normal, 2);
-  fval(end+1)= norm(Rot(1,:,i-1)) -1;
-  fval(end+1) = norm(Rot(2,:,i-1)) - 1;
-  fval(end+1) = dot(Rot(1,:,i-1),Rot(2,:,i-1));
-  r3 = cross(Rot(1,:,i-1), Rot(2,:,i-1)); 
-  fval(end+1) = r3(1) - Rot(3,1,i-1);
-  fval(end+1) = r3(2) - Rot(3,2,i-1);
-  fval(end+1) = r3(3) - Rot(3,3,i-1);  
+%   fval(end+1)= norm(Rot(1,:,i-1)) -1;
+%   fval(end+1) = norm(Rot(2,:,i-1)) - 1;
+%   fval(end+1) = dot(Rot(1,:,i-1),Rot(2,:,i-1));
+%   r3 = cross(Rot(1,:,i-1), Rot(2,:,i-1)); 
+%   fval(end+1) = r3(1) - Rot(3,1,i-1);
+%   fval(end+1) = r3(2) - Rot(3,2,i-1);
+%   fval(end+1) = r3(3) - Rot(3,3,i-1);  
 end
 
 end
