@@ -1,6 +1,6 @@
 function tracks = update_tracks(tracks, matchedPairs, view, xyzPoints)
   new_num = size(matchedPairs, 1); % new num
- if(exist('tracks.points'))
+ if(view>2)
     exist_num = size(tracks, 2); % exist num
     tracks_cell = struct2cell(tracks);
     tracks_point_mat = reshape(cell2mat(tracks_cell(1,:,:)), 1, []);

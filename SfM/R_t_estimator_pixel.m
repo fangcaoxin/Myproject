@@ -3,7 +3,7 @@ load parameter.mat
 
 [R_est, t_est] = Rt_estimate(U, 0);
  xw = triangulate(test_points(:,:,1), test_points(:,:,2), R_est, t_est);
- if(xw < R + 100)
+ if(xw(:,3) <0)
  [R_est, t_est] = Rt_estimate(U, 1);
  end 
 end
@@ -30,31 +30,31 @@ function [R_est, t_est] = Rt_estimate(U, mark)
   E=[g(1) g(2) g(3);
 	   g(4) g(5) g(6);
 	   g(7) g(8) g(9)];
-	[U1 S1 V1] = svd(E);
+	[U1, S1, V1] = svd(E);
   %U1
   %S1
   %V1
-  T  = E*R_est';
-  t_err = 0.5*[T(3,2)-T(2,3); T(1,3)-T(3,1);T(2,1)-T(1,2)];
-  sign_t_err = sign(t_err);
-  scale = (S1(1,1) + S1(2,2))/2;
-  t_est = scale * V1(:,3)
-  sign_t_est = sign(t_est);
-  if(sign_t_err ~= sign_t_est)
-     t_est = -t_est;
-  end
-
+   T  = E*R_est';
+   t_err= 0.5*[T(3,2)-T(2,3); T(1,3)-T(3,1);T(2,1)-T(1,2)];
+%    sign_t_err = sign(t_err);
+%    scale = (S1(1,1) + S1(2,2))/2;
+%    t_est = scale * U1(:,3);
+%    sign_t_est = sign(t_est);
+%    if(sign_t_err ~= sign_t_est)
+%       t_est = -t_est;
+%    end
+t_est = t_err;
 end
 
 function xw = triangulate(vec1Full, vec2Full, R1_est, t1_est)
     vec1 =  vec1Full;
     vec2  = vec2Full;
-    r_out_w1 = vec1(:, 1:3)*R1_est';
-    xs_w1 = vec1(:, 4:6)*R1_est' + t1_est';
+    r_out_w1 = vec1(:, 1:3);
+    xs_w1 = vec1(:, 4:6);
     ro2 = vec2(:, 1:3);
     xs2 = vec2(:, 4:6);
-    r_out_w2 = ro2;
-    xs_w2 = xs2;
+    r_out_w2 = ro2*R1_est';
+    xs_w2 = xs2*R1_est' + t1_est';
     v1 = sum(r_out_w1.*r_out_w1,2);
     v2 = sum(r_out_w2.*r_out_w2,2);
     v3 = sum(r_out_w1.*r_out_w2,2);

@@ -1,7 +1,7 @@
 % Use |imageDatastore| to get a list of all image file names in a
 % directory.
 refractive = 0;
-imageDir = fullfile('tortoise');
+imageDir = fullfile('real_images_2/dehazing');
 imds = imageDatastore(imageDir);
 IntrinsicMatrix = [590.2313 0 0; 0 559.4365 0; 369.2098 272.4348 1];
 radialDistortion = [-0.4084 0.1707];
@@ -18,21 +18,22 @@ for i = 1:numel(imds.Files)
     images{i} = rgb2gray(I);
 end
 I = undistortImage(images{1}, cameraParams);
-border = 50;
+border = 5;
 roi = [border, border, size(I, 2)- 2*border, size(I, 1)- 2*border];
-prevPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
+prevPoints   = detectSURFFeatures(I,  'ROI', roi);
 prevFeatures = extractFeatures(I, prevPoints);
 vSet = viewSet;
 viewId = 1;
 vSet = addView(vSet, viewId, 'Points', prevPoints, 'Orientation', ...
     eye(3, 'like', prevPoints.Location), 'Location', ...
     zeros(1, 3, 'like', prevPoints.Location));
-for i = 2:numel(images)
+%for i = 2:numel(images)
+for i = 2:2
     % Undistort the current image.
      I = undistortImage(images{i}, cameraParams);
 %    I = images{i};
     % Detect, extract and match features.
-    currPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
+    currPoints   = detectSURFFeatures(I, 'ROI', roi);
     currFeatures = extractFeatures(I, currPoints);
     indexPairs = matchFeatures(prevFeatures, currFeatures, ...
         'MaxRatio', .7, 'Unique',  true);
@@ -40,7 +41,9 @@ for i = 2:numel(images)
     % Select matched points.
     matchedPoints1 = prevPoints(indexPairs(:, 1));
     matchedPoints2 = currPoints(indexPairs(:, 2));
-
+    figure; ax = axes;
+    showMatchedFeatures(images{i-1}, images{i}, matchedPoints1, matchedPoints2,...
+        'montage', 'Parent', ax);
     % Estimate the camera pose of current view relative to the previous view.
     % The pose is computed up to scale, meaning that the distance between
     % the cameras in the previous view and the current view is set to 1.
@@ -86,13 +89,13 @@ for i = 2:numel(images)
     end
 
     % Refine the 3-D world points and camera poses.
-    if(refractive == 0)
-       [xyzPoints, camPoses, reprojectionErrors] = bundleAdjustment(xyzPoints, ...
-        tracks, camPoses, cameraParams, 'FixedViewId', 1, ...
-        'PointsUndistorted', true);
-    else
-        [xyzPoints, camPoses] = refractiveBA(xyzPoints, bearingVec);
-    end
+%     if(refractive == 0)
+%        [xyzPoints, camPoses, reprojectionErrors] = bundleAdjustment(xyzPoints, ...
+%         tracks, camPoses, cameraParams, 'FixedViewId', 1, ...
+%         'PointsUndistorted', true);
+%     else
+%         [xyzPoints, camPoses] = refractiveBA(xyzPoints, bearingVec);
+%     end
 
     % Store the refined camera poses.
     vSet = updateView(vSet, camPoses);
@@ -108,8 +111,8 @@ plotCamera(camPoses, 'Size', 0.2);
 hold on
 
 % Exclude noisy 3-D points.
-goodIdx = (reprojectionErrors < 5);
-xyzPoints = xyzPoints(goodIdx, :);
+% goodIdx = (reprojectionErrors < 5);
+% xyzPoints = xyzPoints(goodIdx, :);
 
 % Display the 3-D points.
 pcshow(xyzPoints, 'VerticalAxis', 'y', 'VerticalAxisDir', 'down', ...

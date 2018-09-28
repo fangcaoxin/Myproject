@@ -5,7 +5,7 @@ teapot1 = teapot(1:10:end,:) + [0 0 600]; % Z>600
 %% transform 3D points to another view(R,t) external matrix
 load camera_motion.mat
 load parameter.mat
-teapot2 = teapot1*Rotate' + translation';
+teapot2 = (teapot1-translation')*Rotate; % transform teapot 1 to Camera 2 system according R and t
 teapot1 = cast(teapot1,'double');
 teapot2 = cast(teapot2,'double');
 %% intrinsic matrix
@@ -15,13 +15,15 @@ teapot_c1 = teapot1*K';
 teapot_c2 = teapot2*K';
 teapot_c1_norm = teapot_c1(:,1:2)./teapot_c1(:,3);
 teapot_c2_norm = teapot_c2(:,1:2)./teapot_c2(:,3);
-%   plot(teapot_c2_norm(:,1), teapot_c2_norm(:,2),'r.');
-%   axis([0 1280 0 960]);
-%   hold on
+%    plot(teapot_c2_norm(:,1), teapot_c2_norm(:,2),'r.');
+%    axis([0 1280 0 960]);
+%    hold on
 %% considering refraction 3d->2d
-% image_points_1 = point3d_t_2d(teapot1);
-% image_points_2 = point3d_t_2d(teapot2);
-% plot(image_points_2(:,1), image_points_2(:,2), '.');
+%  image_points_1 = point3d_t_2d(teapot1);
+%  image_points_2 = point3d_t_2d(teapot2);
+%  plot(image_points_2(:,1), image_points_2(:,2), '.');
+%  save image_points_1.mat image_points_1
+%  save image_points_2.mat image_points_2
 %% considering refraction 2d->3d
 load image_points_1.mat
 load image_points_2.mat
@@ -39,26 +41,29 @@ R_est
 translation
 t_est
 %% reconstruction
-xw = triangulate(matchedVector1, matchedVector2, R_est, t_est);
+xw = triangulate(matchedVector1, matchedVector2, R_est, t_est-[1;-1;1]);
 t_no_scale = translation/norm(translation);
 vec1_no_scale = vectorNoScale(image_points_1);
 vec2_no_scale = vectorNoScale(image_points_2);
-xw_no_scale = triangulate(vec1_no_scale, vec2_no_scale, Rotate, t_no_scale);
+[R_p, t_p] = R_t_estimator_pespective(vec1_no_scale, vec2_no_scale);
+R_p
+t_p
+xw_no_scale = triangulate(vec1_no_scale, vec2_no_scale, R_p, t_p);
 %% draw
 color1 = [1 0 0];
-draw(R_est, t_est, xw, color1);
+draw(R_est, t_est, Rotate, translation, xw, color1);
  hold on 
- scatter3(teapot2(:,1), teapot2(:,2), teapot2(:,3), 5, 'MarkerFaceColor',[0 0 1]);
-% hold on
-% draw(Rotate, t_no_scale, 50*xw_no_scale, [0 1 0]);
+ scatter3(teapot1(:,1), teapot1(:,2), teapot1(:,3), 5, 'MarkerFaceColor',[0 0 1], 'MarkerEdgeColor', [0 0 0.5]);
+%  hold on
+%  draw(Rotate, t_no_scale, 50*xw_no_scale, [0 1 0]);
 
 function xw = triangulate(vec1, vec2, R_est, t_est)
-    r_out_w1 = vec1(:, 1:3)*R_est';
-    xs_w1 = vec1(:, 4:6)*R_est' + t_est';
+    r_out_w1 = vec1(:, 1:3);
+    xs_w1 = vec1(:, 4:6);
     ro2 = vec2(:, 1:3);
     xs2 = vec2(:, 4:6);
-    r_out_w2 = ro2;
-    xs_w2 = xs2;
+    r_out_w2 = ro2*R_est';
+    xs_w2 = xs2*R_est' + t_est';
     v1 = sum(r_out_w1.*r_out_w1,2);
     v2 = sum(r_out_w2.*r_out_w2,2);
     v3 = sum(r_out_w1.*r_out_w2,2);
@@ -69,26 +74,31 @@ function xw = triangulate(vec1, vec2, R_est, t_est)
     xw = (xs_w1 + s1.*r_out_w1 + xs_w2 + s2.*r_out_w2)/2;
 end
 
-function draw(R_est, t_est, xw_est, color)
+function draw(R_est, t_est, Rotate, translation, xw_est, color)
 loc1 = [0;0;0];
 loc2 = t_est;
 ori1 = [1 0 0; 0 1 0; 0 0 1];
 ori2 = R_est;
 
-% cam1 = plotCamera('Location',loc1, 'Orientation', ori1,'Size', 20,...
-%     'label', '1', 'AxesVisible', false);
-% hold on
-% cam2 = plotCamera('Location',loc2, 'Orientation', ori2,'Size', 20,...
-%     'Color',[0 0 1], 'label', '2', 'AxesVisible', false);
-% hold on
+cam1 = plotCamera('Location',loc1, 'Orientation', ori1,'Size', 20,...
+    'label', '1', 'AxesVisible', false);
+hold on
+cam2 = plotCamera('Location',loc2, 'Orientation', ori2,'Size', 20,...
+    'Color',[0 0 1], 'label', 'Estimated 2', 'AxesVisible', false);
+hold on
+cam4 = plotCamera('Location',translation, 'Orientation', Rotate,'Size', 20,...
+    'Color',[0 1 0], 'label', 'Ground truth 2', 'AxesVisible', false);
+hold on
 % scatter3(worldPoints(:,1), worldPoints(:,2), Z,'MarkerFaceColor',[0 0 1]);
-% hold on
+hold on
 scatter3(xw_est(:,1), xw_est(:,2), xw_est(:,3), 5, 'MarkerFaceColor',color, 'MarkerEdgeColor', 0.5*color);
 
 grid on
 xlabel('X[mm]');
 ylabel('Y[mm]');
 zlabel('Z[mm]');
+%legend('Reconstructed by RSfM', 'Ground truth', 'Reconstructed by PSfM (50x)');
+legend('Reconstructed by RSfM','Ground truth');
 % axis_x_min = min([xw_est(:,1); t_est(1,1)]);
 % axis_x_max = max([xw_est(:,1); t_est(1,1)]);
 % axis_y_min = min([xw_est(:,2); t_est(2,1)]);
