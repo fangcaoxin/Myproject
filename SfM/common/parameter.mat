@@ -1,0 +1,76 @@
+# Created by Octave 4.0.3, Wed Apr 04 15:25:07 2018 GMT <unknown@M-13-DPC287>
+# name: n1
+# type: scalar
+1
+
+
+# name: n2
+# type: scalar
+1.49
+
+
+# name: n3
+# type: scalar
+1.333
+
+
+# name: focal
+# type: scalar
+3.7
+
+
+# name: sx
+# type: scalar
+0.0035
+
+
+# name: sy
+# type: scalar
+0.0035
+
+
+# name: fx
+# type: scalar
+1057.142857142857
+
+
+# name: fy
+# type: scalar
+1057.142857142857
+
+
+# name: hcx
+# type: scalar
+640
+
+
+# name: hcy
+# type: scalar
+480
+
+
+# name: R
+# type: scalar
+50
+
+
+# name: r
+# type: scalar
+46
+
+
+# name: d
+# type: scalar
+25
+
+
+# name: r_pixel
+# type: scalar
+13142.85714285714
+
+
+# name: d_pixel
+# type: scalar
+7142.857142857143
+
+

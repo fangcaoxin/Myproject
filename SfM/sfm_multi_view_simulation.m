@@ -52,9 +52,9 @@ for i = 2:m
      scatter3(nxyzPoints(:,1), nxyzPoints(:,2), nxyzPoints(:,3));
     valid_num = size(tracks, 1);
     out = optim_point(xyzPoints, view, i, tracks);
-    xw_est = reshape(out(1:3*point_num),[point_num, 3]);
-    R_opm = reshape(out(3*point_num+1:3*point_num + 9*(i-1)),[3,3, i-1]);
-    t_opm = reshape(out(3*point_num +9*(i-1)+ 1:end), [1 3 i-1]);
+    xw_est = reshape(out(1:3*valid_num),[valid_num, 3]);
+    R_opm = reshape(out(3*valid_num+1:3*valid_num + 9*(i-1)),[3,3, i-1]);
+    t_opm = reshape(out(3*valid_num +9*(i-1)+ 1:end), [1 3 i-1]);
     view = updateView(view, rot, trans, i);
     prevBearing = currBearing;
     % scatter3(xw_est(:,1), xw_est(:,2), xw_est(:,3));
