@@ -3,15 +3,16 @@ load parameter.mat
 
 [R_est, t_est] = Rt_estimate(U, 0);
  xw = triangulate(test_points(:,:,1), test_points(:,:,2), R_est, t_est);
- if(xw(:,3) <0)
+ if(xw(:,3) <50)
  [R_est, t_est] = Rt_estimate(U, 1);
- end 
+ end
+ xw1 = triangulate(test_points(:,:,1), test_points(:,:,2), R_est, t_est);
 end
 
 function [R_est, t_est] = Rt_estimate(U, mark)
    U = cast(U, 'double');
     [v,lambda]=eig(U'*U);
-    g=v(:,1);
+    g=v(:,2);
     k=sqrt(g(10)^2+g(11)^2+g(12)^2);
     g0 = g/k;
     if mark == 1

@@ -1,7 +1,7 @@
 function [xyzPoints, view] = optim_point(view, tracks)
 % p is point 1xN , Rt estimated rotation and translation mat4x3xM
 % v calucated bearing vector
-step = 1;
+step = 10;
 tracks_cell = struct2cell(tracks);
 nxyzPoints = reshape(cell2mat(tracks_cell(3,:,:)), 3, []);
 p = nxyzPoints';
@@ -33,8 +33,7 @@ function fval = fun(x, v, numViews,numPoints, tracks,step)
  points = reshape(x(1:3*n), [],3);
  Rot = reshape(x(3*n+1:3*n+9*(m-1)), [3 3 m-1] );
  trans = reshape(x(3*n+9*(m-1)+1:end),[1 3 m-1]);
- fval = 0;
- count = 0;
+fval = 0;
 for i = 1:n
     rn = 1 + step*(i-1);
    for j = 1 : size(tracks(rn).views, 2)
@@ -44,13 +43,16 @@ for i = 1:n
        end
        rotate = Rot(:,:,view-1);
        translation = trans(:,:,view-1);
-       xc = (points(i,:) - translation)*rotate;
+       xc = rotate'*(points(i,:) - translation)';
+       xc = xc';
        ro = v(tracks(rn).points, 1:3, view);
        xs = v(tracks(rn).points, 4:6, view);
        ro_est = xc - xs;
+       ro_est = ro_est/norm(ro_est);
        ro_proj = ro(:,1:2)./ro(:,3);
        ro_est_proj = ro_est(:, 1:2)./ro_est(:,3);
-       fval(end + 1) = norm(ro_proj - ro_est_proj);
+       %fval(end + 1,1) = norm(ro_proj - ro_est_proj);
+       fval(end + 1, 1) = norm(ro-ro_est);
 %       tmp = [0 1 1];
 %       N1 = xs.*tmp;
 %       N1_norm = N1/norm(N1);
@@ -65,13 +67,13 @@ end
            continue;
        end
        rotate = Rot(:,:,view-1);
-         fval(end+1) = norm(rotate(1,:))-1;
-        fval(end+1) = norm(rotate(2,:))-1;
-        fval(end+1) = dot(rotate(1,:),rotate(2,:));
+         fval(end+1,1) = norm(rotate(1,:))-1;
+        fval(end+1,1) = norm(rotate(2,:))-1;
+        fval(end+1,1) = dot(rotate(1,:),rotate(2,:));
          r3 = cross(rotate(1,:), rotate(2,:));
-       fval(end+1) = r3(1) - rotate(3,1);
-       fval(end+1) = r3(2) - rotate(3,2);
-       fval(end+1) = r3(3) - rotate(3,3);  
+       fval(end+1,1) = r3(1) - rotate(3,1);
+       fval(end+1,1) = r3(2) - rotate(3,2);
+       fval(end+1,1) = r3(3) - rotate(3,3);  
  end
 
   %fval(end+1: end + n)= xs_est(:,1)-xs(:,1);

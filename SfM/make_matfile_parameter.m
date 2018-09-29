@@ -14,6 +14,7 @@ r = 46; % radius 50mm
 d = 25; % distance between camera center and axis
 r_pixel = r/sx;
 d_pixel = d/sx;
+w = 4;
 
 
-save parameter.mat n1 n2 n3 focal sx sy fx fy hcx hcy R r d r_pixel d_pixel;
+save parameter.mat n1 n2 n3 focal sx sy fx fy hcx hcy R r d r_pixel d_pixel w;
