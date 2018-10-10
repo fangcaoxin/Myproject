@@ -1,12 +1,12 @@
 function [R_est,t_est]=R_t_estimator_pixel(U, test_points, vertical)
 %load parameter.mat
-
+addpath('common');
 [R_est, t_est] = Rt_estimate(U, 1, vertical);
- xw = triangulate(test_points(:,:,1), test_points(:,:,2), R_est, t_est);
- if(xw(:,3) <300)
+ xw = triangulateOptim(test_points(:,:,1), test_points(:,:,2), R_est, t_est);
+ if(R_est(1,1) <0)
  [R_est, t_est] = Rt_estimate(U, 0, vertical);
  end
- xw1 = triangulate(test_points(:,:,1), test_points(:,:,2), R_est, t_est);
+ xw1 = triangulateOptim(test_points(:,:,1), test_points(:,:,2), R_est, t_est);
 end
 
 function [R_est, t_est] = Rt_estimate(U, mark, vertical)
@@ -60,21 +60,3 @@ function [R_est, t_est] = Rt_estimate(U, mark, vertical)
 % t_est = t_err;
 end
 
-function xw = triangulate(vec1Full, vec2Full, R1_est, t1_est)
-    vec1 =  vec1Full;
-    vec2  = vec2Full;
-    r_out_w1 = vec1(:, 1:3);
-    xs_w1 = vec1(:, 4:6);
-    ro2 = vec2(:, 1:3);
-    xs2 = vec2(:, 4:6);
-    r_out_w2 = ro2*R1_est';
-    xs_w2 = xs2*R1_est' + t1_est';
-    v1 = sum(r_out_w1.*r_out_w1,2);
-    v2 = sum(r_out_w2.*r_out_w2,2);
-    v3 = sum(r_out_w1.*r_out_w2,2);
-    w1 = sum((xs_w2-xs_w1).*r_out_w1,2);
-    w2 = sum((xs_w2-xs_w1).*r_out_w2,2);
-    s1 = (w1.*v2 - w2.*v3)./(v1.*v2-v3.*v3);
-    s2 = (s1.*v3 -w2)./v2;
-    xw = (xs_w1 + s1.*r_out_w1 + xs_w2 + s2.*r_out_w2)/2;
-end

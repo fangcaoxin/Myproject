@@ -63,7 +63,8 @@ trans = t_est;
       hold on
       axis equal
      tracks = update_tracks(tracks, matchPairs, i, xyzPoints);
-     
+     num_tracks = numel(tracks);
+[xw1_est, view] = optim_point(view, tracks,10, 1, num_tracks);
 
  
 %    prevBearing = currBearing;
