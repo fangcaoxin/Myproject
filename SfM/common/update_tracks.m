@@ -8,9 +8,9 @@ function tracks = update_tracks(tracks, matchedPairs, view, xyzPoints)
     for i = 1: new_num
       res = find(tracks_point_mat == matchedPairs(i,1));
       if(res)
-          tracks(res).views = [tracks(i).views view];
-          tracks(res).pointcloud = tracks(res).pointcloud...
-              /(size(tracks(res).views, 2) -1);
+          tracks(res).views = [tracks(res).views view];
+          tracks(res).pointcloud = (tracks(res).pointcloud + xyzPoints(i,:))...
+              /2;
       else
           curr_num = curr_num + 1;
           tracks(curr_num).points = matchedPairs(i,1);
@@ -23,5 +23,6 @@ function tracks = update_tracks(tracks, matchedPairs, view, xyzPoints)
       tracks(i).points = matchedPairs(i,1);
       tracks(i).views = [1 2];
       tracks(i).pointcloud = xyzPoints(i,:);
+    end
  end
 end

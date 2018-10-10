@@ -1,18 +1,22 @@
-function [R_est,t_est]=R_t_estimator_pixel(U, test_points)
-load parameter.mat
+function [R_est,t_est]=R_t_estimator_pixel(U, test_points, vertical)
+%load parameter.mat
 
-[R_est, t_est] = Rt_estimate(U, 0);
+[R_est, t_est] = Rt_estimate(U, 1, vertical);
  xw = triangulate(test_points(:,:,1), test_points(:,:,2), R_est, t_est);
- if(xw(:,3) <50)
- [R_est, t_est] = Rt_estimate(U, 1);
+ if(xw(:,3) <300)
+ [R_est, t_est] = Rt_estimate(U, 0, vertical);
  end
  xw1 = triangulate(test_points(:,:,1), test_points(:,:,2), R_est, t_est);
 end
 
-function [R_est, t_est] = Rt_estimate(U, mark)
+function [R_est, t_est] = Rt_estimate(U, mark, vertical)
    U = cast(U, 'double');
     [v,lambda]=eig(U'*U);
-    g=v(:,2);
+    if (vertical)
+       g=v(:,2);
+    else
+       g =v(:,1);
+    end
     k=sqrt(g(10)^2+g(11)^2+g(12)^2);
     g0 = g/k;
     if mark == 1
@@ -32,19 +36,28 @@ function [R_est, t_est] = Rt_estimate(U, mark)
 	   g(4) g(5) g(6);
 	   g(7) g(8) g(9)];
 	[U1, S1, V1] = svd(E);
+    W = [ 0 -1 0; 1 0 0; 0 0 1];
+    R_est_1(:,:,1) = U1*W*V1';
+    R_est_1(:,:,2) = U1*W*V1';
+    R_est_1(:,:,3) = U1*W'*V1';
+    R_est_1(:,:,4) = U1*W'*V1';
+    t_est_1(:,:,1) = U1(:,3);
+    t_est_1(:,:,2) = -U1(:,3);
+    t_est_1(:,:,3) = U1(:,3);
+    t_est_1(:,:,4) = -U1(:,3);
   %U1
   %S1
   %V1
    T  = E*R_est';
    t_err= 0.5*[T(3,2)-T(2,3); T(1,3)-T(3,1);T(2,1)-T(1,2)];
-%    sign_t_err = sign(t_err);
-%    scale = (S1(1,1) + S1(2,2))/2;
-%    t_est = scale * U1(:,3);
-%    sign_t_est = sign(t_est);
-%    if(sign_t_err ~= sign_t_est)
-%       t_est = -t_est;
-%    end
-t_est = t_err;
+   sign_t_err = sign(t_err);
+   scale = (S1(1,1) + S1(2,2))/2;
+   t_est = scale * U1(:,3);
+   sign_t_est = sign(t_est);
+   if(sign_t_err ~= sign_t_est)
+      t_est = -t_est;
+   end
+% t_est = t_err;
 end
 
 function xw = triangulate(vec1Full, vec2Full, R1_est, t1_est)

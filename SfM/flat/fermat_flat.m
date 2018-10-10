@@ -1,6 +1,6 @@
 % use fermat to determine the intersect point at glass
 function [c]=fermat_flat(point,n1,n2,n3,w,d,cali)
-	load parameter.mat
+
   if(cali > 0)
       n3 = n1;
   end
@@ -19,7 +19,7 @@ function [c]=fermat_flat(point,n1,n2,n3,w,d,cali)
     x = point(1);
     y = point(2);
     z = point(3);
-	f=@(c)L_flat(c,x,y,z,n1,n2,n3,R,r,d);
+	f=@(c)L_flat(c,x,y,z,n1,n2,n3,w,d);
 
    options=optimoptions('fmincon','Display','off'); %only matlab
 %    [c,fval,info]=fsolve(f,c0,options);

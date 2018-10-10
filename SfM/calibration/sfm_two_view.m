@@ -27,7 +27,7 @@ error_x = xw_est(:,1)- worldPoints(:,1);
 error_y = xw_est(:,2)- worldPoints(:,2);
 error_z = xw_est(:,3);
 error = error_x.*error_x + error_y.*error_y + error_z.*error_z; 
-error_sum = sqrt(sum(error, 1)/70);
+error_sum = sqrt(sum(error, 1))/70;
 
 % save xw_est.mat xw_est
 %% draw 

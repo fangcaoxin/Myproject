@@ -28,7 +28,7 @@ vSet = addView(vSet, viewId, 'Points', prevPoints, 'Orientation', ...
     eye(3, 'like', prevPoints.Location), 'Location', ...
     zeros(1, 3, 'like', prevPoints.Location));
 %for i = 2:numel(images)
-for i = 2:2
+for i = 2:numel(imds.Files)
     % Undistort the current image.
      I = undistortImage(images{i}, cameraParams);
 %    I = images{i};
@@ -89,13 +89,13 @@ for i = 2:2
     end
 
     % Refine the 3-D world points and camera poses.
-%     if(refractive == 0)
-%        [xyzPoints, camPoses, reprojectionErrors] = bundleAdjustment(xyzPoints, ...
-%         tracks, camPoses, cameraParams, 'FixedViewId', 1, ...
-%         'PointsUndistorted', true);
-%     else
-%         [xyzPoints, camPoses] = refractiveBA(xyzPoints, bearingVec);
-%     end
+    if(refractive == 0)
+       [xyzPoints, camPoses, reprojectionErrors] = bundleAdjustment(xyzPoints, ...
+        tracks, camPoses, cameraParams, 'FixedViewId', 1, ...
+        'PointsUndistorted', true);
+    else
+        [xyzPoints, camPoses] = refractiveBA(xyzPoints, bearingVec);
+    end
 
     % Store the refined camera poses.
     vSet = updateView(vSet, camPoses);
