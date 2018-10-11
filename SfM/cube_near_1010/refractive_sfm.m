@@ -54,14 +54,15 @@ for i = 2:9
      basePoints = currPoints;
      prevlabel = currlabel;
      prevBearing = currBearing;
-points3D = triangulateR(matchVector1, matchVector2, rot, trans');
-tracks = update_tracks(tracks, matchedPairs, 2, points3D);
+points3D = triangulateR(matchVector1, matchVector2, relativeOrient, relativeLoc); % in C1
+points3D_world = points3D*prevRot' + prevTrans;
+tracks = update_tracks(tracks, matchedPairs, 2, points3D_world);
  [xw_est, view] = optim_point(view, tracks, 1, 1, numel(tracks));
 % Get the color of each reconstructed point
 
 ptCloud = pointCloud(xw_est);
 
-pcshow(ptCloud, 'MarkerSize', 50);
+ax= pcshow(ptCloud, 'MarkerSize', 50);
 %   axis([-1 -0.5 2.02 2.06 41.6 42]);
 % pcwrite(ptCloud, 'structure_out', 'PLYFormat', 'binary');
 % Rotate and zoom the plot
@@ -69,7 +70,7 @@ pcshow(ptCloud, 'MarkerSize', 50);
 % camzoom(1.5);
 
 % Label the axes
-axis equal
+
 xlabel('x-axis');
 ylabel('y-axis');
 zlabel('z-axis')
