@@ -30,7 +30,7 @@ R_opm = reshape(out(3*numPoints+1:3*numPoints + 9*(numViews-1)),[3,3, numViews-1
 t_opm = reshape(out(3*numPoints + 9*(numViews-1)+1:end), [3 1 numViews-1]);
  for  k = 2: numViews
     view(k).rot = R_opm(:,:,k-1);
-    view(k).trans = t_opm(:,:,k-1);
+    view(k).trans = t_opm(:,:,k-1)';
  end
 end
 % startNum the starting num of 3D points for optim
