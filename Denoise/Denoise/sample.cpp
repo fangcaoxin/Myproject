@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
 			getMaskFromStd(labels, normalize_std);
 			getMaskFromStd(labels1, normalize_std1);
 			int num = sumAreaByRadius(labels, labels1, centroids, centroids1, diff_output_c, 5);
-			imageClosing(diff_output_c, diff_output_c, 12);
+			imageClosing(diff_output_c, diff_output_c, 3);
 			int size_final = connectedComponentsWithStats(diff_output_c, labels_final, stats_final, centroids_final);
 			floatingAreaRestoration(image_list_compensation, image_list_gray_compensation, stats_final, labels_final, output);
 #ifdef TIME
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
 		res_save.push_back(output);
 		hconcat(res_save, res);*/
 			//imshow("cdfd", diff_output_c);
-			//imwrite("cdfd.jpg", diff_output_c);
+			imwrite("cdfd.jpg", diff_output_c);
 			//imshow("output", output);
 			//imshow("trans", trans);
 			//imwrite(save_name, output);

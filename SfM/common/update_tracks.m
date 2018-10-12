@@ -9,8 +9,6 @@ function tracks = update_tracks(tracks, matchedPairs, view, xyzPoints)
       res = find(tracks_point_mat == matchedPairs(i,1));
       if(res)
           tracks(res).views = [tracks(res).views view];
-          tracks(res).pointcloud = (tracks(res).pointcloud + xyzPoints(i,:))...
-              /2;
       else
           curr_num = curr_num + 1;
           tracks(curr_num).points = matchedPairs(i,1);
