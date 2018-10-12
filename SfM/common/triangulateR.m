@@ -1,11 +1,11 @@
-function xw = triangulateR(vec1, vec2, R_2, t_2)
+function xw = triangulateR(vec1, vec2, R_1, t_1, R_2, t_2)
 % R_2, t_2 the camera pose relative world coordinate system
-    r_out_w1 = vec1(:, 1:3);
-    xs_w1 = vec1(:, 4:6);
+    r_out_w1 = vec1(:, 1:3)*R_1';
+    xs_w1 = vec1(:, 4:6)*R_1'+ t_1;
     ro2 = vec2(:, 1:3);
     xs2 = vec2(:, 4:6);
     r_out_w2 = ro2*R_2';
-    xs_w2 = xs2*R_2'+t_2';
+    xs_w2 = xs2*R_2'+t_2;
     v1 = sum(r_out_w1.*r_out_w1,2);
     v2 = sum(r_out_w2.*r_out_w2,2);
     v3 = sum(r_out_w1.*r_out_w2,2);

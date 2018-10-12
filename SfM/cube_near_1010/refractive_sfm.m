@@ -5,7 +5,7 @@ addpath('../common');
 load corres.mat
 IntrinsicMatrix = [2881.84239103060,0,0;0,2890.20944782907,0;2073.63152572517,1398.01946105023,1];
 radialDistortion = [0.0424498292149281,-0.0489981810340664];
-cameraParams = cameraParameters('IntrinsicMatrix',IntrinsicMatrix, 'RadialDistortion',radialDistortion);
+%cameraParams = cameraParameters('IntrinsicMatrix',IntrinsicMatrix, 'RadialDistortion',radialDistortion);
 bearingVec = struct('ViewIds',{},'BearingVector',{});
 
 % fileID_corres = fopen('res.txt', 'r');
@@ -19,7 +19,8 @@ bearingVec = struct('ViewIds',{},'BearingVector',{});
 gg = [56.9670253618861,-2.18342172302219,2.76380543162081,-0.862991761238783];
 c = [1.0 1.49 1.333];
 w = 5.10;
-K = cameraParams.IntrinsicMatrix;
+K = IntrinsicMatrix;
+%K = cameraParams.IntrinsicMatrix;
 view = struct('points',{}, 'label',{},'rot',{},'trans',{}, 'bearing_vector',{});
 tracks = struct ('points',{}, 'views', {}, 'pointcloud',{});
 basePoints = corres(:,:,1)';
@@ -39,30 +40,45 @@ for i = 2:9
    testVector(:,:,1) = matchVector1(1:2,:);
     testVector(:,:,2) = matchVector2(1:2,:);
    U=umatrix_generator_general(matchVector1, matchVector2);
-   [relativeOrient,relativeLoc]=R_t_estimator_pixel(U, testVector, 1);
+   [relativeOrient,relativeLoc]=R_t_estimator_pixel(U, 0, 1);
     relativeOrient
     relativeLoc
    
     % triangulation
       prevRot = view(i-1).rot;
       prevTrans = view(i-1).trans;
-      rot =  relativeOrient* prevRot; 
-      trans = prevTrans + relativeLoc'*prevRot;
+      rot =  relativeOrient* prevRot 
+      trans = prevTrans + relativeLoc'*prevRot
+      xw_test = triangulateR(matchVector1, matchVector2, prevRot, prevTrans, rot, trans);
+      if(xw_test < 0)
+      [relativeOrient,relativeLoc]=R_t_estimator_pixel(U, 1, 1);
+      end
+      rot =  relativeOrient* prevRot 
+      trans = prevTrans + relativeLoc'*prevRot
+if(i >= 3)
+     tracks_cell = struct2cell(tracks);
+     xyzPoints = reshape(cell2mat(tracks_cell(3,:,:)), 3, []);
+     label = reshape(cell2mat(tracks_cell(1,:,:)), 1, []);
+     [exist_label, ia, ib] = intersect(label, currlabel);
+     [rot, trans] = R_t_estimator_3d(currBearing(currexist_label, :), xyzPoints'(ia, :), 0);
+      rot
+      trans
+end
+    points3D = triangulateR(matchVector1, matchVector2, prevRot, PrevTrans, rot, trans); % in C1
 
       view = addview(view, currPoints, currlabel, rot, ...
       trans, currBearing, i);
      basePoints = currPoints;
      prevlabel = currlabel;
      prevBearing = currBearing;
-points3D = triangulateR(matchVector1, matchVector2, relativeOrient, relativeLoc); % in C1
-points3D_world = points3D*prevRot' + prevTrans;
-tracks = update_tracks(tracks, matchedPairs, 2, points3D_world);
- [xw_est, view] = optim_point(view, tracks, 1, 1, numel(tracks));
+tracks = update_tracks(tracks, matchedPairs, 2, points3D);
+ 
 % Get the color of each reconstructed point
 
-ptCloud = pointCloud(xw_est);
+%ptCloud = pointCloud(xw_est);
 
-ax= pcshow(ptCloud, 'MarkerSize', 50);
+%ax= pcshow(ptCloud, 'MarkerSize', 50);
+%axis(ax, 'equal');
 %   axis([-1 -0.5 2.02 2.06 41.6 42]);
 % pcwrite(ptCloud, 'structure_out', 'PLYFormat', 'binary');
 % Rotate and zoom the plot
@@ -70,12 +86,17 @@ ax= pcshow(ptCloud, 'MarkerSize', 50);
 % camzoom(1.5);
 
 % Label the axes
+tracks_cell = struct2cell(tracks);
+nxyzPoints = reshape(cell2mat(tracks_cell(3,:,:)), 3, []);
+nxyzPoints = nxyzPoints'; % get pointcloud
+scatter3(nxyzPoints(:,1),nxyzPoints(:,2),nxyzPoints(:,3));
 
 xlabel('x-axis');
 ylabel('y-axis');
 zlabel('z-axis')
 end
-
+[xw_est, view] = optim_point(view, tracks, 1, 1, numel(tracks));
+scatter3(xw_est(:,1), xw_est(:,2), xw_est(:,3));
 function vector_no_scale = vectorNoScale(x)
 load parameter.mat
 u_v = x - [hcx hcy];
