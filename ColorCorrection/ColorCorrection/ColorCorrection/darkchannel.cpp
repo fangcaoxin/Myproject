@@ -299,3 +299,44 @@ void calcMaxReflectChannelColorMap(Mat& src, Mat& dst, int radius) {
 	
 
 }
+
+void calcRedChannel(Mat& src, Mat& redchannel, int radius) {
+	int height = src.rows;
+	int width = src.cols;
+	redchannel.create(height, width, CV_8UC1);
+	Mat src_hsv;
+	
+	int st_row, ed_row;
+	int st_col, ed_col;
+
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			st_row = i - radius, ed_row = i + radius;
+			st_col = j - radius, ed_col = j + radius;
+
+			st_row = st_row < 0 ? 0 : st_row;
+			ed_row = ed_row >= height ? (height - 1) : ed_row;
+			st_col = st_col < 0 ? 0 : st_col;
+			ed_col = ed_col >= width ? (width - 1) : ed_col;
+
+
+			int min = 300;
+			int max = 0;
+			for (int m = st_row; m <= ed_row; m++)
+			{
+				for (int n = st_col; n <= ed_col; n++)
+				{
+					int blue_c = src.at<Vec3b>(m, n)[0];
+					int green_c = src.at<Vec3b>(m, n)[1];
+					int red_c = src.at<Vec3b>(m, n)[2];
+					int min_local = MIN(MIN(blue_c, green_c), 255 - red_c);
+					min = MIN(min_local, min);
+				}
+			}
+
+			redchannel.at<uchar>(i, j) = min;
+		}
+	}
+}

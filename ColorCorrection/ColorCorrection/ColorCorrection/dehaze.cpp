@@ -1,6 +1,6 @@
 #include "dehaze.h"
 #include <opencv2/highgui/highgui.hpp>
-
+using namespace cv::ximgproc;
 void dehaze(cv::Mat& input, cv::Mat& recover) {
 	int height = input.rows;
 	int width = input.cols;

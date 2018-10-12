@@ -94,30 +94,47 @@ int main(int argc, char** argv) {
 	string filename = folder_name + to_string(beg_no) + ".jpg";
 #endif//OLD
 #ifdef LIST
-	string saveImage = "..//..//..//..//result//20180517//my_test2//";
+	string saveImage = "dfd//";
 	ifstream image_file;
-	image_file.open("test2.txt", ios::in);
+	image_file.open("list20180925.txt", ios::in);
+	//image_file.open("list.txt", ios::in);
 	vector<string> image_list;
 	Mat res;
 	while (!image_file.eof()) {
-		string save_filename = saveImage + to_string(beg_no) + ".jpg";
-		beg_no++;
+		string save_filename = saveImage + to_string(beg_no++) + "_out.jpg";
 		string image_name;
 		getline(image_file, image_name);
 		if (image_name.length() == 0) break;
 		string filename = image_name;
+		image_list.push_back(filename);
+		Mat redchannel, darkchannel, brightchannel,div_dst;
 		Mat image = imread(filename);
-		/*Mat res;
-		resize(image, res, Size(640, 480));*/
-		opticalModelCorrect(image, res);
+		resize(image, image, Size(640, 480));
+		calcDarkChannel(darkchannel, brightchannel, image, 480 * 0.015);
+		calcRedChannel(image, redchannel, 480*0.015);
+		//redchannel.convertTo(redchannel, CV_32F);
+		//brightchannel.convertTo(brightchannel, CV_32F);
+		divide(redchannel, brightchannel, div_dst);
+
+		normalize(div_dst, div_dst, 0, 255, NORM_MINMAX);
+		div_dst.convertTo(div_dst, CV_8UC3);
+		imshow("bright channel", brightchannel);
+		imshow("red channel", redchannel);
+	    
+		imshow("trans", div_dst);
+		waitKey(0);
+		//Mat res;
+		//resize(image, res, Size(640, 480));
+		//opticalModelCorrect(image, res);
 		//dehaze(image, res);
 		//enhance(image, res);
-		imwrite(save_filename, res);
-		imshow("res", res);
-		waitKey(0);
+		
+		/*imshow("res", res);
+		waitKey(0);*/
 
 	}
 	image_file.close();
+
 	
 #endif //LIST
 	

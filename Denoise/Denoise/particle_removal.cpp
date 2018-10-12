@@ -493,6 +493,7 @@ static void restorationBaseMationBrightEM(std::vector<cv::Mat>& image_list_compe
 						max = probs[flag[label_num - 1]];
 						frame_num = k;
 					}
+				
 					if (probs[flag[label_num - 1]] > label_max[label_num - 1].prob) {
 						label_max[label_num - 1].frame_num = k;
 						label_max[label_num - 1].pos = cv::Point(j, i);
@@ -500,13 +501,15 @@ static void restorationBaseMationBrightEM(std::vector<cv::Mat>& image_list_compe
 					}
 				}
 				//cout << "probs " << max << " frame "<< frame_num<< endl;
-				if (max > 0) {
+				//if (max > 0) 
+				{
 					output.at<cv::Vec3b>(i, j) = image_list_compensation[frame_num].at<cv::Vec3b>(i, j);
 				}
-				else {
-					//output.at<Vec3b>(i, j) = Vec3b(0, 0, 255);
-					need_to_repair.push_back(cv::Point(j, i));
-				}
+				//else {
+				//	//output.at<Vec3b>(i, j) = Vec3b(0, 0, 255);
+				//	need_to_repair.push_back(cv::Point(j, i));
+				//	std::cout << "need to repair\n" << std::endl;
+				//}
 			}
 		}
 	}
@@ -519,13 +522,58 @@ static void restorationBaseMationBrightEM(std::vector<cv::Mat>& image_list_compe
 
 
 }
+
+static
+void
+restorationBaseLabel(std::vector<cv::Mat>& image_list_compensation,
+	std::vector<cv::Mat>& image_list_gray, cv::Mat& stats, cv::Mat& label, cv::Mat& output)
+{
+	int width = image_list_compensation[0].cols;
+	int height = image_list_compensation[0].rows;
+
+	image_list_compensation[1].copyTo(output);
+	int boarder = 70;
+	
+	for (int i = 0 + boarder; i < height - boarder; i++) {
+		for (int j = 0 + boarder; j < width - boarder; j++) {
+			int label_num = label.at<int>(i, j);
+			if (label_num > 0) {
+				
+				int frame_num = 0;
+				int v0 = image_list_gray[0].at<uchar>(i, j);
+				int v1 = image_list_gray[1].at<uchar>(i, j);
+				int v2 = image_list_gray[2].at<uchar>(i, j);
+				if (v0 < 5 || v2 < 5) {
+					frame_num = 1;
+				}
+				else {
+					int f = v0 < v2 ? 0 : 2;
+					frame_num = v1 < image_list_gray[f].at<uchar>(i, j)? 1:f;
+				}
+				
+				{
+					output.at<cv::Vec3b>(i, j) = image_list_compensation[frame_num].at<cv::Vec3b>(i, j);
+				}
+				
+			}
+		}
+	}
+	
+}
+
+
 void floatingAreaRestoration(std::vector<cv::Mat>& image_list, std::vector<cv::Mat>& image_list_gray, cv::Mat& stats, cv::Mat& label, cv::Mat& output)
 {
+#if 0
 	int size = stats.rows - 1;
 	std::vector<cv::Mat> samples;
 	std::vector<cv::Ptr<cv::ml::EM>> em_models(size);
 	createSamplesFrames(image_list_gray, label, samples, stats, size);
 	EMModel(samples, em_models);
 	restorationBaseMationBrightEM(image_list, image_list_gray, label, em_models, output);
+#else
+	restorationBaseLabel(image_list,
+		image_list_gray, stats, label, output);
+#endif
 
 }

@@ -4,7 +4,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #define TRANSESTIMATION
-#define COLORREFLECTFREE
+//#define COLORREFLECTFREE
 #define BRIGHTCHANNEL
 void opticalModelCorrect(Mat& src, Mat& dst) {
 	int width = src.cols;
@@ -17,10 +17,12 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 #ifdef COLORREFLECTFREE
 	/*caculate bright R,G,B channel*/
 	calcMaxReflectChannelColorMap(src, colorRelfectMap, radius);
+	
 #ifdef BRIGHTCHANNEL
 	/*caculate bright birightness channel according to brightness channel*/
 	calcBrightBrightChannel(src, bbchannel, radius);
 	bbchannel.convertTo(bbchannel, CV_32FC1);
+	
 #endif //BRIGHTCHANNEL
 
 	/*caculate color of ambient illumination*/
@@ -52,7 +54,7 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 	Mat light_brightchannel, light_darkchannel;
 	calcDarkChannel(light_darkchannel, light_brightchannel, src_colorRefelectFree, radius);
 	guidedFilter(src, light_brightchannel, light_brightchannel, 32, 1e-2);
-	//imshow("airlight", light_brightchannel);
+	
 	//imwrite("airlight.jpg", light_brightchannel);
 //#define TRANSESTIMATION_ESTI
 #ifdef TRANSESTIMATION_ESTI
@@ -71,9 +73,10 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 	imshow("transmission", transmission);
 	imwrite("transmission.jpg", transmission);*/
 #else
-	/*vector<Mat> bgr_channels;
-	split(src_colorRefelectFree, bgr_channels);*/
-	Mat transmission = colorRelfectMapChannels[2];
+	vector<Mat> bgr_channels;
+	split(src_colorRefelectFree, bgr_channels);
+	//Mat transmission = colorRelfectMapChannels[2];
+	Mat transmission = bgr_channels[2];
 	transmission.convertTo(transmission, CV_32FC1);
 	normalize(transmission, transmission, 0.1, 0.6, NORM_MINMAX);
 	//imshow("transmission", transmission);
@@ -97,7 +100,7 @@ void opticalModelCorrect(Mat& src, Mat& dst) {
 			Vec3b src_colorFree = src_colorRefelectFree.at<Vec3b>(i, j);
 
 			int air_light = light_brightchannel.at<uchar>(i, j);
-			float trans = MAX(transmission.at<float>(i, j),(float)0.3);
+			float trans = MAX(transmission.at<float>(i, j),(float)0.1);
 			float dst_0 = ((float)(src_colorFree[0] / 255.) - (float)(air_light / 255.)) / (trans*1.1) + (float)(air_light / 255.);
 			float dst_1 = ((float)(src_colorFree[1] / 255.) - (float)(air_light / 255.)) / (trans*1.1) + (float)(air_light / 255.);
 			float dst_2 = ((float)(src_colorFree[2] / 255.) - (float)(air_light / 255.)) / trans + (float)(air_light / 255.);

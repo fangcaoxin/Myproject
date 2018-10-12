@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <opencv2/highgui/highgui.hpp>
 using std::sort;
+using namespace cv;
 
 struct Pixel {
 	int value;

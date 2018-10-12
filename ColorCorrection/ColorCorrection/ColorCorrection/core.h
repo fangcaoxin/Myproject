@@ -4,6 +4,8 @@
 #include <vector>
 #include <iostream>
 #include <opencv2/ml.hpp>
+using namespace cv;
+using namespace std;
 
 void calcDarkChannel(cv::Mat& darkChannel,cv::Mat& brightChannel, cv::Mat& input, int radius);
 void calcAirLight(cv::Mat& darkChannel, cv::Mat& input, double A[]);
@@ -15,3 +17,4 @@ double evaluationScore_UCIQUE(cv::Mat& src);
 /** paper: Fast Haze Removal for Nighttime Image UsingMaximumReflectance Prior
 * cvpr 2017*/
 void calcMaxReflectChannelColorMap(cv::Mat& src, cv::Mat& dst, int radius);
+void calcRedChannel(Mat& src, Mat& redchannel, int radius);
