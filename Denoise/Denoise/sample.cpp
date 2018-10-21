@@ -100,19 +100,75 @@ int main(int argc, char* argv[]) {
 			cv::imwrite("ctdf//label1.jpg", diff_wb_c[0]);
 			cv::imwrite("ctdf//label2.jpg", diff_wb_c[1]);
 			int num = sumAreaByRadius(labels, labels1, centroids, centroids1, diff_output_c, 5);
+<<<<<<< HEAD
 			//imageClosing(diff_output_c, diff_output_c, 12);
 			cv::imwrite("ctdf//ctdf.jpg", diff_output_c);
 			cv::imshow("diff", diff_output_c);
 			cv::waitKey(0);
+=======
+			imageClosing(diff_output_c, diff_output_c, 3);
+>>>>>>> f35ef30a8175d926245cc2332a0f49c89326a38b
 			int size_final = connectedComponentsWithStats(diff_output_c, labels_final, stats_final, centroids_final);
 			floatingAreaRestoration(image_list_compensation, image_list_gray_compensation, stats_final, labels_final, res);
 #ifdef TIME
 			QueryPerformanceCounter(&et);
 			std::cout << "Processint time: " << (et.QuadPart - st.QuadPart) * 1000 / Freq.QuadPart << "ms" << std::endl;
 #endif
+<<<<<<< HEAD
 #if 0
 			cv::imshow("debug", image_list_gray[0] -image_list_gray[1]);
 #endif
+=======
+			//showMaskImg(labels, labels_show);
+			//showMaskImg(labels1, labels1_show);
+			//imwrite("label.jpg", labels_show);
+			//imwrite("label1.jpg", labels1_show);
+			/*diff_output_c.copyTo(cdfd);*/
+			//showLabelImg(diff_output_c);
+			//vector<float> probs_similar;
+			//nearNeighourSimilarity(image_list[1], stats, probs_similar);
+#endif //CONNECTED
+
+#ifdef SAVERESULT
+		Mat combine1, combine2, combine;
+		//cvtColor(cdfd, cdfd, CV_GRAY2BGR);
+		cvtColor(diff_output, diff_output, CV_GRAY2BGR);
+		putText(image_list[1], "Original", Point(10, 10), CV_FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0));
+		putText(output, "Processed", Point(10, 10), CV_FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0));
+		putText(cdfd, "Combined DFD", Point(10, 10), CV_FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0));
+		putText(diff_output, "After EM", Point(10, 10), CV_FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0));
+
+
+
+		hconcat(image_list[1], output, combine1);
+		hconcat(cdfd, diff_output, combine2);
+		vconcat(combine1, combine2, combine);
+		imshow("combine", combine);
+		imwrite(save_name, combine);
+#endif //SAVERESULT
+
+			//imshow("diff_by_sum", diff_output);
+			//imshow("area label", show_img);
+			//imshow("original diff", diff_output);
+	/*	Mat res;
+		cvtColor(diff_output_c, diff_output_c, CV_GRAY2BGR);
+		vector<Mat> res_save;
+		res_save.push_back(image_list[1]);
+		res_save.push_back(diff_output_c);
+		res_save.push_back(output);
+		hconcat(res_save, res);*/
+			//imshow("cdfd", diff_output_c);
+			imwrite("cdfd.jpg", diff_output_c);
+			//imshow("output", output);
+			//imshow("trans", trans);
+			//imwrite(save_name, output);
+			//imshow("diff_cur_pre_camera", diff_wb_c[0]);
+			//imshow("diff_cur_next_camera", diff_wb_c[1]);
+			//imwrite(save_name, output);
+			//imshow("diff_cur_pre_std", labels_show);
+			//imshow("diff_cur_next_std", labels1_show);
+			//imwrite(save_name, labels_show);
+>>>>>>> f35ef30a8175d926245cc2332a0f49c89326a38b
 			image_list.erase(image_list.begin());
 
 			image_list_gray.erase(image_list_gray.begin());

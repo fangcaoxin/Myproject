@@ -11,8 +11,8 @@ numPoints = size(p_select,1);
 p_one_row = reshape(p_select, 1, []);
 R_one_row = reshape([view.rot], 1, []);
 t_one_row = reshape([view.trans], 1, []);
-v = reshape([view.bearing_vector], [], 6, numViews);
-x0 = [p_one_row R_one_row(10:end) t_one_row(4:end)];
+v = reshape([view.bearing_vector], [], 9, numViews);
+x0 = [p_one_row R_one_row t_one_row];
 p_lb = -Inf(1, size(p_one_row,2));
 p_ub = Inf(1, size(p_one_row,2));
 R_lb = -ones(1, size(R_one_row(10:end),2));
@@ -23,14 +23,14 @@ lb = [p_lb R_lb t_lb];
 ub = [p_ub R_ub t_ub];
 %opts = optimset('Display', 'iter');
 %opts = optimoptions(@lsqnonlin,'Algorithm','levenberg-marquardt','MaxFunEvals',3e4,'TolFun',1e-3);
-opts = optimoptions('lsqnonlin','Display','iter','Algorithm','levenberg-marquardt','MaxFunEvals',3e10,'TolFun',1e-10);
+opts = optimoptions('lsqnonlin','Display','iter','Algorithm','levenberg-marquardt','MaxFunEvals',3e10,'TolFun',1e-5);
 out = lsqnonlin(@(x)fun(x,v,numViews,numPoints,tracks_select), x0, [],[], opts);
 xyzPoints = reshape(out(1:3*numPoints),[numPoints, 3]);
-R_opm = reshape(out(3*numPoints+1:3*numPoints + 9*(numViews-1)),[3,3, numViews-1]);
-t_opm = reshape(out(3*numPoints + 9*(numViews-1)+1:end), [3 1 numViews-1]);
- for  k = 2: numViews
-    view(k).rot = R_opm(:,:,k-1);
-    view(k).trans = t_opm(:,:,k-1)';
+R_opm = reshape(out(3*numPoints+1:3*numPoints + 9*(numViews)),[3,3, numViews]);
+t_opm = reshape(out(3*numPoints + 9*(numViews)+1:end), [3 1 numViews]);
+ for  k = 1: numViews
+    view(k).rot = R_opm(:,:,k);
+    view(k).trans = t_opm(:,:,k)';
  end
 end
 % startNum the starting num of 3D points for optim
@@ -40,20 +40,17 @@ function fval = fun(x, v, numViews,numPoints, tracks)
  m = numViews; % how many views
  n = numPoints; % how many points
  points = reshape(x(1:3*n), [],3);
- Rot = reshape(x(3*n+1:3*n+9*(m-1)), [3 3 m-1] );
- trans = reshape(x(3*n+9*(m-1)+1:end),[1 3 m-1]);
-fval = zeros(1, n+6*(m-1));
+ Rot = reshape(x(3*n+1:3*n+9*(m)), [3 3 m] );
+ trans = reshape(x(3*n+9*(m)+1:end),[1 3 m]);
+fval = zeros(1, n+6*(m));
 for i = 1:n
     e_total = 0;
    for j = 1 : size(tracks(i).views, 2)
        view = tracks(i).views(j);
-       if(view == 1)
-           rotate = eye(3);
-           translation = zeros(1,3);
-       else
-           rotate = Rot(:,:,view-1);
-           translation = trans(:,:,view-1);
-       end
+      
+        rotate = Rot(:,:,view);
+        translation = trans(:,:,view);
+       
        
        xc = rotate'*(points(i,:) - translation)'; 
        
@@ -64,7 +61,8 @@ for i = 1:n
        ro_est = ro_est/norm(ro_est);
       
        e1 =norm(cross(ro, ro_est));
-       tmp = [0 1 1];
+       ri = v(tracks(i).points, 7:9, view);
+       tmp = [0 0 1];
        N1 = xs.*tmp;
        N1_norm = N1/norm(N1);
        xw_normal = cross(ro, N1_norm);
@@ -73,7 +71,7 @@ for i = 1:n
    end
    fval(i) = e_total/size(tracks(i).views, 2);
 end
- for j = 1:numViews-1
+ for j = 1:numViews
      rotate = Rot(:,:,j);
      fval(n + 6*(j-1)+1) = norm(rotate(1,:))-1;
      fval(n + 6*(j-1)+2) = norm(rotate(2,:))-1;

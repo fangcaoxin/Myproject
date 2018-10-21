@@ -1,12 +1,9 @@
-function [R_est,t_est]=R_t_estimator_pixel(U, test_points, vertical)
+function [R_est,t_est]=R_t_estimator_pixel(U, mark, vertical)
 %load parameter.mat
 addpath('common');
-[R_est, t_est] = Rt_estimate(U, 1, vertical);
- xw = triangulateOptim(test_points(:,:,1), test_points(:,:,2), R_est, t_est);
- if(R_est(1,1) <0)
- [R_est, t_est] = Rt_estimate(U, 0, vertical);
- end
- xw1 = triangulateOptim(test_points(:,:,1), test_points(:,:,2), R_est, t_est);
+
+[R_est, t_est] = Rt_estimate(U, mark, vertical);
+
 end
 
 function [R_est, t_est] = Rt_estimate(U, mark, vertical)
@@ -57,6 +54,6 @@ function [R_est, t_est] = Rt_estimate(U, mark, vertical)
    if(sign_t_err ~= sign_t_est)
       t_est = -t_est;
    end
-% t_est = t_err;
+ t_est = t_est';
 end
 

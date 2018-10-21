@@ -1,5 +1,5 @@
-function [x_s, r_out_norm] = sfm_one_view(gg, x, K, c, w)
 
+function [x_s, r_out_norm, r_in] = sfm_one_view(gg, x, K, c, w)
 d_flat = gg(1);
 Rc = angle2Rot(gg(2), gg(3), gg(4));
 hcx = K(3,1);
@@ -37,7 +37,6 @@ c2_norm = dot(r_glass_norm, N1_norm, 2);
 r_out = n2/n3*r_glass_norm - (n2/n3*c2_norm - sqrt(1- n2*n2/(n3*n3)*s2_norm.*s2_norm)).*N1_norm;
 r_out_norm = r_out./sqrt(sum(r_out.*r_out, 2));
 x_s = p2;
-
 end
 
 function rotate = angle2Rot(alpha, beta, gamma)
