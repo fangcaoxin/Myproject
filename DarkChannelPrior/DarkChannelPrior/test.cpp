@@ -8,7 +8,7 @@
 
 using namespace cv;
 using namespace std;
-#define NEW
+//#define NEW
 //#define OLD
 //#define LIST
 int main(int argc, char* argv[]){
@@ -37,15 +37,15 @@ int main(int argc, char* argv[]){
 	image_file.close();
 	string filename = image_list[beg_no];
 #endif //LIST
-	//string filename = "city.png";
+	string filename = "DCP1.jpg";
 	Mat image = imread(filename);
 	vector<Mat> channels;
 	split(image, channels);
 	Mat res;
 	dehaze(image, res);
-	imshow("original", image);
-	imshow("res", res);
-	imshow("red", channels[2]);
+	//imshow("original", image);
+	imwrite("DCP1_res.jpg", res);
+	//imshow("red", channels[2]);
 	waitKey(0);
 	
 }

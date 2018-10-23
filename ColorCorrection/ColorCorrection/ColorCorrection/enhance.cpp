@@ -45,7 +45,7 @@ void enhance(Mat src, Mat& dst) {
 	Mat img1;
 	SimplestColorBalance(src, img1, 5);
 	img1.convertTo(img1, CV_8UC3);
-	//imshow("colorBalance", img1);
+	imwrite("colorBalance.jpg", img1);
 	Mat LabIm1, L1;
 	vector<Mat> result;
 	//img1 = src;
@@ -55,17 +55,23 @@ void enhance(Mat src, Mat& dst) {
 	applyCLAHE(LabIm1, L1, result);
 	Mat img2 = result[0];
 	Mat L2 = result[1];
-	//imshow("image after histogram", img2);
+	imwrite("image_after_histogram.jpg", img2);
 	Mat w1, w2;
 	vector<Mat> weight1, weight2, bCnl1, gCnl1, rCnl1, bCnl2, gCnl2, rCnl2;
 	calWieght(img1, L1, w1);
 	calWieght(img2, L2, w2);
-
+    
 	Mat sumW;
 	add(w1, w2, sumW);
 	divide(w1, sumW, w1);
 	divide(w2, sumW, w2);
-
+    Mat w1_normal, w2_normal;
+    normalize(w1, w1_normal, 0, 255, NORM_MINMAX);
+    w1_normal.convertTo(w1_normal, CV_8UC1);
+    normalize(w2, w2_normal, 0, 255, NORM_MINMAX);
+    w2_normal.convertTo(w2_normal, CV_8UC1);
+    imwrite("weight1.jpg", w1_normal);
+    imwrite("weight2.jpg", w2_normal);
 	int level = 5;
 	GaussianPyramid(w1, weight1, level);
 	GaussianPyramid(w2, weight2, level);

@@ -5,7 +5,7 @@ void calcRecover(Mat& result, Mat& input, Mat& transmission, double A[])
 	int height = input.rows;
 	int width = input.cols;
 
-	double t0 = 0.1;
+	double t0 = 0.2;
 	double t, tmp_res;
 	int i, j, k;
 	int e = 0, number = 0;

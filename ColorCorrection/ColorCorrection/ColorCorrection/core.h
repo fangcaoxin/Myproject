@@ -4,6 +4,8 @@
 #include <vector>
 #include <iostream>
 #include <opencv2/ml.hpp>
+using namespace cv;
+using namespace std;
 
 void calcDarkChannel(cv::Mat& darkChannel,cv::Mat& brightChannel, cv::Mat& input, int radius);
 void calcAirLight(cv::Mat& darkChannel, cv::Mat& input, double A[]);

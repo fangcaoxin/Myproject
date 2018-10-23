@@ -99,25 +99,25 @@ int main(int argc, char** argv) {
 	image_file.open("test2.txt", ios::in);
 	vector<string> image_list;
 	Mat res;
-	while (!image_file.eof()) {
-		string save_filename = saveImage + to_string(beg_no) + ".jpg";
-		beg_no++;
-		string image_name;
-		getline(image_file, image_name);
-		if (image_name.length() == 0) break;
+	//while (!image_file.eof()) {
+	//	string save_filename = saveImage + to_string(beg_no) + ".jpg";
+	//	beg_no++;
+		string image_name = "..//..//image//u3.png";
+	//	getline(image_file, image_name);
+	//	if (image_name.length() == 0) break;
 		string filename = image_name;
 		Mat image = imread(filename);
 		/*Mat res;
 		resize(image, res, Size(640, 480));*/
-		opticalModelCorrect(image, res);
+		//opticalModelCorrect(image, res);
 		//dehaze(image, res);
-		//enhance(image, res);
-		imwrite(save_filename, res);
-		imshow("res", res);
-		waitKey(0);
+		enhance(image, res);
+		imwrite("fusion_result_1022.jpg", res);
+		//imshow("res", res);
+		//waitKey(0);
 
-	}
-	image_file.close();
+	/*}
+	image_file.close();*/
 	
 #endif //LIST
 	

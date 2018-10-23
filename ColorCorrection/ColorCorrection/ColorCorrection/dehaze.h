@@ -4,7 +4,7 @@
 /**dehaze: Kaiming He et al., Single image haze removal using dark channel prior
 * dark channel prior(DCP)
 * dehazeMY: improved underwater DCP*/
-//using namespace cv::ximgproc;
+using namespace cv::ximgproc;
 void dehaze(cv::Mat& input, cv::Mat& recover);
 void dehazeDC(cv::Mat image, cv::Mat &dehaze);
 void dehazeMY(cv::Mat image, cv::Mat &mydehaze);

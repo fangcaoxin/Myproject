@@ -7,7 +7,7 @@ void calcTransmission(Mat& transmission, Mat& input, double A[], int radius)
 	int width = input.cols;
 	int height = input.rows;
 
-	double w = 0.95;
+	double w = 0.9;
 
 	Mat normalized_input(height, width, CV_8UC3);
 	for (int k = 0; k < 3; k++) {

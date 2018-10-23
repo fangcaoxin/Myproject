@@ -4,9 +4,7 @@
 #include <vector>
 #include "core.h"
 #include <opencv2/ml.hpp>
-using namespace cv::ml;
-using namespace cv;
-using namespace std;
+
 
 void EMSegmetation(Mat& img,Mat& label,int pixel_num,int num);
 void EMSegmetationSamples(Mat& img, Mat& samples,vector<int>& valid_labels,vector<float>&probs, int num);

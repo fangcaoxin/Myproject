@@ -15,7 +15,7 @@ void dehaze(Mat& input, Mat& recover) {
 	
 	printf("CalcDarkChannel...");
 	calcDarkChannel(darkchannel, brightchannel, input, darkchannelradius);
-
+    imwrite("DCP1_DC.jpg", darkchannel);
 	printf("CalcAirLight...");
 	calcAirLight(darkchannel, input, Airlight);
 
@@ -24,7 +24,7 @@ void dehaze(Mat& input, Mat& recover) {
 
 	printf("GuidedFilterColor...");
 	guidedFilter(input, transmission, refine_transmission, 60, 1e-6);
-
+    imwrite("dcp1_trans.jpg", refine_transmission);
 	printf("CalcRecover...");
 	calcRecover(recover, input, refine_transmission, Airlight);
 }
