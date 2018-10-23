@@ -13,7 +13,7 @@ function tracks = update_tracks(tracks, matchedPairs, view, xyzPoints)
           curr_num = curr_num + 1;
           tracks(curr_num).points = matchedPairs(i,1);
           tracks(curr_num).views = view;
-          tracks(curr_num).pointcloud = xyzPoints(i, :);
+          tracks(curr_num).pointcloud = (tracks(curr_num).pointcloud + xyzPoints(i, :))/2;
       end
     end
  else

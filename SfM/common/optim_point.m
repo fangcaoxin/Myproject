@@ -1,4 +1,4 @@
-function [xyzPoints, view] = optim_point(view, tracks, step, startNum, endNum)
+function [xyzPoints, view] = optim_point(view, tracks, K, step, startNum, endNum)
 % p is point 1xN , Rt estimated rotation and translation mat4x3xM
 % v calucated bearing vector
 tracks_cell = struct2cell(tracks);
@@ -12,6 +12,7 @@ p_one_row = reshape(p_select, 1, []);
 R_one_row = reshape([view.rot], 1, []);
 t_one_row = reshape([view.trans], 1, []);
 v = reshape([view.bearing_vector], [], 6, numViews);
+points_2d = reshape([view.points], [], 2, numViews);
 x0 = [p_one_row R_one_row(10:end) t_one_row(4:end)];
 p_lb = -Inf(1, size(p_one_row,2));
 p_ub = Inf(1, size(p_one_row,2));
@@ -24,7 +25,7 @@ ub = [p_ub R_ub t_ub];
 opts = optimset('Display', 'iter');
 %opts = optimoptions(@lsqnonlin,'Algorithm','levenberg-marquardt','MaxFunEvals',3e4,'TolFun',1e-3);
 %opts = optimoptions('lsqnonlin','Display','iter','Algorithm','levenberg-marquardt','MaxFunEvals',3e10,'TolFun',1e-10);
-out = lsqnonlin(@(x)fun(x,v,numViews,numPoints,tracks_select), x0, [],[], opts);
+out = lsqnonlin(@(x)fun(x,v,points_2d,K, numViews,numPoints,tracks_select), x0, [],[], opts);
 xyzPoints = reshape(out(1:3*numPoints),[numPoints, 3]);
 R_opm = reshape(out(3*numPoints+1:3*numPoints + 9*(numViews-1)),[3,3, numViews-1]);
 t_opm = reshape(out(3*numPoints + 9*(numViews-1)+1:end), [3 1 numViews-1]);
@@ -36,7 +37,7 @@ end
 % startNum the starting num of 3D points for optim
 % endNum the ending num of 3D points for optim
 % the step for 3D points for optim
-function fval = fun(x, v, numViews,numPoints, tracks)
+function fval = fun(x, v, points_2d,K, numViews,numPoints, tracks)
  m = numViews; % how many views
  n = numPoints; % how many points
  points = reshape(x(1:3*n), [],3);
@@ -64,11 +65,14 @@ for i = 1:n
        ro_est = ro_est/norm(ro_est);
       
        e1 =norm(cross(ro, ro_est));
-       tmp = [0 1 1];
+       tmp = [0 0 1];
        N1 = xs.*tmp;
        N1_norm = N1/norm(N1);
        xw_normal = cross(ro, N1_norm);
        e2 = dot(ro_est, xw_normal);
+       xc_2d = K'*xc';
+       xc_2d_norm = [xc_2d(1,1) xc_2d(2,1)]./xc_2d(3,1);
+       e3 = norm(xc_2d_norm - points_2d(tracks(i).points, :, view));
        e_total = e_total + e1 + e2;
    end
    fval(i) = e_total/size(tracks(i).views, 2);

@@ -54,6 +54,6 @@ function [R_est, t_est] = Rt_estimate(U, mark, vertical)
    if(sign_t_err ~= sign_t_est)
       t_est = -t_est;
    end
- t_est = t_est';
+ t_est = t_err';
 end
 
