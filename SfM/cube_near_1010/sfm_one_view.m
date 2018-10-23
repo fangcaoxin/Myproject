@@ -1,4 +1,5 @@
-function [x_s, r_out_norm] = sfm_one_view(gg, x, K, c,w)
+
+function [x_s, r_out_norm, r_in] = sfm_one_view(gg, x, K, c, w)
 d_flat = gg(1);
 Rc = angle2Rot(gg(2), gg(3), gg(4));
 hcx = K(3,1);
